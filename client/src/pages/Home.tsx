@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Play, Pause, RotateCcw, SkipBack, SkipForward, 
   Code2, Box, Cpu, Sparkles, Flame, CheckCircle2, 
-  ArrowRight, RefreshCw, Layers
+  ArrowRight, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +23,9 @@ interface ExecutionStep {
 }
 
 export default function Home() {
-  // Window form view state: 1 = Code Input Form, 2 = Synchronized Parallel 3D Visual & Explanation
   const [viewStep, setViewStep] = useState<1 | 2>(1);
-
   const [selectedLang, setSelectedLang] = useState<'python' | 'c' | 'java'>('python');
-  const [userProblem, setUserProblem] = useState("Two Sum / Array Search");
+  const [userProblem, setUserProblem] = useState("Two Sum II (Sorted Array)");
   const [userCode, setUserCode] = useState(
 `def twoSum(numbers: list[int], target: int) -> list[int]:
     i, j = 0, len(numbers) - 1
@@ -49,12 +47,12 @@ export default function Home() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Synchronized execution steps
+  // Simplified English execution steps
   const [executionSteps] = useState<ExecutionStep[]>([
     {
       step: 1,
       line: 2,
-      explanation: "Initialize pointers i = 0 (leftmost) and j = 5 (rightmost) in 3D memory array.",
+      explanation: "Start by setting two pointers: 'i' at the very beginning (index 0) and 'j' at the very end (index 5) of our sorted list.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [0, 5],
@@ -63,7 +61,7 @@ export default function Home() {
     {
       step: 2,
       line: 3,
-      explanation: "Evaluate while condition: i (0) < j (5). Condition evaluates to True, entering loop body.",
+      explanation: "Check if pointer 'i' is still to the left of pointer 'j' (0 < 5). Since this is true, we enter the loop to search for our target.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [0, 5],
@@ -72,43 +70,43 @@ export default function Home() {
     {
       step: 3,
       line: 4,
-      explanation: "Calculate sum of numbers[i] (2) + numbers[j] (19) = 21. Compare with target 19.",
+      explanation: "Add the numbers at positions 'i' and 'j': 2 + 19 = 21. We want our target sum to be 19.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [0, 5],
-      stateVars: { sum: 21, condition: "21 > 19" }
+      stateVars: { sum: 21, check: "21 > 19" }
     },
     {
       step: 4,
       line: 10,
-      explanation: "Since sum (21) > target (19), decrement right pointer j from 5 to 4.",
+      explanation: "Our sum (21) is greater than target (19). Because the list is sorted, moving 'j' one step to the left decreases the sum. So we decrease 'j' from 5 to 4.",
       pointers: { i: 0, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [4],
-      stateVars: { i: 0, j: 4, action: "j -= 1" }
+      stateVars: { i: 0, j: 4, action: "j moves left" }
     },
     {
       step: 5,
       line: 4,
-      explanation: "Calculate sum of numbers[0] (2) + numbers[4] (15) = 17. Sum (17) < target (19).",
+      explanation: "Add the new numbers at 'i' (0) and 'j' (4): 2 + 15 = 17. Now our sum is 17.",
       pointers: { i: 0, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [0, 4],
-      stateVars: { sum: 17, condition: "17 < 19" }
+      stateVars: { sum: 17, check: "17 < 19" }
     },
     {
       step: 6,
       line: 8,
-      explanation: "Since sum < target, increment left pointer i from 0 to 1.",
+      explanation: "Our sum (17) is smaller than target (19). To increase the sum, we move 'i' one step to the right from 0 to 1.",
       pointers: { i: 1, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [1, 4],
-      stateVars: { i: 1, j: 4, action: "i += 1" }
+      stateVars: { i: 1, j: 4, action: "i moves right" }
     },
     {
       step: 7,
       line: 4,
-      explanation: "Calculate sum of numbers[1] (5) + numbers[3] (11) = 16. Increment left pointer i to 2.",
+      explanation: "Add numbers at 'i' (1) and 'j' (3): 5 + 11 = 16. Still less than 19, so move 'i' to 2.",
       pointers: { i: 2, j: 3 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [2, 3],
@@ -117,12 +115,12 @@ export default function Home() {
     {
       step: 8,
       line: 6,
-      explanation: "Match found! numbers[2] (8) + numbers[3] (11) = 19 equals target. Returning 1-based indices [3, 4].",
+      explanation: "Success! Numbers at index 2 (8) and index 3 (11) add up exactly to 19. We return their 1-based positions [3, 4].",
       pointers: { i: 2, j: 3 },
       arrayState: [2, 5, 8, 11, 15, 19],
       highlights: [2, 3],
       matched: true,
-      stateVars: { result: "[3, 4]", status: "Success" }
+      stateVars: { result: "[3, 4]", status: "Match Found!" }
     }
   ]);
 
@@ -135,7 +133,7 @@ export default function Home() {
         } else {
           setIsPlaying(false);
         }
-      }, 1600 / playbackSpeed);
+      }, 1800 / playbackSpeed);
     }
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -201,9 +199,9 @@ export default function Home() {
       setIsAnalyzing(false);
       setViewStep(2);
       setCurrentStepIndex(0);
-      setIsPlaying(true); // Start playing parallel simulation automatically
-      toast.success("Code compiled! Playing 3D visualization and parallel explanation.");
-    }, 1200);
+      setIsPlaying(true);
+      toast.success("Ready! 3D visualizer and English explanation playing in parallel.");
+    }, 1000);
   };
 
   const currentStep = executionSteps[currentStepIndex] || executionSteps[0];
@@ -223,7 +221,7 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Parallel Code-to-3D Visualizer & Explainer
+            Simple English 3D Code Visualizer & Explainer
           </span>
         </div>
 
@@ -237,7 +235,7 @@ export default function Home() {
               }}
               className="text-xs h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
             >
-              ← Edit Code / New Problem
+              ← Edit Code
             </Button>
           )}
 
@@ -259,8 +257,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Container Form / Player Window */}
-      <main className="flex-1 p-6 flex flex-col max-w-6xl mx-auto w-full justify-center">
+      {/* Main Container */}
+      <main className="flex-1 p-6 flex flex-col max-w-5xl mx-auto w-full justify-center">
         
         {/* STEP 1: Code Input Form */}
         {viewStep === 1 && (
@@ -269,33 +267,33 @@ export default function Home() {
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center">
                   <Code2 className="w-5 h-5 text-[#e59b63] mr-2" />
-                  Step 1: Provide Your Problem & {selectedLang.toUpperCase()} Code
+                  Step 1: Enter Your Problem & {selectedLang.toUpperCase()} Code
                 </h2>
                 <p className="text-xs text-[#9c8b7c] mt-1">
-                  Enter your problem statement and paste your source code. The engine will compile and synchronize 3D spatial execution with parallel line-by-line explanation.
+                  Provide your code below. We will generate simple English explanations and 3D visual step-by-step animations that move together in parallel.
                 </p>
               </div>
               <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
-                Form Step 1 / 2
+                Step 1 of 2
               </Badge>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
                 <Label className="text-xs text-[#b09e90] uppercase tracking-wider mb-1.5 block">
-                  Problem Title / Statement
+                  Problem Title
                 </Label>
                 <Input 
                   value={userProblem}
                   onChange={(e) => setUserProblem(e.target.value)}
-                  placeholder="e.g. Two Sum II, Binary Search, QuickSort..."
+                  placeholder="e.g. Two Sum II"
                   className="bg-[#120e0a] border-[#382d23] text-white text-sm h-10"
                 />
               </div>
 
               <div>
                 <Label className="text-xs text-[#b09e90] uppercase tracking-wider mb-1.5 block">
-                  Source Code ({selectedLang.toUpperCase()})
+                  Your Code ({selectedLang.toUpperCase()})
                 </Label>
                 <Textarea 
                   value={userCode}
@@ -316,11 +314,11 @@ export default function Home() {
                 {isAnalyzing ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Parsing AST & Generating 3D Model...
+                    Preparing Visualizer...
                   </>
                 ) : (
                   <>
-                    Proceed to 3D Parallel Playback <ArrowRight className="w-4 h-4 ml-2" />
+                    Visualize in 3D & Simple English <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
               </Button>
@@ -328,21 +326,21 @@ export default function Home() {
           </div>
         )}
 
-        {/* STEP 2: Synchronized Parallel 3D Visual & Explanation Window */}
+        {/* STEP 2: Parallel 3D Visual & Simple English Explanation Window */}
         {viewStep === 2 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             
-            {/* Window Header Status */}
+            {/* Status Bar */}
             <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-3 flex items-center justify-between shadow-lg">
               <div className="flex items-center space-x-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-[#e59b63]">
-                  Active Problem:
+                  Problem:
                 </span>
                 <span className="text-sm font-bold text-white">{userProblem}</span>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-emerald-400">
-                  {isPlaying ? "▶ Playing Parallel Simulation" : "⏸ Paused"}
+                  {isPlaying ? "▶ Playing in Parallel" : "⏸ Paused"}
                 </Badge>
                 <span className="text-xs text-[#9c8b7c] font-mono">
                   Step {currentStepIndex + 1} of {executionSteps.length}
@@ -350,7 +348,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Top: 3D Spatial Visual Representation */}
+            {/* 3D Visual Representation */}
             <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
@@ -360,12 +358,12 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="text-[11px] text-[#9c8b7c] font-mono">
-                  Runtime Language: <span className="text-[#e59b63] uppercase">{selectedLang}</span>
+                  Language: <span className="text-[#e59b63] uppercase">{selectedLang}</span>
                 </div>
               </div>
 
               {/* 3D Array Blocks Arena */}
-              <div className="min-h-[220px] bg-[#0d0a08] border border-[#261e17] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+              <div className="min-h-[200px] bg-[#0d0a08] border border-[#261e17] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1812_1px,transparent_1px),linear-gradient(to_bottom,#1f1812_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-25 pointer-events-none" />
 
                 <div className="transform rotate-x-6 rotate-y-3">
@@ -414,10 +412,9 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Status bar */}
                 <div className="mt-4 flex items-center justify-between w-full px-4 bg-[#14100c] border border-[#2d241c] py-2 rounded-lg text-xs">
                   <div className="flex items-center space-x-3">
-                    <span className="text-[#9c8b7c]">Target Value:</span>
+                    <span className="text-[#9c8b7c]">Target:</span>
                     <span className="font-mono font-bold text-[#e59b63]">19</span>
                   </div>
                   {currentStep.matched && (
@@ -430,91 +427,77 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Playback & Control Toolbar */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-3 flex items-center justify-between shadow-lg">
-              <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => {
-                    setIsPlaying(false);
-                    setCurrentStepIndex(0);
-                  }}
-                  className="w-9 h-9 rounded-lg bg-[#211a14] border border-[#382e25] flex items-center justify-center text-[#b09e90] hover:text-white transition"
-                  title="Reset"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsPlaying(false);
-                    setCurrentStepIndex(prev => Math.max(0, prev - 1));
-                  }}
-                  className="w-9 h-9 rounded-lg bg-[#211a14] border border-[#382e25] flex items-center justify-center text-[#b09e90] hover:text-white transition"
-                  title="Previous Step"
-                >
-                  <SkipBack className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-11 h-11 rounded-xl bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] flex items-center justify-center transition shadow-lg font-bold"
-                  title={isPlaying ? "Pause Simulation" : "Play Simulation"}
-                >
-                  {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsPlaying(false);
-                    setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1));
-                  }}
-                  className="w-9 h-9 rounded-lg bg-[#211a14] border border-[#382e25] flex items-center justify-center text-[#b09e90] hover:text-white transition"
-                  title="Next Step"
-                >
-                  <SkipForward className="w-4 h-4" />
-                </button>
+            {/* Playback Toolbar with Interactive Scrubber (User can freely pick any step/line) */}
+            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-4 flex flex-col space-y-3 shadow-lg">
+              <div className="flex items-center justify-between text-xs text-[#9c8b7c]">
+                <span>Drag the scrubber or use buttons to jump to any step/line instantly:</span>
+                <span className="font-mono text-[#e59b63]">Step {currentStepIndex + 1} of {executionSteps.length}</span>
               </div>
 
-              {/* Scrubber progress */}
-              <div className="flex-1 mx-6">
-                <input 
-                  type="range" 
-                  min={0} 
-                  max={executionSteps.length - 1} 
-                  value={currentStepIndex}
-                  onChange={(e) => {
-                    setIsPlaying(false);
-                    setCurrentStepIndex(Number(e.target.value));
-                  }}
-                  className="w-full accent-[#e59b63] bg-[#261e17] h-2 rounded-lg cursor-pointer"
-                />
-              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => {
+                      setIsPlaying(false);
+                      setCurrentStepIndex(0);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white"
+                  >
+                    Reset
+                  </button>
+                  <button 
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="px-4 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow"
+                  >
+                    {isPlaying ? "Pause" : "Play Parallel"}
+                  </button>
+                </div>
 
-              <div className="flex items-center space-x-3">
-                <span className="text-xs text-[#9c8b7c]">Speed:</span>
-                <button
-                  onClick={() => setPlaybackSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 0.5)}
-                  className="text-xs font-mono bg-[#211a14] border border-[#382e25] px-2.5 py-1 rounded text-[#b09e90] hover:text-white"
-                >
-                  {playbackSpeed}x
-                </button>
+                {/* Scrubber bar where user can choose any step/line */}
+                <div className="flex-1">
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={executionSteps.length - 1} 
+                    value={currentStepIndex}
+                    onChange={(e) => {
+                      setIsPlaying(false);
+                      setCurrentStepIndex(Number(e.target.value));
+                    }}
+                    className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-[#9c8b7c]">Speed:</span>
+                  <button
+                    onClick={() => setPlaybackSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 0.5)}
+                    className="text-xs font-mono bg-[#211a14] border border-[#382e25] px-2 py-1 rounded text-[#b09e90] hover:text-white"
+                  >
+                    {playbackSpeed}x
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Down: Full Line-by-Line Explanation (Moving in Parallel) */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl">
+            {/* Simple English Full Explanation (Moving in Parallel) */}
+            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-xl">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
                   <Cpu className="w-4 h-4 mr-2" />
-                  Full Line-by-Line Explanation (Synchronized Parallel Execution — Line {currentStep.line})
+                  Simple English Explanation (Code Line {currentStep.line})
                 </span>
                 <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
                   Step {currentStepIndex + 1} / {executionSteps.length}
                 </Badge>
               </div>
 
-              <div className="bg-[#110e0b] border border-[#2d241c] p-4 rounded-xl text-sm leading-relaxed text-[#f4ede2] mb-4 shadow-inner">
+              {/* Fully explained in simple English */}
+              <div className="bg-[#110e0b] border border-[#2d241c] p-5 rounded-xl text-base leading-relaxed text-[#f4ede2] shadow-inner mb-4">
                 {currentStep.explanation}
               </div>
 
-              {/* State Variables Row */}
+              {/* State Variables */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {Object.entries(currentStep.stateVars).map(([key, val]) => (
                   <div key={key} className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl shadow">
