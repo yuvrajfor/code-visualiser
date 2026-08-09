@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { 
-  Play, Pause, RotateCcw, SkipBack, SkipForward, 
-  Code2, Box, Cpu, Sparkles, Flame, CheckCircle2, 
-  ArrowRight, RefreshCw
+  SkipBack, SkipForward, Code2, Box, Cpu, Flame, 
+  CheckCircle2, ArrowRight, RefreshCw, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,10 +41,6 @@ export default function Home() {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Simplified English execution steps
   const [executionSteps] = useState<ExecutionStep[]>([
@@ -124,22 +119,6 @@ export default function Home() {
     }
   ]);
 
-  // Parallel Playback Timer
-  useEffect(() => {
-    if (isPlaying && viewStep === 2) {
-      timerRef.current = setTimeout(() => {
-        if (currentStepIndex < executionSteps.length - 1) {
-          setCurrentStepIndex(prev => prev + 1);
-        } else {
-          setIsPlaying(false);
-        }
-      }, 1800 / playbackSpeed);
-    }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [isPlaying, currentStepIndex, executionSteps.length, playbackSpeed, viewStep]);
-
   const handleLangChange = (lang: 'python' | 'c' | 'java') => {
     setSelectedLang(lang);
     if (lang === 'python') {
@@ -199,8 +178,7 @@ export default function Home() {
       setIsAnalyzing(false);
       setViewStep(2);
       setCurrentStepIndex(0);
-      setIsPlaying(true);
-      toast.success("Ready! 3D visualizer and English explanation playing in parallel.");
+      toast.success("Ready! 3D visualizer and full English explanation loaded.");
     }, 1000);
   };
 
@@ -221,7 +199,7 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Simple English 3D Code Visualizer & Explainer
+            Side-by-Side 3D Visualizer & Simple English Explainer
           </span>
         </div>
 
@@ -229,10 +207,7 @@ export default function Home() {
           {viewStep === 2 && (
             <Button 
               variant="outline" 
-              onClick={() => {
-                setIsPlaying(false);
-                setViewStep(1);
-              }}
+              onClick={() => setViewStep(1)}
               className="text-xs h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
             >
               ← Edit Code
@@ -258,11 +233,11 @@ export default function Home() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 p-6 flex flex-col max-w-5xl mx-auto w-full justify-center">
+      <main className="flex-1 p-6 flex flex-col max-w-7xl mx-auto w-full justify-center">
         
         {/* STEP 1: Code Input Form */}
         {viewStep === 1 && (
-          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl animate-in fade-in duration-300">
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#261f18]">
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center">
@@ -270,7 +245,7 @@ export default function Home() {
                   Step 1: Enter Your Problem & {selectedLang.toUpperCase()} Code
                 </h2>
                 <p className="text-xs text-[#9c8b7c] mt-1">
-                  Provide your code below. We will generate simple English explanations and 3D visual step-by-step animations that move together in parallel.
+                  Provide your code below. We will generate simple English explanations and 3D visual steps.
                 </p>
               </div>
               <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
@@ -318,7 +293,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    Visualize in 3D & Simple English <ArrowRight className="w-4 h-4 ml-2" />
+                    View 3D Visual & Explanation <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
               </Button>
@@ -326,7 +301,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* STEP 2: Parallel 3D Visual & Simple English Explanation Window */}
+        {/* STEP 2: Side-by-Side Parallel 3D Visual & Explanation Window */}
         {viewStep === 2 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             
@@ -340,170 +315,183 @@ export default function Home() {
               </div>
               <div className="flex items-center space-x-3">
                 <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-emerald-400">
-                  {isPlaying ? "▶ Playing in Parallel" : "⏸ Paused"}
-                </Badge>
-                <span className="text-xs text-[#9c8b7c] font-mono">
                   Step {currentStepIndex + 1} of {executionSteps.length}
-                </span>
+                </Badge>
               </div>
             </div>
 
-            {/* 3D Visual Representation */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl relative overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Box className="w-4 h-4 text-[#e59b63]" />
-                  <span className="text-xs font-semibold tracking-wider uppercase text-white">
-                    3D Spatial Visual Representation
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#9c8b7c] font-mono">
-                  Language: <span className="text-[#e59b63] uppercase">{selectedLang}</span>
-                </div>
-              </div>
-
-              {/* 3D Array Blocks Arena */}
-              <div className="min-h-[200px] bg-[#0d0a08] border border-[#261e17] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1812_1px,transparent_1px),linear-gradient(to_bottom,#1f1812_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-25 pointer-events-none" />
-
-                <div className="transform rotate-x-6 rotate-y-3">
-                  <div className="flex items-center justify-center gap-3 sm:gap-5 my-4">
-                    {currentStep.arrayState.map((val, idx) => {
-                      const isHighlighted = currentStep.highlights.includes(idx);
-                      const isLeftPointer = currentStep.pointers.i === idx;
-                      const isRightPointer = currentStep.pointers.j === idx;
-
-                      return (
-                        <div key={idx} className="flex flex-col items-center relative">
-                          <div className="h-8 flex items-end pb-1">
-                            {isLeftPointer && (
-                              <div className="flex flex-col items-center animate-bounce">
-                                <span className="text-[11px] font-bold text-[#e59b63] bg-[#261d15] px-1.5 py-0.5 rounded border border-[#e59b63]/40 shadow">
-                                  i={idx}
-                                </span>
-                                <div className="w-0.5 h-3 bg-[#e59b63]" />
-                              </div>
-                            )}
-                            {isRightPointer && (
-                              <div className="flex flex-col items-center animate-bounce" style={{ animationDelay: '0.2s' }}>
-                                <span className="text-[11px] font-bold text-cyan-400 bg-[#15242b] px-1.5 py-0.5 rounded border border-cyan-400/40 shadow">
-                                  j={idx}
-                                </span>
-                                <div className="w-0.5 h-3 bg-cyan-400" />
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={`w-16 h-18 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-xl transition-all duration-300 shadow-2xl relative ${
-                            isHighlighted 
-                              ? 'bg-gradient-to-br from-[#e59b63] to-[#b85d23] text-[#110e0b] scale-110 shadow-[0_0_25px_rgba(229,155,99,0.6)] border-2 border-white' 
-                              : 'bg-[#1b1511] text-[#f4ede2] border border-[#3d3127]'
-                          }`}>
-                            {val}
-                            <div className="absolute -bottom-2.5 -right-2.5 w-full h-2.5 bg-[#120e0b] rounded-b-xl border-r border-b border-[#2d241c] pointer-events-none" />
-                          </div>
-
-                          <span className="mt-3 text-xs font-mono text-[#8a796c]">
-                            [{idx}]
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between w-full px-4 bg-[#14100c] border border-[#2d241c] py-2 rounded-lg text-xs">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-[#9c8b7c]">Target:</span>
-                    <span className="font-mono font-bold text-[#e59b63]">19</span>
-                  </div>
-                  {currentStep.matched && (
-                    <div className="flex items-center space-x-1 text-emerald-400 font-semibold animate-pulse">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Target Found Successfully!</span>
+            {/* SIDE-BY-SIDE PARALLEL GRID: Left (3D Visualizer) | Right (Full Simple English Explanation) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              
+              {/* LEFT 7 COLS: 3D Visual Representation */}
+              <div className="lg:col-span-7 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Box className="w-4 h-4 text-[#e59b63]" />
+                      <span className="text-xs font-semibold tracking-wider uppercase text-white">
+                        3D Spatial Visual Representation
+                      </span>
                     </div>
-                  )}
+                    <div className="text-[11px] text-[#9c8b7c] font-mono">
+                      Line <span className="text-[#e59b63]">{currentStep.line}</span>
+                    </div>
+                  </div>
+
+                  {/* 3D Array Blocks Arena */}
+                  <div className="min-h-[260px] bg-[#0d0a08] border border-[#261e17] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1812_1px,transparent_1px),linear-gradient(to_bottom,#1f1812_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-25 pointer-events-none" />
+
+                    <div className="transform rotate-x-6 rotate-y-3">
+                      <div className="flex items-center justify-center gap-3 sm:gap-4 my-4">
+                        {currentStep.arrayState.map((val, idx) => {
+                          const isHighlighted = currentStep.highlights.includes(idx);
+                          const isLeftPointer = currentStep.pointers.i === idx;
+                          const isRightPointer = currentStep.pointers.j === idx;
+
+                          return (
+                            <div key={idx} className="flex flex-col items-center relative">
+                              <div className="h-8 flex items-end pb-1">
+                                {isLeftPointer && (
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-[11px] font-bold text-[#e59b63] bg-[#261d15] px-1.5 py-0.5 rounded border border-[#e59b63]/40 shadow">
+                                      i={idx}
+                                    </span>
+                                    <div className="w-0.5 h-3 bg-[#e59b63]" />
+                                  </div>
+                                )}
+                                {isRightPointer && (
+                                  <div className="flex flex-col items-center">
+                                    <span className="text-[11px] font-bold text-cyan-400 bg-[#15242b] px-1.5 py-0.5 rounded border border-cyan-400/40 shadow">
+                                      j={idx}
+                                    </span>
+                                    <div className="w-0.5 h-3 bg-cyan-400" />
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className={`w-14 h-16 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-lg transition-all duration-300 shadow-2xl relative ${
+                                isHighlighted 
+                                  ? 'bg-gradient-to-br from-[#e59b63] to-[#b85d23] text-[#110e0b] scale-110 shadow-[0_0_20px_rgba(229,155,99,0.6)] border-2 border-white' 
+                                  : 'bg-[#1b1511] text-[#f4ede2] border border-[#3d3127]'
+                              }`}>
+                                {val}
+                                <div className="absolute -bottom-2 -right-2 w-full h-2 bg-[#120e0b] rounded-b-xl border-r border-b border-[#2d241c] pointer-events-none" />
+                              </div>
+
+                              <span className="mt-3 text-xs font-mono text-[#8a796c]">
+                                [{idx}]
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between w-full px-4 bg-[#14100c] border border-[#2d241c] py-2 rounded-lg text-xs">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-[#9c8b7c]">Target:</span>
+                        <span className="font-mono font-bold text-[#e59b63]">19</span>
+                      </div>
+                      {currentStep.matched && (
+                        <div className="flex items-center space-x-1 text-emerald-400 font-semibold">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Target Found!</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* State Variables */}
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  {Object.entries(currentStep.stateVars).map(([key, val]) => (
+                    <div key={key} className="bg-[#120e0a] border border-[#261f18] p-2.5 rounded-xl">
+                      <div className="text-[10px] text-[#8a796c] uppercase font-mono">{key}</div>
+                      <div className="text-xs font-mono font-bold text-white mt-0.5 truncate">{String(val)}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
+
+              {/* RIGHT 5 COLS: Full Simple English Explanation */}
+              <div className="lg:col-span-5 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
+                      <Cpu className="w-4 h-4 mr-2" />
+                      Full Simple English Explanation
+                    </span>
+                    <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
+                      Line {currentStep.line}
+                    </Badge>
+                  </div>
+
+                  {/* Fully explained in simple English without truncation */}
+                  <div className="bg-[#110e0b] border border-[#2d241c] p-5 rounded-xl text-sm leading-relaxed text-[#f4ede2] shadow-inner mb-4 min-h-[160px] flex items-center">
+                    {currentStep.explanation}
+                  </div>
+                </div>
+
+                <div className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl text-xs text-[#9c8b7c]">
+                  <span className="font-bold text-white block mb-1">How to navigate:</span>
+                  Use the scrubber bar below to instantly jump to any step or line. The 3D visualizer and this explanation update instantly in parallel.
+                </div>
+              </div>
+
             </div>
 
-            {/* Playback Toolbar with Interactive Scrubber (User can freely pick any step/line) */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-4 flex flex-col space-y-3 shadow-lg">
+            {/* Interactive Scrubber Bar & Controls (User can start/jump from any step) */}
+            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-6 py-4 flex flex-col space-y-3 shadow-lg">
               <div className="flex items-center justify-between text-xs text-[#9c8b7c]">
-                <span>Drag the scrubber or use buttons to jump to any step/line instantly:</span>
-                <span className="font-mono text-[#e59b63]">Step {currentStepIndex + 1} of {executionSteps.length}</span>
+                <span>Drag the bar or click steps to jump to any line instantly:</span>
+                <span className="font-mono text-[#e59b63] font-bold">Step {currentStepIndex + 1} of {executionSteps.length}</span>
               </div>
 
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <button 
-                    onClick={() => {
-                      setIsPlaying(false);
-                      setCurrentStepIndex(0);
-                    }}
-                    className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white"
-                  >
-                    Reset
-                  </button>
-                  <button 
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className="px-4 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow"
-                  >
-                    {isPlaying ? "Pause" : "Play Parallel"}
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setCurrentStepIndex(prev => Math.max(0, prev - 1))}
+                  disabled={currentStepIndex === 0}
+                  className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white disabled:opacity-40"
+                >
+                  ← Prev Step
+                </button>
 
-                {/* Scrubber bar where user can choose any step/line */}
+                {/* Scrubber bar where user can freely choose any step */}
                 <div className="flex-1">
                   <input 
                     type="range" 
                     min={0} 
                     max={executionSteps.length - 1} 
                     value={currentStepIndex}
-                    onChange={(e) => {
-                      setIsPlaying(false);
-                      setCurrentStepIndex(Number(e.target.value));
-                    }}
+                    onChange={(e) => setCurrentStepIndex(Number(e.target.value))}
                     className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-[#9c8b7c]">Speed:</span>
+                <button 
+                  onClick={() => setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1))}
+                  disabled={currentStepIndex === executionSteps.length - 1}
+                  className="px-3 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow disabled:opacity-40"
+                >
+                  Next Step →
+                </button>
+              </div>
+
+              {/* Step Quick-Jump Pills */}
+              <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#261f18]">
+                {executionSteps.map((st, sIdx) => (
                   <button
-                    onClick={() => setPlaybackSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 0.5)}
-                    className="text-xs font-mono bg-[#211a14] border border-[#382e25] px-2 py-1 rounded text-[#b09e90] hover:text-white"
+                    key={st.step}
+                    onClick={() => setCurrentStepIndex(sIdx)}
+                    className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all ${
+                      currentStepIndex === sIdx 
+                        ? 'bg-[#e59b63] text-[#110e0b] font-bold shadow' 
+                        : 'bg-[#1c1612] text-[#9c8b7c] hover:text-white border border-[#2d241c]'
+                    }`}
                   >
-                    {playbackSpeed}x
+                    Step {st.step} (Line {st.line})
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Simple English Full Explanation (Moving in Parallel) */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
-                  <Cpu className="w-4 h-4 mr-2" />
-                  Simple English Explanation (Code Line {currentStep.line})
-                </span>
-                <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
-                  Step {currentStepIndex + 1} / {executionSteps.length}
-                </Badge>
-              </div>
-
-              {/* Fully explained in simple English */}
-              <div className="bg-[#110e0b] border border-[#2d241c] p-5 rounded-xl text-base leading-relaxed text-[#f4ede2] shadow-inner mb-4">
-                {currentStep.explanation}
-              </div>
-
-              {/* State Variables */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {Object.entries(currentStep.stateVars).map(([key, val]) => (
-                  <div key={key} className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl shadow">
-                    <div className="text-[10px] text-[#8a796c] uppercase font-mono">{key}</div>
-                    <div className="text-sm font-mono font-bold text-white mt-1 truncate">{String(val)}</div>
-                  </div>
                 ))}
               </div>
             </div>
