@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { 
-  SkipBack, SkipForward, Code2, Box, Cpu, Flame, 
-  CheckCircle2, ArrowRight, RefreshCw, Layers
+  Code2, Box, Cpu, Flame, CheckCircle2, 
+  ArrowRight, RefreshCw, Terminal, MousePointerClick
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { trpc } from "@/lib/trpc";
 interface ExecutionStep {
   step: number;
   line: number;
+  codeSnippet: string;
   explanation: string;
   pointers: { i: number; j: number };
   arrayState: number[];
@@ -24,13 +25,7 @@ interface ExecutionStep {
 }
 
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
   const { user, isAuthenticated } = useAuth();
-  const utils = trpc.useUtils();
   const saveSubmission = trpc.submissions.save.useMutation({
     onSuccess: () => {
       toast.success("Code submission successfully saved to database!");
@@ -60,11 +55,12 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  // Simplified English execution steps
+  // Pseudo-code execution steps with simple English explanations
   const [executionSteps] = useState<ExecutionStep[]>([
     {
       step: 1,
-      line: 2,
+      line: 1,
+      codeSnippet: "i = 0, j = size - 1  // Initialize two pointers",
       explanation: "Start by setting two pointers: 'i' at the very beginning (index 0) and 'j' at the very end (index 5) of our sorted list.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -73,7 +69,8 @@ export default function Home() {
     },
     {
       step: 2,
-      line: 3,
+      line: 2,
+      codeSnippet: "while (i < j)  // Repeat while pointers haven't crossed",
       explanation: "Check if pointer 'i' is still to the left of pointer 'j' (0 < 5). Since this is true, we enter the loop to search for our target.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -82,7 +79,8 @@ export default function Home() {
     },
     {
       step: 3,
-      line: 4,
+      line: 3,
+      codeSnippet: "sum = numbers[i] + numbers[j]  // Calculate current pair sum",
       explanation: "Add the numbers at positions 'i' and 'j': 2 + 19 = 21. We want our target sum to be 19.",
       pointers: { i: 0, j: 5 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -91,7 +89,8 @@ export default function Home() {
     },
     {
       step: 4,
-      line: 10,
+      line: 4,
+      codeSnippet: "if (sum > target) j--  // Sum too large, shrink right pointer",
       explanation: "Our sum (21) is greater than target (19). Because the list is sorted, moving 'j' one step to the left decreases the sum. So we decrease 'j' from 5 to 4.",
       pointers: { i: 0, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -100,7 +99,8 @@ export default function Home() {
     },
     {
       step: 5,
-      line: 4,
+      line: 3,
+      codeSnippet: "sum = numbers[i] + numbers[j]  // Recalculate sum with new j",
       explanation: "Add the new numbers at 'i' (0) and 'j' (4): 2 + 15 = 17. Now our sum is 17.",
       pointers: { i: 0, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -109,7 +109,8 @@ export default function Home() {
     },
     {
       step: 6,
-      line: 8,
+      line: 5,
+      codeSnippet: "else if (sum < target) i++  // Sum too small, advance left pointer",
       explanation: "Our sum (17) is smaller than target (19). To increase the sum, we move 'i' one step to the right from 0 to 1.",
       pointers: { i: 1, j: 4 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -118,7 +119,8 @@ export default function Home() {
     },
     {
       step: 7,
-      line: 4,
+      line: 3,
+      codeSnippet: "sum = numbers[i] + numbers[j]  // Add numbers at new i and j",
       explanation: "Add numbers at 'i' (1) and 'j' (3): 5 + 11 = 16. Still less than 19, so move 'i' to 2.",
       pointers: { i: 2, j: 3 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -128,6 +130,7 @@ export default function Home() {
     {
       step: 8,
       line: 6,
+      codeSnippet: "return [i+1, j+1]  // Target matched! Return 1-based indices",
       explanation: "Success! Numbers at index 2 (8) and index 3 (11) add up exactly to 19. We return their 1-based positions [3, 4].",
       pointers: { i: 2, j: 3 },
       arrayState: [2, 5, 8, 11, 15, 19],
@@ -193,7 +196,6 @@ export default function Home() {
     }
     setIsAnalyzing(true);
 
-    // Persist code submission to database
     saveSubmission.mutate({
       problemTitle: userProblem,
       language: selectedLang,
@@ -204,7 +206,7 @@ export default function Home() {
       setIsAnalyzing(false);
       setViewStep(2);
       setCurrentStepIndex(0);
-      toast.success("Ready! 3D visualizer and full English explanation loaded.");
+      toast.success("Ready! Interactive pseudo-code visualizer loaded.");
     }, 1000);
   };
 
@@ -225,7 +227,7 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Side-by-Side 3D Visualizer & Simple English Explainer
+            Interactive Pseudo-Code & 3D Visualizer
           </span>
         </div>
 
@@ -271,7 +273,7 @@ export default function Home() {
                   Step 1: Enter Your Problem & {selectedLang.toUpperCase()} Code
                 </h2>
                 <p className="text-xs text-[#9c8b7c] mt-1">
-                  Provide your code below. We will generate simple English explanations and 3D visual steps.
+                  Provide your code below. We will transform it into an interactive pseudo-code breakdown and 3D visual step-by-step viewer.
                 </p>
               </div>
               <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
@@ -315,11 +317,11 @@ export default function Home() {
                 {isAnalyzing ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Preparing Visualizer...
+                    Generating Pseudo-Code Visualizer...
                   </>
                 ) : (
                   <>
-                    View 3D Visual & Explanation <ArrowRight className="w-4 h-4 ml-2" />
+                    Generate Interactive Pseudo-Code & 3D <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
               </Button>
@@ -327,7 +329,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* STEP 2: Side-by-Side Parallel 3D Visual & Explanation Window */}
+        {/* STEP 2: Side-by-Side Parallel 3D Visualizer & Clickable Pseudo-Code Explainer */}
         {viewStep === 2 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             
@@ -341,16 +343,16 @@ export default function Home() {
               </div>
               <div className="flex items-center space-x-3">
                 <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-emerald-400">
-                  Step {currentStepIndex + 1} of {executionSteps.length}
+                  Active Step {currentStepIndex + 1} of {executionSteps.length}
                 </Badge>
               </div>
             </div>
 
-            {/* SIDE-BY-SIDE PARALLEL GRID: Left (3D Visualizer) | Right (Full Simple English Explanation) */}
+            {/* SIDE-BY-SIDE PARALLEL GRID: Left (3D Visualizer) | Right (Interactive Clickable Pseudo-Code Explainer) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               
-              {/* LEFT 7 COLS: 3D Visual Representation */}
-              <div className="lg:col-span-7 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+              {/* LEFT 6 COLS: 3D Visual Representation */}
+              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
@@ -360,7 +362,7 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="text-[11px] text-[#9c8b7c] font-mono">
-                      Line <span className="text-[#e59b63]">{currentStep.line}</span>
+                      Step <span className="text-[#e59b63]">{currentStep.step}</span>
                     </div>
                   </div>
 
@@ -440,37 +442,67 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* RIGHT 5 COLS: Full Simple English Explanation */}
-              <div className="lg:col-span-5 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+              {/* RIGHT 6 COLS: Fully Interactive Clickable Pseudo-Code Explainer */}
+              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
-                      <Cpu className="w-4 h-4 mr-2" />
-                      Full Simple English Explanation
+                      <Terminal className="w-4 h-4 mr-1.5" />
+                      Interactive Pseudo-Code & Step Breakdown (Click any step)
                     </span>
-                    <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
-                      Line {currentStep.line}
+                    <Badge variant="outline" className="text-[10px] bg-[#221c16] border-[#382d23] text-white">
+                      <MousePointerClick className="w-3 h-3 mr-1 text-[#e59b63]" />
+                      Clickable
                     </Badge>
                   </div>
 
-                  {/* Fully explained in simple English without truncation */}
-                  <div className="bg-[#110e0b] border border-[#2d241c] p-5 rounded-xl text-sm leading-relaxed text-[#f4ede2] shadow-inner mb-4 min-h-[160px] flex items-center">
-                    {currentStep.explanation}
+                  {/* Clickable Pseudo-Code List */}
+                  <div className="space-y-2 mb-4 max-h-[340px] overflow-y-auto pr-1">
+                    {executionSteps.map((st, idx) => {
+                      const isActive = currentStepIndex === idx;
+                      return (
+                        <div 
+                          key={st.step}
+                          onClick={() => setCurrentStepIndex(idx)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1.5 ${
+                            isActive 
+                              ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
+                              : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
+                              Step {st.step}: {st.codeSnippet}
+                            </span>
+                            {isActive && (
+                              <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          {isActive && (
+                            <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d] animate-in fade-in duration-200">
+                              💡 <span className="font-medium">{st.explanation}</span>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl text-xs text-[#9c8b7c]">
-                  <span className="font-bold text-white block mb-1">How to navigate:</span>
-                  Use the scrubber bar below to instantly jump to any step or line. The 3D visualizer and this explanation update instantly in parallel.
+                <div className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl text-xs text-[#9c8b7c] flex items-center justify-between">
+                  <span>Click any step above to instantly inspect its 3D state & simple explanation.</span>
+                  <span className="font-mono text-[#e59b63]">Step {currentStepIndex + 1} / {executionSteps.length}</span>
                 </div>
               </div>
 
             </div>
 
-            {/* Interactive Scrubber Bar & Controls (User can start/jump from any step) */}
+            {/* Bottom Scrubber Bar & Quick-Jump Pills */}
             <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-6 py-4 flex flex-col space-y-3 shadow-lg">
               <div className="flex items-center justify-between text-xs text-[#9c8b7c]">
-                <span>Drag the bar or click steps to jump to any line instantly:</span>
+                <span>Navigate using scrubber bar or click steps above:</span>
                 <span className="font-mono text-[#e59b63] font-bold">Step {currentStepIndex + 1} of {executionSteps.length}</span>
               </div>
 
@@ -483,7 +515,6 @@ export default function Home() {
                   ← Prev Step
                 </button>
 
-                {/* Scrubber bar where user can freely choose any step */}
                 <div className="flex-1">
                   <input 
                     type="range" 
@@ -502,23 +533,6 @@ export default function Home() {
                 >
                   Next Step →
                 </button>
-              </div>
-
-              {/* Step Quick-Jump Pills */}
-              <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#261f18]">
-                {executionSteps.map((st, sIdx) => (
-                  <button
-                    key={st.step}
-                    onClick={() => setCurrentStepIndex(sIdx)}
-                    className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all ${
-                      currentStepIndex === sIdx 
-                        ? 'bg-[#e59b63] text-[#110e0b] font-bold shadow' 
-                        : 'bg-[#1c1612] text-[#9c8b7c] hover:text-white border border-[#2d241c]'
-                    }`}
-                  >
-                    Step {st.step} (Line {st.line})
-                  </button>
-                ))}
               </div>
             </div>
 
