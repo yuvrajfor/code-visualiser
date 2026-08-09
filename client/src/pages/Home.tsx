@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 
 interface ExecutionStep {
   step: number;
@@ -22,6 +24,22 @@ interface ExecutionStep {
 }
 
 export default function Home() {
+  // The useAuth hook provides authentication state.
+  // To implement login/logout, call logout(), or start login from an event
+  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
+  // startLogin() during render (no href={startLogin()}) — it mints a one-time
+  // nonce cookie and must run only at the moment of navigation.
+  const { user, isAuthenticated } = useAuth();
+  const utils = trpc.useUtils();
+  const saveSubmission = trpc.submissions.save.useMutation({
+    onSuccess: () => {
+      toast.success("Code submission successfully saved to database!");
+    },
+    onError: (err: any) => {
+      toast.error("Failed to save submission: " + err.message);
+    }
+  });
+
   const [viewStep, setViewStep] = useState<1 | 2>(1);
   const [selectedLang, setSelectedLang] = useState<'python' | 'c' | 'java'>('python');
   const [userProblem, setUserProblem] = useState("Two Sum II (Sorted Array)");
@@ -174,6 +192,14 @@ export default function Home() {
       return;
     }
     setIsAnalyzing(true);
+
+    // Persist code submission to database
+    saveSubmission.mutate({
+      problemTitle: userProblem,
+      language: selectedLang,
+      code: userCode,
+    });
+
     setTimeout(() => {
       setIsAnalyzing(false);
       setViewStep(2);
