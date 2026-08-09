@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Code2, Box, Cpu, Flame, CheckCircle2, 
-  ArrowRight, RefreshCw, Terminal, MousePointerClick
+  ArrowRight, RefreshCw, Terminal, Play, Pause, RotateCcw, MousePointerClick
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import * as THREE from "three";
 
 interface ExecutionStep {
   step: number;
@@ -54,6 +55,13 @@ export default function Home() {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Three.js Canvas Ref
+  const mountRef = useRef<HTMLDivElement | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cubesRef = useRef<THREE.Mesh[]>([]);
 
   // Pseudo-code execution steps with simple English explanations
   const [executionSteps] = useState<ExecutionStep[]>([
@@ -140,6 +148,144 @@ export default function Home() {
     }
   ]);
 
+  const currentStep = executionSteps[currentStepIndex] || executionSteps[0];
+
+  // Initialize Three.js Ice-Style 3D Scene
+  useEffect(() => {
+    if (viewStep !== 2 || !mountRef.current) return;
+
+    const container = mountRef.current;
+    container.innerHTML = ""; // clear previous canvas if any
+
+    const width = container.clientWidth;
+    const height = 280;
+
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 3, 9);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    // Lighting for ice / glass crystal effect
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+
+    const pointLight1 = new THREE.PointLight(0x38bdf8, 2, 50); // ice blue light
+    pointLight1.position.set(5, 5, 5);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0xe59b63, 2, 50); // amber highlight light
+    pointLight2.position.set(-5, -2, 3);
+    scene.add(pointLight2);
+
+    // Create 3D Ice Cubes for Array Elements
+    const cubes: THREE.Mesh[] = [];
+    cubesRef.current = cubes;
+
+    const arrayData = currentStep.arrayState;
+    const totalWidth = arrayData.length * 1.1;
+    const startX = -totalWidth / 2 + 0.5;
+
+    arrayData.forEach((val, idx) => {
+      const geometry = new THREE.BoxGeometry(0.85, 0.85, 0.85);
+      
+      // Ice / glass crystal material
+      const isHighlighted = currentStep.highlights.includes(idx);
+      const material = new THREE.MeshPhysicalMaterial({
+        color: isHighlighted ? 0xe59b63 : 0x1e293b,
+        metalness: 0.1,
+        roughness: 0.1,
+        transmission: 0.85, // glass transmission
+        thickness: 1.2,
+        transparent: true,
+        opacity: 0.9,
+        emissive: isHighlighted ? 0xc76e33 : 0x0f172a,
+        emissiveIntensity: isHighlighted ? 0.6 : 0.2
+      });
+
+      const cube = new THREE.Mesh(geometry, material);
+      cube.position.set(startX + idx * 1.1, 0, 0);
+      scene.add(cube);
+      cubes.push(cube);
+    });
+
+    let animationFrameId: number;
+    let clock = new THREE.Clock();
+
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      cubes.forEach((cube, idx) => {
+        cube.rotation.y = elapsedTime * 0.5 + idx * 0.2;
+        cube.position.y = Math.sin(elapsedTime * 2 + idx * 0.5) * 0.08;
+      });
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    const handleResize = () => {
+      if (!container) return;
+      const w = container.clientWidth;
+      camera.aspect = w / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, height);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+      renderer.dispose();
+      container.innerHTML = "";
+    };
+  }, [viewStep]);
+
+  // Update cube materials when step changes
+  useEffect(() => {
+    if (!sceneRef.current || cubesRef.current.length === 0) return;
+
+    cubesRef.current.forEach((cube, idx) => {
+      const isHighlighted = currentStep.highlights.includes(idx);
+      const mat = cube.material as THREE.MeshPhysicalMaterial;
+      mat.color.setHex(isHighlighted ? 0xe59b63 : 0x1e293b);
+      mat.emissive.setHex(isHighlighted ? 0xc76e33 : 0x0f172a);
+      mat.emissiveIntensity = isHighlighted ? 0.6 : 0.2;
+    });
+  }, [currentStepIndex]);
+
+  // Auto-play once when entering Step 2
+  useEffect(() => {
+    if (viewStep === 2) {
+      setCurrentStepIndex(0);
+      setIsPlaying(true);
+      
+      let stepCounter = 0;
+      playTimerRef.current = setInterval(() => {
+        stepCounter++;
+        if (stepCounter < executionSteps.length) {
+          setCurrentStepIndex(stepCounter);
+        } else {
+          setIsPlaying(false);
+          if (playTimerRef.current) clearInterval(playTimerRef.current);
+        }
+      }, 1800);
+    }
+
+    return () => {
+      if (playTimerRef.current) clearInterval(playTimerRef.current);
+    };
+  }, [viewStep]);
+
   const handleLangChange = (lang: 'python' | 'c' | 'java') => {
     setSelectedLang(lang);
     if (lang === 'python') {
@@ -205,12 +351,9 @@ export default function Home() {
     setTimeout(() => {
       setIsAnalyzing(false);
       setViewStep(2);
-      setCurrentStepIndex(0);
-      toast.success("Ready! Interactive pseudo-code visualizer loaded.");
+      toast.success("Generated 3D Ice Visualizer & Auto-playing once!");
     }, 1000);
   };
-
-  const currentStep = executionSteps[currentStepIndex] || executionSteps[0];
 
   return (
     <div className="min-h-screen bg-[#110e0b] text-[#f4ede2] flex flex-col font-sans selection:bg-[#e59b63]/30 selection:text-[#f4ede2]">
@@ -227,7 +370,7 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Interactive Pseudo-Code & 3D Visualizer
+            Three.js Ice 3D & Interactive Explainer
           </span>
         </div>
 
@@ -235,7 +378,10 @@ export default function Home() {
           {viewStep === 2 && (
             <Button 
               variant="outline" 
-              onClick={() => setViewStep(1)}
+              onClick={() => {
+                if (playTimerRef.current) clearInterval(playTimerRef.current);
+                setViewStep(1);
+              }}
               className="text-xs h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
             >
               ← Edit Code
@@ -261,11 +407,11 @@ export default function Home() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 p-6 flex flex-col max-w-7xl mx-auto w-full justify-center">
+      <main className="flex-1 p-6 flex flex-col max-w-4xl mx-auto w-full justify-center">
         
         {/* STEP 1: Code Input Form */}
         {viewStep === 1 && (
-          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto w-full animate-in fade-in duration-300">
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl animate-in fade-in duration-300">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#261f18]">
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center">
@@ -273,7 +419,7 @@ export default function Home() {
                   Step 1: Enter Your Problem & {selectedLang.toUpperCase()} Code
                 </h2>
                 <p className="text-xs text-[#9c8b7c] mt-1">
-                  Provide your code below. We will transform it into an interactive pseudo-code breakdown and 3D visual step-by-step viewer.
+                  Provide your code below. We will render a Three.js ice crystal 3D visualizer that auto-plays once upon generation.
                 </p>
               </div>
               <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
@@ -317,11 +463,11 @@ export default function Home() {
                 {isAnalyzing ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Pseudo-Code Visualizer...
+                    Rendering Three.js Ice Crystals...
                   </>
                 ) : (
                   <>
-                    Generate Interactive Pseudo-Code & 3D <ArrowRight className="w-4 h-4 ml-2" />
+                    Generate Three.js 3D Visual & Play Once <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
               </Button>
@@ -329,7 +475,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* STEP 2: Side-by-Side Parallel 3D Visualizer & Clickable Pseudo-Code Explainer */}
+        {/* STEP 2: Three.js 3D Ice Visualizer (Top) -> Explanation Right After (Bottom) */}
         {viewStep === 2 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             
@@ -343,172 +489,114 @@ export default function Home() {
               </div>
               <div className="flex items-center space-x-3">
                 <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-emerald-400">
-                  Active Step {currentStepIndex + 1} of {executionSteps.length}
+                  {isPlaying ? "▶ Auto-Playing Generation" : `Step ${currentStepIndex + 1} of ${executionSteps.length}`}
                 </Badge>
               </div>
             </div>
 
-            {/* SIDE-BY-SIDE PARALLEL GRID: Left (3D Visualizer) | Right (Interactive Clickable Pseudo-Code Explainer) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              
-              {/* LEFT 6 COLS: 3D Visual Representation */}
-              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <Box className="w-4 h-4 text-[#e59b63]" />
-                      <span className="text-xs font-semibold tracking-wider uppercase text-white">
-                        3D Spatial Visual Representation
+            {/* THREE.JS ICE 3D CRYSTAL CANVAS */}
+            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Box className="w-4 h-4 text-[#e59b63]" />
+                  <span className="text-xs font-semibold tracking-wider uppercase text-white">
+                    Three.js Ice Crystal 3D Spatial Visualizer
+                  </span>
+                </div>
+                <span className="text-[11px] text-[#9c8b7c] font-mono">
+                  Pointers: <span className="text-[#e59b63]">i = {currentStep.pointers.i}, j = {currentStep.pointers.j}</span>
+                </span>
+              </div>
+
+              {/* Three.js mount container */}
+              <div 
+                ref={mountRef} 
+                className="w-full h-[280px] bg-[#0d0a08] border border-[#261e17] rounded-xl relative overflow-hidden shadow-inner flex items-center justify-center"
+              />
+
+              {/* Array values labels under canvas */}
+              <div className="mt-3 flex items-center justify-center gap-4">
+                {currentStep.arrayState.map((val, idx) => {
+                  const isHighlighted = currentStep.highlights.includes(idx);
+                  const isI = currentStep.pointers.i === idx;
+                  const isJ = currentStep.pointers.j === idx;
+
+                  return (
+                    <div key={idx} className="flex flex-col items-center">
+                      <div className="h-6 flex items-end">
+                        {isI && <span className="text-[10px] font-bold text-[#e59b63] font-mono">i</span>}
+                        {isJ && <span className="text-[10px] font-bold text-cyan-400 font-mono">j</span>}
+                      </div>
+                      <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${
+                        isHighlighted ? 'bg-[#e59b63] text-[#110e0b]' : 'bg-[#1c1612] text-[#9c8b7c]'
+                      }`}>
+                        {val}
                       </span>
+                      <span className="text-[10px] text-[#8a796c] mt-1">[{idx}]</span>
                     </div>
-                    <div className="text-[11px] text-[#9c8b7c] font-mono">
-                      Step <span className="text-[#e59b63]">{currentStep.step}</span>
-                    </div>
-                  </div>
-
-                  {/* 3D Array Blocks Arena */}
-                  <div className="min-h-[260px] bg-[#0d0a08] border border-[#261e17] rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1812_1px,transparent_1px),linear-gradient(to_bottom,#1f1812_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-25 pointer-events-none" />
-
-                    <div className="transform rotate-x-6 rotate-y-3">
-                      <div className="flex items-center justify-center gap-3 sm:gap-4 my-4">
-                        {currentStep.arrayState.map((val, idx) => {
-                          const isHighlighted = currentStep.highlights.includes(idx);
-                          const isLeftPointer = currentStep.pointers.i === idx;
-                          const isRightPointer = currentStep.pointers.j === idx;
-
-                          return (
-                            <div key={idx} className="flex flex-col items-center relative">
-                              <div className="h-8 flex items-end pb-1">
-                                {isLeftPointer && (
-                                  <div className="flex flex-col items-center">
-                                    <span className="text-[11px] font-bold text-[#e59b63] bg-[#261d15] px-1.5 py-0.5 rounded border border-[#e59b63]/40 shadow">
-                                      i={idx}
-                                    </span>
-                                    <div className="w-0.5 h-3 bg-[#e59b63]" />
-                                  </div>
-                                )}
-                                {isRightPointer && (
-                                  <div className="flex flex-col items-center">
-                                    <span className="text-[11px] font-bold text-cyan-400 bg-[#15242b] px-1.5 py-0.5 rounded border border-cyan-400/40 shadow">
-                                      j={idx}
-                                    </span>
-                                    <div className="w-0.5 h-3 bg-cyan-400" />
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className={`w-14 h-16 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-lg transition-all duration-300 shadow-2xl relative ${
-                                isHighlighted 
-                                  ? 'bg-gradient-to-br from-[#e59b63] to-[#b85d23] text-[#110e0b] scale-110 shadow-[0_0_20px_rgba(229,155,99,0.6)] border-2 border-white' 
-                                  : 'bg-[#1b1511] text-[#f4ede2] border border-[#3d3127]'
-                              }`}>
-                                {val}
-                                <div className="absolute -bottom-2 -right-2 w-full h-2 bg-[#120e0b] rounded-b-xl border-r border-b border-[#2d241c] pointer-events-none" />
-                              </div>
-
-                              <span className="mt-3 text-xs font-mono text-[#8a796c]">
-                                [{idx}]
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between w-full px-4 bg-[#14100c] border border-[#2d241c] py-2 rounded-lg text-xs">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-[#9c8b7c]">Target:</span>
-                        <span className="font-mono font-bold text-[#e59b63]">19</span>
-                      </div>
-                      {currentStep.matched && (
-                        <div className="flex items-center space-x-1 text-emerald-400 font-semibold">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Target Found!</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* State Variables */}
-                <div className="grid grid-cols-3 gap-2 mt-4">
-                  {Object.entries(currentStep.stateVars).map(([key, val]) => (
-                    <div key={key} className="bg-[#120e0a] border border-[#261f18] p-2.5 rounded-xl">
-                      <div className="text-[10px] text-[#8a796c] uppercase font-mono">{key}</div>
-                      <div className="text-xs font-mono font-bold text-white mt-0.5 truncate">{String(val)}</div>
-                    </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-
-              {/* RIGHT 6 COLS: Fully Interactive Clickable Pseudo-Code Explainer */}
-              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
-                      <Terminal className="w-4 h-4 mr-1.5" />
-                      Interactive Pseudo-Code & Step Breakdown (Click any step)
-                    </span>
-                    <Badge variant="outline" className="text-[10px] bg-[#221c16] border-[#382d23] text-white">
-                      <MousePointerClick className="w-3 h-3 mr-1 text-[#e59b63]" />
-                      Clickable
-                    </Badge>
-                  </div>
-
-                  {/* Clickable Pseudo-Code List */}
-                  <div className="space-y-2 mb-4 max-h-[340px] overflow-y-auto pr-1">
-                    {executionSteps.map((st, idx) => {
-                      const isActive = currentStepIndex === idx;
-                      return (
-                        <div 
-                          key={st.step}
-                          onClick={() => setCurrentStepIndex(idx)}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1.5 ${
-                            isActive 
-                              ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
-                              : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
-                              Step {st.step}: {st.codeSnippet}
-                            </span>
-                            {isActive && (
-                              <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
-                                Active
-                              </span>
-                            )}
-                          </div>
-                          {isActive && (
-                            <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d] animate-in fade-in duration-200">
-                              💡 <span className="font-medium">{st.explanation}</span>
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="bg-[#120e0a] border border-[#261f18] p-3 rounded-xl text-xs text-[#9c8b7c] flex items-center justify-between">
-                  <span>Click any step above to instantly inspect its 3D state & simple explanation.</span>
-                  <span className="font-mono text-[#e59b63]">Step {currentStepIndex + 1} / {executionSteps.length}</span>
-                </div>
-              </div>
-
             </div>
 
-            {/* Bottom Scrubber Bar & Quick-Jump Pills */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-6 py-4 flex flex-col space-y-3 shadow-lg">
-              <div className="flex items-center justify-between text-xs text-[#9c8b7c]">
-                <span>Navigate using scrubber bar or click steps above:</span>
-                <span className="font-mono text-[#e59b63] font-bold">Step {currentStepIndex + 1} of {executionSteps.length}</span>
+            {/* EXPLANATION RIGHT AFTER (VERTICAL FLOW) */}
+            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-[#261f18] pb-3">
+                <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
+                  <Cpu className="w-4 h-4 mr-2" />
+                  Interactive Pseudo-Code & Explanation (Right After 3D View)
+                </span>
+                <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
+                  Step {currentStepIndex + 1} / {executionSteps.length}
+                </Badge>
               </div>
 
-              <div className="flex items-center space-x-4">
+              {/* Clickable Pseudo-code list */}
+              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                {executionSteps.map((st, idx) => {
+                  const isActive = currentStepIndex === idx;
+                  return (
+                    <div 
+                      key={st.step}
+                      onClick={() => {
+                        if (playTimerRef.current) clearInterval(playTimerRef.current);
+                        setIsPlaying(false);
+                        setCurrentStepIndex(idx);
+                      }}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1 ${
+                        isActive 
+                          ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
+                          : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
+                          Step {st.step}: {st.codeSnippet}
+                        </span>
+                        {isActive && (
+                          <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      {isActive && (
+                        <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d]">
+                          💡 <span className="font-medium">{st.explanation}</span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Navigation Scrubber */}
+              <div className="pt-3 border-t border-[#261f18] flex items-center space-x-4">
                 <button 
-                  onClick={() => setCurrentStepIndex(prev => Math.max(0, prev - 1))}
+                  onClick={() => {
+                    if (playTimerRef.current) clearInterval(playTimerRef.current);
+                    setIsPlaying(false);
+                    setCurrentStepIndex(prev => Math.max(0, prev - 1));
+                  }}
                   disabled={currentStepIndex === 0}
                   className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white disabled:opacity-40"
                 >
@@ -521,13 +609,21 @@ export default function Home() {
                     min={0} 
                     max={executionSteps.length - 1} 
                     value={currentStepIndex}
-                    onChange={(e) => setCurrentStepIndex(Number(e.target.value))}
+                    onChange={(e) => {
+                      if (playTimerRef.current) clearInterval(playTimerRef.current);
+                      setIsPlaying(false);
+                      setCurrentStepIndex(Number(e.target.value));
+                    }}
                     className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
                   />
                 </div>
 
                 <button 
-                  onClick={() => setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1))}
+                  onClick={() => {
+                    if (playTimerRef.current) clearInterval(playTimerRef.current);
+                    setIsPlaying(false);
+                    setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1));
+                  }}
                   disabled={currentStepIndex === executionSteps.length - 1}
                   className="px-3 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow disabled:opacity-40"
                 >
