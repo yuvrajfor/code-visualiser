@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Code2, Box, Cpu, Flame, CheckCircle2, 
-  ArrowRight, RefreshCw, Terminal, Play, Pause, RotateCcw, MousePointerClick
+  ArrowRight, RefreshCw, Terminal, MousePointerClick
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,16 +155,16 @@ export default function Home() {
     if (viewStep !== 2 || !mountRef.current) return;
 
     const container = mountRef.current;
-    container.innerHTML = ""; // clear previous canvas if any
+    container.innerHTML = "";
 
     const width = container.clientWidth;
-    const height = 280;
+    const height = 320;
 
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 3, 9);
+    camera.position.set(0, 3.5, 9.5);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -172,19 +172,17 @@ export default function Home() {
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    // Lighting for ice / glass crystal effect
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const pointLight1 = new THREE.PointLight(0x38bdf8, 2, 50); // ice blue light
+    const pointLight1 = new THREE.PointLight(0x38bdf8, 2.5, 50);
     pointLight1.position.set(5, 5, 5);
     scene.add(pointLight1);
 
-    const pointLight2 = new THREE.PointLight(0xe59b63, 2, 50); // amber highlight light
+    const pointLight2 = new THREE.PointLight(0xe59b63, 2.5, 50);
     pointLight2.position.set(-5, -2, 3);
     scene.add(pointLight2);
 
-    // Create 3D Ice Cubes for Array Elements
     const cubes: THREE.Mesh[] = [];
     cubesRef.current = cubes;
 
@@ -194,14 +192,12 @@ export default function Home() {
 
     arrayData.forEach((val, idx) => {
       const geometry = new THREE.BoxGeometry(0.85, 0.85, 0.85);
-      
-      // Ice / glass crystal material
       const isHighlighted = currentStep.highlights.includes(idx);
       const material = new THREE.MeshPhysicalMaterial({
         color: isHighlighted ? 0xe59b63 : 0x1e293b,
         metalness: 0.1,
         roughness: 0.1,
-        transmission: 0.85, // glass transmission
+        transmission: 0.85,
         thickness: 1.2,
         transparent: true,
         opacity: 0.9,
@@ -351,7 +347,7 @@ export default function Home() {
     setTimeout(() => {
       setIsAnalyzing(false);
       setViewStep(2);
-      toast.success("Generated 3D Ice Visualizer & Auto-playing once!");
+      toast.success("Generated Three.js 3D Visualizer & Auto-playing once!");
     }, 1000);
   };
 
@@ -370,7 +366,7 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Three.js Ice 3D & Interactive Explainer
+            Side-by-Side Three.js Ice 3D & Explainer
           </span>
         </div>
 
@@ -407,11 +403,11 @@ export default function Home() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 p-6 flex flex-col max-w-4xl mx-auto w-full justify-center">
+      <main className="flex-1 p-6 flex flex-col max-w-7xl mx-auto w-full justify-center">
         
         {/* STEP 1: Code Input Form */}
         {viewStep === 1 && (
-          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl animate-in fade-in duration-300">
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#261f18]">
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center">
@@ -419,7 +415,7 @@ export default function Home() {
                   Step 1: Enter Your Problem & {selectedLang.toUpperCase()} Code
                 </h2>
                 <p className="text-xs text-[#9c8b7c] mt-1">
-                  Provide your code below. We will render a Three.js ice crystal 3D visualizer that auto-plays once upon generation.
+                  Provide your code below. We will render a Three.js ice crystal 3D visualizer side-by-side with explanations.
                 </p>
               </div>
               <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
@@ -467,7 +463,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    Generate Three.js 3D Visual & Play Once <ArrowRight className="w-4 h-4 ml-2" />
+                    Generate Side-by-Side 3D & Explainer <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
               </Button>
@@ -475,7 +471,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* STEP 2: Three.js 3D Ice Visualizer (Top) -> Explanation Right After (Bottom) */}
+        {/* STEP 2: SIDE-BY-SIDE PARALLEL LAYOUT (Left: Three.js 3D Visualizer | Right: Interactive Explainer) */}
         {viewStep === 2 && (
           <div className="space-y-5 animate-in fade-in duration-300">
             
@@ -494,142 +490,157 @@ export default function Home() {
               </div>
             </div>
 
-            {/* THREE.JS ICE 3D CRYSTAL CANVAS */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl relative overflow-hidden">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <Box className="w-4 h-4 text-[#e59b63]" />
-                  <span className="text-xs font-semibold tracking-wider uppercase text-white">
-                    Three.js Ice Crystal 3D Spatial Visualizer
-                  </span>
-                </div>
-                <span className="text-[11px] text-[#9c8b7c] font-mono">
-                  Pointers: <span className="text-[#e59b63]">i = {currentStep.pointers.i}, j = {currentStep.pointers.j}</span>
-                </span>
-              </div>
-
-              {/* Three.js mount container */}
-              <div 
-                ref={mountRef} 
-                className="w-full h-[280px] bg-[#0d0a08] border border-[#261e17] rounded-xl relative overflow-hidden shadow-inner flex items-center justify-center"
-              />
-
-              {/* Array values labels under canvas */}
-              <div className="mt-3 flex items-center justify-center gap-4">
-                {currentStep.arrayState.map((val, idx) => {
-                  const isHighlighted = currentStep.highlights.includes(idx);
-                  const isI = currentStep.pointers.i === idx;
-                  const isJ = currentStep.pointers.j === idx;
-
-                  return (
-                    <div key={idx} className="flex flex-col items-center">
-                      <div className="h-6 flex items-end">
-                        {isI && <span className="text-[10px] font-bold text-[#e59b63] font-mono">i</span>}
-                        {isJ && <span className="text-[10px] font-bold text-cyan-400 font-mono">j</span>}
-                      </div>
-                      <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${
-                        isHighlighted ? 'bg-[#e59b63] text-[#110e0b]' : 'bg-[#1c1612] text-[#9c8b7c]'
-                      }`}>
-                        {val}
+            {/* TWO-COLUMN GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              
+              {/* LEFT 6 COLS: Three.js Ice Crystal 3D Visualizer */}
+              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <Box className="w-4 h-4 text-[#e59b63]" />
+                      <span className="text-xs font-semibold tracking-wider uppercase text-white">
+                        Three.js Ice Crystal 3D Visualizer
                       </span>
-                      <span className="text-[10px] text-[#8a796c] mt-1">[{idx}]</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    <span className="text-[11px] text-[#9c8b7c] font-mono">
+                      i = <span className="text-[#e59b63]">{currentStep.pointers.i}</span>, j = <span className="text-cyan-400">{currentStep.pointers.j}</span>
+                    </span>
+                  </div>
 
-            {/* EXPLANATION RIGHT AFTER (VERTICAL FLOW) */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-[#261f18] pb-3">
-                <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
-                  <Cpu className="w-4 h-4 mr-2" />
-                  Interactive Pseudo-Code & Explanation (Right After 3D View)
-                </span>
-                <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-white">
-                  Step {currentStepIndex + 1} / {executionSteps.length}
-                </Badge>
-              </div>
+                  {/* Three.js canvas container */}
+                  <div 
+                    ref={mountRef} 
+                    className="w-full h-[320px] bg-[#0d0a08] border border-[#261e17] rounded-xl relative overflow-hidden shadow-inner flex items-center justify-center"
+                  />
 
-              {/* Clickable Pseudo-code list */}
-              <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                {executionSteps.map((st, idx) => {
-                  const isActive = currentStepIndex === idx;
-                  return (
-                    <div 
-                      key={st.step}
-                      onClick={() => {
-                        if (playTimerRef.current) clearInterval(playTimerRef.current);
-                        setIsPlaying(false);
-                        setCurrentStepIndex(idx);
-                      }}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1 ${
-                        isActive 
-                          ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
-                          : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
-                          Step {st.step}: {st.codeSnippet}
-                        </span>
-                        {isActive && (
-                          <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
-                            Active
+                  {/* Array values labels under canvas */}
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    {currentStep.arrayState.map((val, idx) => {
+                      const isHighlighted = currentStep.highlights.includes(idx);
+                      const isI = currentStep.pointers.i === idx;
+                      const isJ = currentStep.pointers.j === idx;
+
+                      return (
+                        <div key={idx} className="flex flex-col items-center">
+                          <div className="h-6 flex items-end">
+                            {isI && <span className="text-[10px] font-bold text-[#e59b63] font-mono bg-[#261d15] px-1 rounded">i</span>}
+                            {isJ && <span className="text-[10px] font-bold text-cyan-400 font-mono bg-[#15242b] px-1 rounded">j</span>}
+                          </div>
+                          <span className={`text-xs font-mono font-bold px-2.5 py-1.5 rounded-lg shadow ${
+                            isHighlighted ? 'bg-gradient-to-r from-[#e59b63] to-[#c76e33] text-[#110e0b]' : 'bg-[#1c1612] text-[#9c8b7c]'
+                          }`}>
+                            {val}
                           </span>
-                        )}
-                      </div>
-                      {isActive && (
-                        <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d]">
-                          💡 <span className="font-medium">{st.explanation}</span>
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
+                          <span className="text-[10px] text-[#8a796c] mt-1">[{idx}]</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4 bg-[#120e0a] border border-[#261f18] p-3 rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-[#9c8b7c]">Target Value:</span>
+                  <span className="font-mono font-bold text-[#e59b63]">19</span>
+                </div>
               </div>
 
-              {/* Bottom Navigation Scrubber */}
-              <div className="pt-3 border-t border-[#261f18] flex items-center space-x-4">
-                <button 
-                  onClick={() => {
-                    if (playTimerRef.current) clearInterval(playTimerRef.current);
-                    setIsPlaying(false);
-                    setCurrentStepIndex(prev => Math.max(0, prev - 1));
-                  }}
-                  disabled={currentStepIndex === 0}
-                  className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white disabled:opacity-40"
-                >
-                  ← Prev Step
-                </button>
+              {/* RIGHT 6 COLS: Interactive Parallel Explanation */}
+              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
+                      <Terminal className="w-4 h-4 mr-1.5" />
+                      Interactive Explanation & Pseudo-Code
+                    </span>
+                    <Badge variant="outline" className="text-[10px] bg-[#221c16] border-[#382d23] text-white">
+                      <MousePointerClick className="w-3 h-3 mr-1 text-[#e59b63]" />
+                      Clickable
+                    </Badge>
+                  </div>
 
-                <div className="flex-1">
-                  <input 
-                    type="range" 
-                    min={0} 
-                    max={executionSteps.length - 1} 
-                    value={currentStepIndex}
-                    onChange={(e) => {
+                  {/* Clickable steps */}
+                  <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                    {executionSteps.map((st, idx) => {
+                      const isActive = currentStepIndex === idx;
+                      return (
+                        <div 
+                          key={st.step}
+                          onClick={() => {
+                            if (playTimerRef.current) clearInterval(playTimerRef.current);
+                            setIsPlaying(false);
+                            setCurrentStepIndex(idx);
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1.5 ${
+                            isActive 
+                              ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
+                              : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
+                              Step {st.step}: {st.codeSnippet}
+                            </span>
+                            {isActive && (
+                              <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          {isActive && (
+                            <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d]">
+                              💡 <span className="font-medium">{st.explanation}</span>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Scrubber bar */}
+                <div className="pt-3 border-t border-[#261f18] flex items-center space-x-4">
+                  <button 
+                    onClick={() => {
                       if (playTimerRef.current) clearInterval(playTimerRef.current);
                       setIsPlaying(false);
-                      setCurrentStepIndex(Number(e.target.value));
+                      setCurrentStepIndex(prev => Math.max(0, prev - 1));
                     }}
-                    className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
-                  />
-                </div>
+                    disabled={currentStepIndex === 0}
+                    className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white disabled:opacity-40"
+                  >
+                    ← Prev
+                  </button>
 
-                <button 
-                  onClick={() => {
-                    if (playTimerRef.current) clearInterval(playTimerRef.current);
-                    setIsPlaying(false);
-                    setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1));
-                  }}
-                  disabled={currentStepIndex === executionSteps.length - 1}
-                  className="px-3 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow disabled:opacity-40"
-                >
-                  Next Step →
-                </button>
+                  <div className="flex-1">
+                    <input 
+                      type="range" 
+                      min={0} 
+                      max={executionSteps.length - 1} 
+                      value={currentStepIndex}
+                      onChange={(e) => {
+                        if (playTimerRef.current) clearInterval(playTimerRef.current);
+                        setIsPlaying(false);
+                        setCurrentStepIndex(Number(e.target.value));
+                      }}
+                      className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      if (playTimerRef.current) clearInterval(playTimerRef.current);
+                      setIsPlaying(false);
+                      setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1));
+                    }}
+                    disabled={currentStepIndex === executionSteps.length - 1}
+                    className="px-3 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
+
             </div>
 
           </div>
