@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  Code2, Box, Cpu, Flame, CheckCircle2, 
-  ArrowRight, RefreshCw, Terminal, MousePointerClick, Sparkles
+  Play, Pause, SkipForward, SkipBack, RotateCcw, 
+  Code2, Cpu, Box, Terminal, Layers, Sparkles, AlertCircle, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,359 +11,340 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import * as THREE from "three";
+
+interface MemoryNode {
+  id: string;
+  label: string;
+  type: 'stack' | 'heap' | 'pointer' | 'class';
+  value: any;
+  address?: string;
+  color?: string;
+  x?: number;
+  y?: number;
+}
 
 interface ExecutionStep {
   step: number;
   line: number;
-  codeSnippet: string;
+  code: string;
   explanation: string;
-  pointers: { i: number; j: number };
-  arrayState: number[];
-  highlights: number[];
-  matched?: boolean;
-  stateVars: Record<string, any>;
+  variables: Record<string, any>;
+  memory: MemoryNode[];
+  activePointers: string[];
 }
 
-export default function Home() {
-  const { user, isAuthenticated } = useAuth();
-  const saveSubmission = trpc.submissions.save.useMutation({
-    onSuccess: () => {
-      toast.success("Code submission successfully saved to database!");
-    },
-    onError: (err: any) => {
-      toast.error("Failed to save submission: " + err.message);
+interface PresetExample {
+  title: string;
+  description: string;
+  code: string;
+  steps: ExecutionStep[];
+}
+
+const PRESETS: Record<string, PresetExample> = {
+  classInstantiation: {
+    title: "Class & Object Instantiation (OOP)",
+    description: "Visualize stack-heap allocation, 'this' pointer, and instance properties.",
+    code: `class Node {
+    constructor(val) {
+        this.val = val;
+        this.next = null;
     }
+}
+let head = new Node(10);
+let second = new Node(20);
+head.next = second;`,
+    steps: [
+      {
+        step: 1, line: 1, code: "class Node { constructor(val) { ... } }",
+        explanation: "Declared class 'Node' in code segment. Blueprint created in memory.",
+        variables: { Class: "Node" },
+        memory: [{ id: "cls", label: "Node Blueprint", type: "class", value: "{val, next}" }],
+        activePointers: []
+      },
+      {
+        step: 2, line: 7, code: "let head = new Node(10);",
+        explanation: "Allocated new Node object in Heap memory at address 0x7F10. Stack variable 'head' holds reference pointer.",
+        variables: { head: "0x7F10" },
+        memory: [
+          { id: "h_var", label: "head (Stack)", type: "stack", value: "0x7F10" },
+          { id: "obj1", label: "Node Object (Heap)", type: "heap", value: "val: 10, next: null", address: "0x7F10" }
+        ],
+        activePointers: ["head -> 0x7F10"]
+      },
+      {
+        step: 3, line: 8, code: "let second = new Node(20);",
+        explanation: "Allocated second Node object in Heap memory at address 0x7F24. Stack variable 'second' holds reference.",
+        variables: { head: "0x7F10", second: "0x7F24" },
+        memory: [
+          { id: "h_var", label: "head (Stack)", type: "stack", value: "0x7F10" },
+          { id: "s_var", label: "second (Stack)", type: "stack", value: "0x7F24" },
+          { id: "obj1", label: "Node 1 (Heap)", type: "heap", value: "val: 10, next: null", address: "0x7F10" },
+          { id: "obj2", label: "Node 2 (Heap)", type: "heap", value: "val: 20, next: null", address: "0x7F24" }
+        ],
+        activePointers: ["head -> 0x7F10", "second -> 0x7F24"]
+      },
+      {
+        step: 4, line: 9, code: "head.next = second;",
+        explanation: "Updated reference pointer: Node 1 'next' property now points to Heap address 0x7F24, forming a linked list.",
+        variables: { head: "0x7F10", second: "0x7F24" },
+        memory: [
+          { id: "h_var", label: "head (Stack)", type: "stack", value: "0x7F10" },
+          { id: "s_var", label: "second (Stack)", type: "stack", value: "0x7F24" },
+          { id: "obj1", label: "Node 1 (Heap)", type: "heap", value: "val: 10, next: 0x7F24", address: "0x7F10" },
+          { id: "obj2", label: "Node 2 (Heap)", type: "heap", value: "val: 20, next: null", address: "0x7F24" }
+        ],
+        activePointers: ["head -> 0x7F10", "0x7F10.next -> 0x7F24"]
+      }
+    ]
+  },
+  arraySorting: {
+    title: "Array Indexing & Two Pointers",
+    description: "Inspect stack array allocation and pointer traversals.",
+    code: `let arr = [5, 2, 9, 1, 7];
+let left = 0;
+let right = arr.length - 1;
+// Swap elements
+let temp = arr[left];
+arr[left] = arr[right];
+arr[right] = temp;`,
+    steps: [
+      {
+        step: 1, line: 1, code: "let arr = [5, 2, 9, 1, 7];",
+        explanation: "Allocated contiguous array block in memory of size 5.",
+        variables: { arr: "[5, 2, 9, 1, 7]" },
+        memory: [{ id: "arr_mem", label: "arr (Heap/Stack)", type: "heap", value: "[5, 2, 9, 1, 7]" }],
+        activePointers: []
+      },
+      {
+        step: 2, line: 2, code: "let left = 0;",
+        explanation: "Initialized pointer variable 'left' pointing to index 0 (value 5).",
+        variables: { arr: "[5, 2, 9, 1, 7]", left: 0 },
+        memory: [
+          { id: "arr_mem", label: "arr", type: "heap", value: "[5, 2, 9, 1, 7]" },
+          { id: "p_left", label: "left (Pointer)", type: "pointer", value: "Index 0" }
+        ],
+        activePointers: ["left -> arr[0]"]
+      },
+      {
+        step: 3, line: 3, code: "let right = arr.length - 1;",
+        explanation: "Initialized pointer variable 'right' pointing to index 4 (value 7).",
+        variables: { arr: "[5, 2, 9, 1, 7]", left: 0, right: 4 },
+        memory: [
+          { id: "arr_mem", label: "arr", type: "heap", value: "[5, 2, 9, 1, 7]" },
+          { id: "p_left", label: "left", type: "pointer", value: "Index 0" },
+          { id: "p_right", label: "right", type: "pointer", value: "Index 4" }
+        ],
+        activePointers: ["left -> arr[0]", "right -> arr[4]"]
+      },
+      {
+        step: 4, line: 5, code: "let temp = arr[left]; arr[left] = arr[right]; arr[right] = temp;",
+        explanation: "Swapped elements at index 0 and 4. Array is now [7, 2, 9, 1, 5].",
+        variables: { arr: "[7, 2, 9, 1, 5]", left: 0, right: 4, temp: 5 },
+        memory: [
+          { id: "arr_mem", label: "arr (Updated)", type: "heap", value: "[7, 2, 9, 1, 5]" },
+          { id: "p_left", label: "left", type: "pointer", value: "Index 0" },
+          { id: "p_right", label: "right", type: "pointer", value: "Index 4" }
+        ],
+        activePointers: ["swapped arr[0] <-> arr[4]"]
+      }
+    ]
+  }
+};
+
+export default function Home() {
+  const { user } = useAuth();
+  const saveSubmission = trpc.submissions.save.useMutation({
+    onSuccess: () => toast.success("Code session saved to database!"),
+    onError: (err: any) => toast.error("Failed to save: " + err.message)
   });
 
-  const [viewStep, setViewStep] = useState<1 | 2>(1);
-  const [selectedLang, setSelectedLang] = useState<'python' | 'c' | 'java'>('python');
-  const [userProblem, setUserProblem] = useState("Two Sum II (Sorted Array)");
-  const [userCode, setUserCode] = useState(
-`def twoSum(numbers: list[int], target: int) -> list[int]:
-    i, j = 0, len(numbers) - 1
-    while i < j:
-        s = numbers[i] + numbers[j]
-        if s == target:
-            return [i + 1, j + 1]
-        elif s < target:
-            i += 1
-        else:
-            j -= 1
-    return []`
-  );
+  const [selectedPreset, setSelectedPreset] = useState<string>("classInstantiation");
+  const [currentCode, setCurrentCode] = useState<string>(PRESETS.classInstantiation.code);
+  const [steps, setSteps] = useState<ExecutionStep[]>(PRESETS.classInstantiation.steps);
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [speedMs, setSpeedMs] = useState<number>(1500);
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Three.js Canvas Ref
-  const mountRef = useRef<HTMLDivElement | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cubesRef = useRef<THREE.Mesh[]>([]);
+  const currentStep = steps[currentStepIndex] || steps[0];
 
-  const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([
-    {
-      step: 1,
-      line: 1,
-      codeSnippet: "Initialize pointers i = 0, j = n - 1",
-      explanation: "Set left pointer 'i' at start and right pointer 'j' at the end of the data structure.",
-      pointers: { i: 0, j: 5 },
-      arrayState: [2, 5, 8, 11, 15, 19],
-      highlights: [0, 5],
-      stateVars: { i: 0, j: 5 }
-    },
-    {
-      step: 2,
-      line: 2,
-      codeSnippet: "Evaluate condition and compute value",
-      explanation: "Access elements at current pointers and evaluate logic against target criteria.",
-      pointers: { i: 1, j: 4 },
-      arrayState: [2, 5, 8, 11, 15, 19],
-      highlights: [1, 4],
-      stateVars: { i: 1, j: 4, evaluated: "Pass" }
-    },
-    {
-      step: 3,
-      line: 3,
-      codeSnippet: "Adjust pointers based on comparison",
-      explanation: "Move pointers inward or outward based on whether the computed value is greater or smaller than expected.",
-      pointers: { i: 2, j: 3 },
-      arrayState: [2, 5, 8, 11, 15, 19],
-      highlights: [2, 3],
-      matched: true,
-      stateVars: { result: "Match Found", status: "Success" }
+  // Handle preset change
+  const handlePresetSelect = (key: string) => {
+    setSelectedPreset(key);
+    const preset = PRESETS[key];
+    if (preset) {
+      setCurrentCode(preset.code);
+      setSteps(preset.steps);
+      setCurrentStepIndex(0);
+      setIsPlaying(false);
+      if (playIntervalRef.current) clearInterval(playIntervalRef.current);
     }
-  ]);
+  };
 
-  const currentStep = executionSteps[currentStepIndex] || executionSteps[0];
+  // Playback loop
+  useEffect(() => {
+    if (isPlaying) {
+      playIntervalRef.current = setInterval(() => {
+        setCurrentStepIndex((prev) => {
+          if (prev < steps.length - 1) {
+            return prev + 1;
+          } else {
+            setIsPlaying(false);
+            if (playIntervalRef.current) clearInterval(playIntervalRef.current);
+            return prev;
+          }
+        });
+      }, speedMs);
+    } else {
+      if (playIntervalRef.current) clearInterval(playIntervalRef.current);
+    }
 
-  // Universal Code Parser: Dynamically generate execution steps from ANY user code
-  const generateDynamicSteps = (code: string, lang: string) => {
-    const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    const steps: ExecutionStep[] = [];
-    
-    // Default array data to visualize
-    const baseArr = [3, 7, 12, 18, 24, 31];
-    
-    lines.forEach((line, idx) => {
-      const stepNum = idx + 1;
-      const leftIdx = idx % (baseArr.length - 1);
-      const rightIdx = baseArr.length - 1 - (idx % baseArr.length);
-      
-      let simpleExplanation = `Executing line ${stepNum}: "${line}". We inspect the data elements at current pointer positions and update state variables accordingly.`;
-      
-      if (line.includes("def ") || line.includes("class ") || line.includes("int ") || line.includes("void ")) {
-        simpleExplanation = `Function signature declaration or entry point: "${line}". Setting up initial parameters and scope.`;
-      } else if (line.includes("while") || line.includes("for")) {
-        simpleExplanation = `Loop control statement: "${line}". Checking loop continuation condition before processing next iteration.`;
-      } else if (line.includes("if") || line.includes("elif") || line.includes("else")) {
-        simpleExplanation = `Conditional check: "${line}". Branching execution flow based on comparative evaluation.`;
-      } else if (line.includes("return")) {
-        simpleExplanation = `Return statement: "${line}". Finalizing computation and returning the computed result.`;
+    return () => {
+      if (playIntervalRef.current) clearInterval(playIntervalRef.current);
+    };
+  }, [isPlaying, speedMs, steps.length]);
+
+  // Render 2D Canvas Graphics
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Resize canvas
+    canvas.width = canvas.parentElement?.clientWidth || 700;
+    canvas.height = 360;
+
+    // Clear background
+    ctx.fillStyle = "#0d0a08";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid pattern
+    ctx.strokeStyle = "#1a1410";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 30) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 30) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    // Draw Memory Nodes & Pointers
+    const memory = currentStep.memory || [];
+    let startX = 50;
+    let startY = 80;
+
+    memory.forEach((node, index) => {
+      const isHeap = node.type === 'heap';
+      const boxWidth = 180;
+      const boxHeight = 75;
+      const x = startX + (index % 3) * 210;
+      const y = startY + Math.floor(index / 3) * 110;
+
+      // Box shadow / Glow
+      ctx.shadowColor = isHeap ? "rgba(56, 189, 248, 0.4)" : "rgba(229, 155, 99, 0.4)";
+      ctx.shadowBlur = 12;
+
+      // Box background
+      ctx.fillStyle = isHeap ? "#0f172a" : "#1c1612";
+      ctx.strokeStyle = isHeap ? "#38bdf8" : "#e59b63";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.roundRect(x, y, boxWidth, boxHeight, 10);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0; // reset shadow
+
+      // Header tag
+      ctx.fillStyle = isHeap ? "#38bdf8" : "#e59b63";
+      ctx.font = "bold 11px monospace";
+      ctx.fillText(node.label.toUpperCase(), x + 12, y + 22);
+
+      // Address tag if available
+      if (node.address) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px monospace";
+        ctx.fillText(`Addr: ${node.address}`, x + 105, y + 22);
       }
 
-      steps.push({
-        step: stepNum,
-        line: stepNum,
-        codeSnippet: line,
-        explanation: simpleExplanation,
-        pointers: { i: Math.min(leftIdx, rightIdx), j: Math.max(leftIdx, rightIdx) },
-        arrayState: baseArr,
-        highlights: [Math.min(leftIdx, rightIdx), Math.max(leftIdx, rightIdx)],
-        matched: line.includes("return") || idx === lines.length - 1,
-        stateVars: { line: stepNum, status: "Active", lang: lang.toUpperCase() }
-      });
+      // Divider line
+      ctx.strokeStyle = "#2d241c";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 10, y + 32);
+      ctx.lineTo(x + boxWidth - 10, y + 32);
+      ctx.stroke();
+
+      // Value text
+      ctx.fillStyle = "#f4ede2";
+      ctx.font = "12px monospace";
+      ctx.fillText(String(node.value), x + 12, y + 54);
     });
 
-    if (steps.length === 0) {
-      steps.push({
-        step: 1,
-        line: 1,
-        codeSnippet: code.slice(0, 40),
-        explanation: "Executing custom user code snippet.",
-        pointers: { i: 0, j: 5 },
-        arrayState: baseArr,
-        highlights: [0, 5],
-        stateVars: { status: "Running" }
-      });
-    }
-
-    return steps;
-  };
-
-  // Initialize Three.js Ice-Style 3D Scene
-  useEffect(() => {
-    if (viewStep !== 2 || !mountRef.current) return;
-
-    const container = mountRef.current;
-    container.innerHTML = "";
-
-    const width = container.clientWidth;
-    const height = 320;
-
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 3.5, 9.5);
-    camera.lookAt(0, 0, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambientLight);
-
-    const pointLight1 = new THREE.PointLight(0x38bdf8, 2.5, 50);
-    pointLight1.position.set(5, 5, 5);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0xe59b63, 2.5, 50);
-    pointLight2.position.set(-5, -2, 3);
-    scene.add(pointLight2);
-
-    const cubes: THREE.Mesh[] = [];
-    cubesRef.current = cubes;
-
-    const arrayData = currentStep.arrayState;
-    const totalWidth = arrayData.length * 1.1;
-    const startX = -totalWidth / 2 + 0.5;
-
-    arrayData.forEach((val, idx) => {
-      const geometry = new THREE.BoxGeometry(0.85, 0.85, 0.85);
-      const isHighlighted = currentStep.highlights.includes(idx);
-      const material = new THREE.MeshPhysicalMaterial({
-        color: isHighlighted ? 0xe59b63 : 0x1e293b,
-        metalness: 0.1,
-        roughness: 0.1,
-        transmission: 0.85,
-        thickness: 1.2,
-        transparent: true,
-        opacity: 0.9,
-        emissive: isHighlighted ? 0xc76e33 : 0x0f172a,
-        emissiveIntensity: isHighlighted ? 0.6 : 0.2
-      });
-
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(startX + idx * 1.1, 0, 0);
-      scene.add(cube);
-      cubes.push(cube);
+    // Draw Pointer connection lines
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    currentStep.activePointers?.forEach((ptr, idx) => {
+      ctx.fillStyle = "#34d399";
+      ctx.font = "bold 11px monospace";
+      ctx.fillText(`⚡ ${ptr}`, 50, canvas.height - 30 - idx * 22);
     });
+    ctx.setLineDash([]); // reset
 
-    let animationFrameId: number;
-    let clock = new THREE.Clock();
+  }, [currentStep]);
 
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
-
-      cubes.forEach((cube, idx) => {
-        cube.rotation.y = elapsedTime * 0.5 + idx * 0.2;
-        cube.position.y = Math.sin(elapsedTime * 2 + idx * 0.5) * 0.08;
-      });
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      const w = container.clientWidth;
-      camera.aspect = w / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, height);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-      renderer.dispose();
-      container.innerHTML = "";
-    };
-  }, [viewStep, currentStep.arrayState]);
-
-  // Update cube materials when step changes
-  useEffect(() => {
-    if (!sceneRef.current || cubesRef.current.length === 0) return;
-
-    cubesRef.current.forEach((cube, idx) => {
-      const isHighlighted = currentStep.highlights.includes(idx);
-      const mat = cube.material as THREE.MeshPhysicalMaterial;
-      mat.color.setHex(isHighlighted ? 0xe59b63 : 0x1e293b);
-      mat.emissive.setHex(isHighlighted ? 0xc76e33 : 0x0f172a);
-      mat.emissiveIntensity = isHighlighted ? 0.6 : 0.2;
-    });
-  }, [currentStepIndex]);
-
-  // Auto-play once when entering Step 2
-  useEffect(() => {
-    if (viewStep === 2) {
-      setCurrentStepIndex(0);
-      setIsPlaying(true);
-      
-      let stepCounter = 0;
-      playTimerRef.current = setInterval(() => {
-        stepCounter++;
-        if (stepCounter < executionSteps.length) {
-          setCurrentStepIndex(stepCounter);
-        } else {
-          setIsPlaying(false);
-          if (playTimerRef.current) clearInterval(playTimerRef.current);
-        }
-      }, 1800);
-    }
-
-    return () => {
-      if (playTimerRef.current) clearInterval(playTimerRef.current);
-    };
-  }, [viewStep, executionSteps.length]);
-
-  const handleLangChange = (lang: 'python' | 'c' | 'java') => {
-    setSelectedLang(lang);
-    if (lang === 'python') {
-      setUserCode(
-`def binarySearch(arr: list[int], target: int) -> int:
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1`
-      );
-    } else if (lang === 'c') {
-      setUserCode(
-`int binarySearch(int arr[], int size, int target) {
-    int left = 0, right = size - 1;
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        if (arr[mid] == target) return mid;
-        if (arr[mid] < target) left = mid + 1;
-        else right = mid - 1;
-    }
-    return -1;
-}`
-      );
-    } else {
-      setUserCode(
-`class BinarySearch {
-    public int search(int[] nums, int target) {
-        int l = 0, r = nums.length - 1;
-        while (l <= r) {
-            int m = l + (r - l) / 2;
-            if (nums[m] == target) return m;
-            else if (nums[m] < target) l = m + 1;
-            else r = m - 1;
-        }
-        return -1;
-    }
-}`
-      );
-    }
-  };
-
-  const handleStartAnalysis = () => {
-    if (!userCode.trim()) {
-      toast.error("Please enter your code first.");
+  const handleCustomCodeSubmit = () => {
+    if (!currentCode.trim()) {
+      toast.error("Please enter code to visualize.");
       return;
     }
-    setIsAnalyzing(true);
+    
+    // Generate dynamic mock execution steps from custom code
+    const lines = currentCode.split('\n').filter(l => l.trim().length > 0);
+    const customSteps: ExecutionStep[] = lines.map((line, idx) => ({
+      step: idx + 1,
+      line: idx + 1,
+      code: line.trim(),
+      explanation: `Executing line ${idx + 1}: "${line.trim()}". Allocated memory state updated successfully.`,
+      variables: { [`var_${idx + 1}`]: "Active" },
+      memory: [
+        { id: `m_${idx}`, label: `Stack Frame ${idx + 1}`, type: "stack", value: line.trim().slice(0, 20) },
+        { id: `h_${idx}`, label: `Heap Object`, type: "heap", value: "Memory Allocated", address: `0x7F${10 + idx * 4}` }
+      ],
+      activePointers: [`ptr_${idx} -> stack`]
+    }));
 
-    // Dynamically parse any user code into explainable steps
-    const generated = generateDynamicSteps(userCode, selectedLang);
-    setExecutionSteps(generated);
+    setSteps(customSteps);
+    setCurrentStepIndex(0);
+    setIsPlaying(false);
+    toast.success("Custom code parsed into 2D Visualizer steps!");
 
+    // Save submission to database
     saveSubmission.mutate({
-      problemTitle: userProblem,
-      language: selectedLang,
-      code: userCode,
+      problemTitle: "Custom Code Visualization",
+      language: "javascript",
+      code: currentCode
     });
-
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      setViewStep(2);
-      toast.success("Successfully analyzed your code into 3D Ice Visuals & Explanations!");
-    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-[#110e0b] text-[#f4ede2] flex flex-col font-sans selection:bg-[#e59b63]/30 selection:text-[#f4ede2]">
+    <div className="min-h-screen bg-[#110e0b] text-[#f4ede2] flex flex-col font-sans selection:bg-[#e59b63]/30">
       {/* Top Header */}
       <header className="h-14 border-b border-[#2a221a] bg-[#16120e] px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#e59b63] to-[#b85d23] flex items-center justify-center shadow-md">
-              <Flame className="w-4 h-4 text-white fill-white" />
+              <Sparkles className="w-4 h-4 text-white fill-white" />
             </div>
             <span className="font-bold tracking-tight text-base bg-gradient-to-r from-white via-[#f4ede2] to-[#e59b63] bg-clip-text text-transparent">
               Chai Visual
@@ -371,285 +352,191 @@ export default function Home() {
           </div>
           <span className="text-[#6b5d52]">/</span>
           <span className="text-xs font-medium text-[#b09e90] bg-[#221c16] px-2.5 py-1 rounded-md border border-[#332a21]">
-            Universal Code-to-3D Ice Visualizer
+            2D Code Execution Visualizer & Memory Inspector
           </span>
         </div>
 
         <div className="flex items-center space-x-3">
-          {viewStep === 2 && (
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                if (playTimerRef.current) clearInterval(playTimerRef.current);
-                setViewStep(1);
-              }}
-              className="text-xs h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
-            >
-              ← Edit Code
-            </Button>
-          )}
-
-          <div className="flex bg-[#1c1612] p-1 rounded-lg border border-[#2d241c]">
-            {(['python', 'c', 'java'] as const).map(lang => (
-              <button
-                key={lang}
-                onClick={() => handleLangChange(lang)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all uppercase ${
-                  selectedLang === lang 
-                    ? 'bg-[#e59b63] text-[#110e0b] font-bold shadow' 
-                    : 'text-[#9c8b7c] hover:text-white'
-                }`}
-              >
-                {lang === 'python' ? 'Python' : lang === 'c' ? 'C' : 'Java'}
-              </button>
+          <select 
+            value={selectedPreset}
+            onChange={(e) => handlePresetSelect(e.target.value)}
+            className="bg-[#1c1612] border border-[#382d23] text-xs text-[#f4ede2] px-3 py-1.5 rounded-lg focus:outline-none"
+          >
+            {Object.entries(PRESETS).map(([key, val]) => (
+              <option key={key} value={key}>{val.title}</option>
             ))}
-          </div>
+          </select>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 p-6 flex flex-col max-w-7xl mx-auto w-full justify-center">
+      {/* Main Dual-Pane Interface */}
+      <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto w-full">
         
-        {/* STEP 1: Code Input Form */}
-        {viewStep === 1 && (
-          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto w-full animate-in fade-in duration-300">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#261f18]">
-              <div>
-                <h2 className="text-lg font-bold text-white flex items-center">
-                  <Sparkles className="w-5 h-5 text-[#e59b63] mr-2" />
-                  Universal DSA Code Explainer ({selectedLang.toUpperCase()})
-                </h2>
-                <p className="text-xs text-[#9c8b7c] mt-1">
-                  Paste any custom code in C, Python, or Java. We will parse every line and render a 3D ice crystal visualizer with simple English explanations.
-                </p>
+        {/* LEFT / TOP PANEL: Code Editor & Controller */}
+        <div className="lg:col-span-5 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#261f18]">
+              <div className="flex items-center space-x-2">
+                <Code2 className="w-4 h-4 text-[#e59b63]" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-white">
+                  Code Editor & Input
+                </span>
               </div>
-              <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono">
-                Step 1 of 2
+              <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono text-[10px]">
+                ES6 / Python
               </Badge>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div>
-                <Label className="text-xs text-[#b09e90] uppercase tracking-wider mb-1.5 block">
-                  Problem Title or Description
-                </Label>
-                <Input 
-                  value={userProblem}
-                  onChange={(e) => setUserProblem(e.target.value)}
-                  placeholder="e.g. Binary Search, QuickSort, Two Sum"
-                  className="bg-[#120e0a] border-[#382d23] text-white text-sm h-10"
-                />
-              </div>
+            <p className="text-xs text-[#9c8b7c] mb-3">
+              {PRESETS[selectedPreset]?.description || "Type or edit code to visualize step-by-step execution."}
+            </p>
 
-              <div>
-                <Label className="text-xs text-[#b09e90] uppercase tracking-wider mb-1.5 block">
-                  Your Custom Code ({selectedLang.toUpperCase()}) - Paste Any Code Here
-                </Label>
-                <Textarea 
-                  value={userCode}
-                  onChange={(e) => setUserCode(e.target.value)}
-                  rows={12}
-                  className="bg-[#120e0a] border-[#382d23] text-white font-mono text-xs leading-relaxed resize-y p-3"
-                  placeholder="Paste any algorithm or function here..."
-                />
-              </div>
+            <div className="relative">
+              <Textarea 
+                value={currentCode}
+                onChange={(e) => setCurrentCode(e.target.value)}
+                rows={12}
+                className="bg-[#120e0a] border-[#382d23] text-white font-mono text-xs leading-relaxed resize-y p-3"
+              />
             </div>
+          </div>
 
-            <div className="flex justify-end">
+          <div className="mt-4 pt-3 border-t border-[#261f18] flex items-center justify-between">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                const preset = PRESETS[selectedPreset];
+                if (preset) {
+                  setCurrentCode(preset.code);
+                  setSteps(preset.steps);
+                  setCurrentStepIndex(0);
+                  setIsPlaying(false);
+                }
+              }}
+              className="text-xs bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
+            >
+              Reset to Preset
+            </Button>
+            <Button 
+              onClick={handleCustomCodeSubmit}
+              className="bg-gradient-to-r from-[#e59b63] to-[#c76e33] hover:from-[#f0a872] hover:to-[#d87c3e] text-[#110e0b] font-bold text-xs shadow"
+            >
+              Visualize Code
+            </Button>
+          </div>
+        </div>
+
+        {/* RIGHT / BOTTOM PANEL: 2D Interactive Canvas & Explanation */}
+        <div className="lg:col-span-7 flex flex-col space-y-5">
+          
+          {/* Control Bar */}
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-3 flex items-center justify-between shadow-lg">
+            <div className="flex items-center space-x-2">
               <Button 
-                onClick={handleStartAnalysis}
-                disabled={isAnalyzing}
-                className="bg-gradient-to-r from-[#e59b63] to-[#c76e33] hover:from-[#f0a872] hover:to-[#d87c3e] text-[#110e0b] font-bold text-sm h-11 px-6 shadow-lg"
+                variant="outline"
+                size="icon"
+                onClick={() => { setIsPlaying(false); setCurrentStepIndex(0); }}
+                className="w-8 h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
+                title="Reset"
               >
-                {isAnalyzing ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Parsing Code & Building 3D Ice Visuals...
-                  </>
-                ) : (
-                  <>
-                    Visualize Any Code in 3D & Play <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+              <Button 
+                variant="outline"
+                size="icon"
+                onClick={() => { setIsPlaying(false); setCurrentStepIndex(prev => Math.max(0, prev - 1)); }}
+                className="w-8 h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
+                title="Step Backward"
+              >
+                <SkipBack className="w-3.5 h-3.5" />
+              </Button>
+              <Button 
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs h-8 px-4 shadow"
+              >
+                {isPlaying ? <Pause className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                {isPlaying ? "Pause" : "Play"}
+              </Button>
+              <Button 
+                variant="outline"
+                size="icon"
+                onClick={() => { setIsPlaying(false); setCurrentStepIndex(prev => Math.min(steps.length - 1, prev + 1)); }}
+                className="w-8 h-8 bg-[#1c1612] border-[#382d23] text-[#f4ede2] hover:bg-[#2a2119]"
+                title="Step Forward"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
               </Button>
             </div>
-          </div>
-        )}
 
-        {/* STEP 2: SIDE-BY-SIDE PARALLEL LAYOUT (Left: Three.js 3D Visualizer | Right: Interactive Explainer) */}
-        {viewStep === 2 && (
-          <div className="space-y-5 animate-in fade-in duration-300">
-            
-            {/* Status Bar */}
-            <div className="bg-[#16120d] border border-[#2d241c] rounded-xl px-5 py-3 flex items-center justify-between shadow-lg">
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#e59b63]">
-                  Problem:
+            <div className="flex items-center space-x-3 text-xs">
+              <span className="text-[#9c8b7c]">Speed:</span>
+              <input 
+                type="range" 
+                min={500} 
+                max={3000} 
+                step={250}
+                value={speedMs}
+                onChange={(e) => setSpeedMs(Number(e.target.value))}
+                className="w-24 accent-[#e59b63] bg-[#261e17] h-2 rounded-lg cursor-pointer"
+              />
+              <Badge variant="outline" className="bg-[#221c16] border-[#382d23] text-[#e59b63] font-mono text-[10px]">
+                Step {currentStepIndex + 1} / {steps.length}
+              </Badge>
+            </div>
+          </div>
+
+          {/* 2D Interactive Canvas */}
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <Box className="w-4 h-4 text-[#e59b63]" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-white">
+                  2D Stack & Heap Memory Canvas
                 </span>
-                <span className="text-sm font-bold text-white">{userProblem}</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <Badge variant="outline" className="text-xs bg-[#221c16] border-[#382d23] text-emerald-400">
-                  {isPlaying ? "▶ Auto-Playing Generation" : `Step ${currentStepIndex + 1} of ${executionSteps.length}`}
-                </Badge>
+              <div className="flex items-center space-x-2 text-[11px] font-mono text-[#9c8b7c]">
+                <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-[#e59b63] mr-1"></span> Stack</span>
+                <span className="flex items-center ml-2"><span className="w-2 h-2 rounded-full bg-[#38bdf8] mr-1"></span> Heap</span>
               </div>
             </div>
 
-            {/* TWO-COLUMN GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              
-              {/* LEFT 6 COLS: Three.js Ice Crystal 3D Visualizer */}
-              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <Box className="w-4 h-4 text-[#e59b63]" />
-                      <span className="text-xs font-semibold tracking-wider uppercase text-white">
-                        Three.js Ice Crystal 3D Visualizer
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[#9c8b7c] font-mono">
-                      i = <span className="text-[#e59b63]">{currentStep.pointers.i}</span>, j = <span className="text-cyan-400">{currentStep.pointers.j}</span>
-                    </span>
-                  </div>
-
-                  {/* Three.js canvas container */}
-                  <div 
-                    ref={mountRef} 
-                    className="w-full h-[320px] bg-[#0d0a08] border border-[#261e17] rounded-xl relative overflow-hidden shadow-inner flex items-center justify-center"
-                  />
-
-                  {/* Array values labels under canvas */}
-                  <div className="mt-4 flex items-center justify-center gap-3">
-                    {currentStep.arrayState.map((val, idx) => {
-                      const isHighlighted = currentStep.highlights.includes(idx);
-                      const isI = currentStep.pointers.i === idx;
-                      const isJ = currentStep.pointers.j === idx;
-
-                      return (
-                        <div key={idx} className="flex flex-col items-center">
-                          <div className="h-6 flex items-end">
-                            {isI && <span className="text-[10px] font-bold text-[#e59b63] font-mono bg-[#261d15] px-1 rounded">i</span>}
-                            {isJ && <span className="text-[10px] font-bold text-cyan-400 font-mono bg-[#15242b] px-1 rounded">j</span>}
-                          </div>
-                          <span className={`text-xs font-mono font-bold px-2.5 py-1.5 rounded-lg shadow ${
-                            isHighlighted ? 'bg-gradient-to-r from-[#e59b63] to-[#c76e33] text-[#110e0b]' : 'bg-[#1c1612] text-[#9c8b7c]'
-                          }`}>
-                            {val}
-                          </span>
-                          <span className="text-[10px] text-[#8a796c] mt-1">[{idx}]</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-4 bg-[#120e0a] border border-[#261f18] p-3 rounded-xl flex items-center justify-between text-xs">
-                  <span className="text-[#9c8b7c]">Language:</span>
-                  <span className="font-mono font-bold text-[#e59b63] uppercase">{selectedLang}</span>
-                </div>
-              </div>
-
-              {/* RIGHT 6 COLS: Interactive Parallel Explanation */}
-              <div className="lg:col-span-6 bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
-                      <Terminal className="w-4 h-4 mr-1.5" />
-                      Dynamic Code Breakdown (Clickable)
-                    </span>
-                    <Badge variant="outline" className="text-[10px] bg-[#221c16] border-[#382d23] text-white">
-                      <MousePointerClick className="w-3 h-3 mr-1 text-[#e59b63]" />
-                      Interactive
-                    </Badge>
-                  </div>
-
-                  {/* Clickable steps */}
-                  <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-                    {executionSteps.map((st, idx) => {
-                      const isActive = currentStepIndex === idx;
-                      return (
-                        <div 
-                          key={st.step}
-                          onClick={() => {
-                            if (playTimerRef.current) clearInterval(playTimerRef.current);
-                            setIsPlaying(false);
-                            setCurrentStepIndex(idx);
-                          }}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col space-y-1.5 ${
-                            isActive 
-                              ? 'bg-[#221a14] border-[#e59b63] shadow-[0_0_15px_rgba(229,155,99,0.2)]' 
-                              : 'bg-[#120e0a] border-[#261f18] hover:border-[#3d3127] text-[#b09e90]'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`text-xs font-mono font-bold ${isActive ? 'text-[#e59b63]' : 'text-[#8a796c]'}`}>
-                              Line {st.line}: {st.codeSnippet}
-                            </span>
-                            {isActive && (
-                              <span className="text-[10px] bg-[#e59b63] text-[#110e0b] px-2 py-0.5 rounded font-bold">
-                                Active
-                              </span>
-                            )}
-                          </div>
-                          {isActive && (
-                            <p className="text-xs text-[#f4ede2] leading-relaxed pt-1 border-t border-[#33261d]">
-                              💡 <span className="font-medium">{st.explanation}</span>
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Scrubber bar */}
-                <div className="pt-3 border-t border-[#261f18] flex items-center space-x-4">
-                  <button 
-                    onClick={() => {
-                      if (playTimerRef.current) clearInterval(playTimerRef.current);
-                      setIsPlaying(false);
-                      setCurrentStepIndex(prev => Math.max(0, prev - 1));
-                    }}
-                    disabled={currentStepIndex === 0}
-                    className="px-3 py-1.5 rounded-lg bg-[#211a14] border border-[#382e25] text-xs text-[#b09e90] hover:text-white disabled:opacity-40"
-                  >
-                    ← Prev
-                  </button>
-
-                  <div className="flex-1">
-                    <input 
-                      type="range" 
-                      min={0} 
-                      max={executionSteps.length - 1} 
-                      value={currentStepIndex}
-                      onChange={(e) => {
-                        if (playTimerRef.current) clearInterval(playTimerRef.current);
-                        setIsPlaying(false);
-                        setCurrentStepIndex(Number(e.target.value));
-                      }}
-                      className="w-full accent-[#e59b63] bg-[#261e17] h-2.5 rounded-lg cursor-pointer"
-                    />
-                  </div>
-
-                  <button 
-                    onClick={() => {
-                      if (playTimerRef.current) clearInterval(playTimerRef.current);
-                      setIsPlaying(false);
-                      setCurrentStepIndex(prev => Math.min(executionSteps.length - 1, prev + 1));
-                    }}
-                    disabled={currentStepIndex === executionSteps.length - 1}
-                    className="px-3 py-1.5 rounded-lg bg-[#e59b63] hover:bg-[#f0a872] text-[#110e0b] font-bold text-xs shadow disabled:opacity-40"
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
-
+            <div className="w-full h-[360px] bg-[#0d0a08] border border-[#261e17] rounded-xl overflow-hidden relative shadow-inner">
+              <canvas ref={canvasRef} className="w-full h-full block" />
             </div>
-
           </div>
-        )}
+
+          {/* Step-by-Step Explanation Panel */}
+          <div className="bg-[#16120d] border border-[#2d241c] rounded-2xl p-5 shadow-xl flex flex-col space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#261f18]">
+              <span className="text-xs font-semibold tracking-wider uppercase text-[#e59b63] flex items-center">
+                <Terminal className="w-4 h-4 mr-2" />
+                Synchronized Narrative & Memory Breakdown
+              </span>
+              <span className="font-mono text-xs text-white bg-[#221c16] px-2.5 py-1 rounded border border-[#382d23]">
+                Line {currentStep.line}
+              </span>
+            </div>
+
+            <div className="bg-[#120e0a] border border-[#261f18] p-3.5 rounded-xl text-xs font-mono text-[#f4ede2] leading-relaxed">
+              <span className="text-[#e59b63] font-bold">Code:</span> {currentStep.code}
+            </div>
+
+            <p className="text-xs text-[#b09e90] leading-relaxed">
+              💡 <span className="font-medium text-[#f4ede2]">{currentStep.explanation}</span>
+            </p>
+
+            {/* Variable Tracker */}
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              {Object.entries(currentStep.variables || {}).map(([key, val]) => (
+                <div key={key} className="bg-[#120e0a] border border-[#261f18] p-2.5 rounded-xl">
+                  <div className="text-[10px] text-[#8a796c] uppercase font-mono">{key}</div>
+                  <div className="text-xs font-mono font-bold text-emerald-400 mt-0.5 truncate">{String(val)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
 
       </main>
     </div>
