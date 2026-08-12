@@ -25,4 +25,4 @@
 - [x] Run an interactive mobile-size browser check for advanced presets and tap-equivalent story controls.
 - [x] Verify mobile tap controls for play, pause, previous, next, restart, sound, and playback speed stay synchronized with the scene and explanation.
 - [x] Verify on mobile that the active scene changes with next/play/restart and remains unchanged on pause, in sync with the explanation.
-- [ ] Save a new checkpoint after the advanced presets, keyboard controls, and theme verification updates.
+- [x] Save a new checkpoint after the advanced presets, keyboard controls, and theme verification updates.
