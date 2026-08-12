@@ -13,4 +13,4 @@
 - [x] Test the new interactions, verify desktop/mobile rendering, and save a checkpoint.
 - [x] Verify preset loading, step changes, sound toggling, and scene-transition presence with scripted in-browser checks.
 - [x] Verify that Play advances steps over time and updates the scene and explanation in sync.
-- [ ] Save a new checkpoint after the animation, audio, preset, and reusable-skill updates.
+- [x] Save a new checkpoint after the animation, audio, preset, and reusable-skill updates.
