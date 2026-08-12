@@ -51,3 +51,10 @@
 - [x] Add Vitest coverage for graph parsing, traversal generation, and shortest-path routing.
 - [x] Verify the custom graph and comparison flow on desktop and mobile, then save a checkpoint.
 - [x] Save a checkpoint for the custom City Map comparison and shortest-route feature.
+- [x] Add a live plain-language narration panel that explains the current BFS, DFS, and Dijkstra actions below the comparison.
+- [x] Extend custom road input with validated travel-time weights.
+- [x] Generate Dijkstra traversal states and show its weighted shortest route alongside BFS and DFS.
+- [x] Add draggable custom city nodes and preserve their layout while the comparison runs.
+- [x] Add Vitest coverage for weighted graph parsing, Dijkstra routing, narration state, and node-position helpers.
+- [x] Verify narration, weighted comparisons, and dragging on desktop and mobile, then save a checkpoint.
+- [ ] Save a checkpoint for live narration, weighted Dijkstra routing, and draggable City Map nodes.

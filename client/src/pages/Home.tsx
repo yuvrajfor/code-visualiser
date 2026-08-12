@@ -13,6 +13,7 @@ import {
   Play,
   RotateCcw,
   Sparkles,
+  GripVertical,
   Volume2,
   VolumeX,
   X,
@@ -25,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
-import { createCityRouteStory, createCityRouteWalkthrough, getCityGraphEdges, getCityGraphPositions, getCityRouteWalkthrough, parseCityGraph, type CityGraph, type CityRouteAlgorithm, type CityRouteState } from "@/lib/cityRoutes";
+import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, getCityGraphEdges, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, getCityWeightedEdges, parseCityGraph, type CityGraph, type CityNodePosition, type CityRouteAlgorithm, type CityRouteState, type CityWeightedGraph } from "@/lib/cityRoutes";
 import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 
@@ -41,22 +42,24 @@ type LearningStep = {
 
 type CityComparisonRun = {
   graph: CityGraph;
+  weightedGraph: CityWeightedGraph;
   stops: string[];
   startStop: string;
   targetStop: string;
   bfs: CityRouteState[];
   dfs: CityRouteState[];
+  dijkstra: CityRouteState[];
 };
 
-const customCityGraphExample = `Cafe: Library, Park
-Library: Museum, Restaurant
-Park: Restaurant
-Museum: Restaurant
+const customCityGraphExample = `Cafe: Library (4), Park (2)
+Library: Museum (2), Restaurant (7)
+Park: Restaurant (3)
+Museum: Restaurant (1)
 Restaurant:`;
 
-function createCustomCityCode(graph: CityGraph, startStop: string, targetStop: string): string {
-  const entries = Object.entries(graph).map(([stop, neighbors]) => `  "${stop}": [${neighbors.map((neighbor) => `"${neighbor}"`).join(", ")}],`).join("\n");
-  return `city_map = {\n${entries}\n}\nstart = "${startStop}"\ntarget = "${targetStop}"\n# Compare BFS and DFS on this map`;
+function createCustomCityCode(graph: CityWeightedGraph, startStop: string, targetStop: string): string {
+  const entries = Object.entries(graph).map(([stop, roads]) => `  "${stop}": [${roads.map((road) => `("${road.to}", ${road.weight})`).join(", ")}],`).join("\n");
+  return `city_map = {\n${entries}\n}\nstart = "${startStop}"\ntarget = "${targetStop}"\n# Compare BFS, DFS, and Dijkstra on this map`;
 }
 
 const defaultCode = `function findApple(basket, wantedApple) {
@@ -285,25 +288,55 @@ function SceneHeader({ story, step }: { story: RealWorldStory; step: LearningSte
   );
 }
 
-function CityComparisonPanel({ routeState, stepNumber, visualTheme }: { routeState: CityRouteState; stepNumber: number; visualTheme: VisualTheme }) {
+function CityComparisonPanel({ routeState, stepNumber, visualTheme, nodePositions, onNodePositionChange }: { routeState: CityRouteState; stepNumber: number; visualTheme: VisualTheme; nodePositions?: Record<string, CityNodePosition>; onNodePositionChange?: (stop: string, position: CityNodePosition) => void }) {
   const story = createCityRouteStory(routeState);
   const step: LearningStep = { step: stepNumber, line: routeState.line, code: routeState.code, story, routeState };
   const isBfs = routeState.algorithm === "bfs";
+  const isDijkstra = routeState.algorithm === "dijkstra";
+  const algorithmLabel = isBfs ? "BFS · nearby-first" : isDijkstra ? "Dijkstra · fastest time" : "DFS · one road deep";
+  const title = isBfs ? "City waiting line" : isDijkstra ? "Travel-time list" : "City road stack";
+  const panelStyle = isBfs ? "border-sky-300/25 bg-[#0d1828]" : isDijkstra ? "border-amber-300/25 bg-[#21170a]" : "border-violet-300/25 bg-[#160d28]";
+  const accentStyle = isBfs ? "text-sky-200" : isDijkstra ? "text-amber-200" : "text-violet-200";
+  const badgeStyle = isBfs ? "border-sky-200/35 bg-sky-300/10 text-sky-100" : isDijkstra ? "border-amber-200/35 bg-amber-300/10 text-amber-100" : "border-violet-200/35 bg-violet-300/10 text-violet-100";
 
   return (
-    <section className={`rounded-[28px] border p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] ${isBfs ? "border-sky-300/25 bg-[#0d1828]" : "border-violet-300/25 bg-[#160d28]"}`} data-comparison-panel={routeState.algorithm}>
-      <div className="mb-4 flex items-center justify-between gap-3"><div><p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${isBfs ? "text-sky-200" : "text-violet-200"}`}>{isBfs ? "BFS · nearby-first" : "DFS · one road deep"}</p><h2 className="mt-1 text-base font-black text-white">{isBfs ? "City waiting line" : "City road stack"}</h2></div><Badge className={`rounded-full border px-3 py-1 text-[10px] font-black ${isBfs ? "border-sky-200/35 bg-sky-300/10 text-sky-100" : "border-violet-200/35 bg-violet-300/10 text-violet-100"}`}>Step {stepNumber}</Badge></div>
-      <RealWorldScene story={story} visualTheme={visualTheme} routeState={routeState} />
+    <section className={`rounded-[28px] border p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] ${panelStyle}`} data-comparison-panel={routeState.algorithm}>
+      <div className="mb-4 flex items-center justify-between gap-3"><div><p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${accentStyle}`}>{algorithmLabel}</p><h2 className="mt-1 text-base font-black text-white">{title}</h2></div><Badge className={`rounded-full border px-3 py-1 text-[10px] font-black ${badgeStyle}`}>Step {stepNumber}</Badge></div>
+      <RealWorldScene story={story} visualTheme={visualTheme} routeState={routeState} nodePositions={nodePositions} onNodePositionChange={onNodePositionChange} />
       <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d9c9b8]">In everyday words</p><p className="mt-2 text-sm font-medium leading-6 text-white">{story.plainEnglish}</p><p className="mt-3 text-xs leading-5 text-[#c9bcd8]"><strong className="text-white">What changed:</strong> {story.whatChanged}</p></div>
       {isBfs && routeState.phase === "complete" && <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4" data-shortest-path-result><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Shortest route</p>{routeState.shortestPath?.length ? <><p className="mt-2 text-sm font-black text-amber-100">{routeState.shortestPath.join(" → ")}</p><p className="mt-1 text-xs leading-5 text-[#ffe6a7]">This glowing path uses the fewest roads from {routeState.shortestPath[0]} to {routeState.shortestPath.at(-1)}.</p></> : <p className="mt-2 text-xs leading-5 text-[#ffe6a7]">There is no road route from the chosen start stop to the target stop.</p>}</div>}
+      {isDijkstra && routeState.phase === "complete" && <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4" data-fastest-path-result><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Fastest route by travel time</p>{routeState.shortestPath?.length ? <><p className="mt-2 text-sm font-black text-amber-100">{routeState.shortestPath.join(" → ")}</p><p className="mt-1 text-xs leading-5 text-[#ffe6a7]">This route takes {routeState.shortestTravelTime} minutes in total, even if it uses more roads.</p></> : <p className="mt-2 text-xs leading-5 text-[#ffe6a7]">There is no travel-time route to the chosen target.</p>}</div>}
     </section>
   );
 }
 
-function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldStory; visualTheme: VisualTheme; routeState?: CityRouteState }) {
+function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodePositionChange }: { story: RealWorldStory; visualTheme: VisualTheme; routeState?: CityRouteState; nodePositions?: Record<string, CityNodePosition>; onNodePositionChange?: (stop: string, position: CityNodePosition) => void }) {
   const style = sceneStyles[story.kind];
   const common = "border border-white/10 bg-[#17100c]/90 shadow-[0_16px_35px_rgba(0,0,0,0.3)]";
   const label = "text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]";
+  const citySceneRef = useRef<HTMLDivElement>(null);
+  const draggedStopRef = useRef<string | null>(null);
+
+  const moveCityStop = (event: { clientX: number; clientY: number }, stop: string) => {
+    if (!onNodePositionChange || !citySceneRef.current) return;
+    const bounds = citySceneRef.current.getBoundingClientRect();
+    const left = Math.max(9, Math.min(91, ((event.clientX - bounds.left) / bounds.width) * 100));
+    const top = Math.max(16, Math.min(76, ((event.clientY - bounds.top) / bounds.height) * 100));
+    onNodePositionChange(stop, { left, top });
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (draggedStopRef.current) moveCityStop(event, draggedStopRef.current);
+    };
+    const handleMouseUp = () => { draggedStopRef.current = null; };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [onNodePositionChange]);
 
   if (story.kind === "storage-shelf") {
     return (
@@ -404,28 +437,30 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
       { from: "Library", to: "Museum", x1: 65, y1: 30, x2: 88, y2: 48 },
     ];
     const graphStops = routeState?.graph ? Object.keys(routeState.graph) : [];
-    const graphPositions = getCityGraphPositions(graphStops);
+    const graphPositions = nodePositions ?? getCityGraphPositions(graphStops);
     const cityStops = routeState?.graph ? graphStops.map((name, index) => ({ name, icon: ["☕", "📚", "🌳", "🏛️", "🍽️", "🚏", "🏠", "🎪", "🎨", "🎬"][index] ?? "📍", position: graphPositions[name] })) : defaultCityStops;
-    const roads = routeState?.graph ? getCityGraphEdges(routeState.graph).map(([from, to]) => ({ from, to, x1: parseFloat(graphPositions[from]?.left ?? "50"), y1: parseFloat(graphPositions[from]?.top ?? "50"), x2: parseFloat(graphPositions[to]?.left ?? "50"), y2: parseFloat(graphPositions[to]?.top ?? "50") })) : defaultRoads;
+    const roads = routeState?.weightedGraph ? getCityWeightedEdges(routeState.weightedGraph).map(({ from, to, weight }) => ({ from, to, weight, x1: graphPositions[from]?.left ?? 50, y1: graphPositions[from]?.top ?? 50, x2: graphPositions[to]?.left ?? 50, y2: graphPositions[to]?.top ?? 50 })) : routeState?.graph ? getCityGraphEdges(routeState.graph).map(([from, to]) => ({ from, to, weight: 1, x1: graphPositions[from]?.left ?? 50, y1: graphPositions[from]?.top ?? 50, x2: graphPositions[to]?.left ?? 50, y2: graphPositions[to]?.top ?? 50 })) : defaultRoads.map((road) => ({ ...road, weight: 1 }));
     const isBfs = routeState?.algorithm === "bfs";
     const isDfs = routeState?.algorithm === "dfs";
+    const isDijkstra = routeState?.algorithm === "dijkstra";
     const shortestPath = routeState?.phase === "complete" ? routeState.shortestPath ?? [] : [];
     return (
-      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#081324] p-6 story-scene-enter" data-scene-world={visualTheme}>
+      <div ref={citySceneRef} className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#081324] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,.22) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-        <div className="absolute left-6 top-5 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-100">{isBfs ? "Breadth-first city route" : isDfs ? "Depth-first city route" : "City map"}</div>
+        <div className="absolute left-6 top-5 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-100">{isBfs ? "Breadth-first city route" : isDijkstra ? "Dijkstra travel-time route" : isDfs ? "Depth-first city route" : "City map"}</div>
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {roads.map((road) => {
             const isActiveRoad = routeState?.activeRoad?.includes(road.from) && routeState?.activeRoad?.includes(road.to);
             const isShortestRoad = shortestPath.some((stop, index) => index > 0 && ((shortestPath[index - 1] === road.from && stop === road.to) || (shortestPath[index - 1] === road.to && stop === road.from)));
-            return <line key={`${road.from}-${road.to}`} x1={road.x1} y1={road.y1} x2={road.x2} y2={road.y2} stroke={isShortestRoad ? "#fbbf24" : isActiveRoad ? (isDfs ? "#c084fc" : "#7dd3fc") : "#4b83b8"} strokeWidth={isShortestRoad ? "2.3" : isActiveRoad ? "1.7" : "0.65"} strokeLinecap="round" opacity={isShortestRoad || isActiveRoad ? "1" : "0.48"} />;
+            const stroke = isShortestRoad ? "#fbbf24" : isActiveRoad ? (isDfs ? "#c084fc" : isDijkstra ? "#fbbf24" : "#7dd3fc") : "#4b83b8";
+            return <g key={`${road.from}-${road.to}`}><line x1={road.x1} y1={road.y1} x2={road.x2} y2={road.y2} stroke={stroke} strokeWidth={isShortestRoad ? "2.3" : isActiveRoad ? "1.7" : "0.65"} strokeLinecap="round" opacity={isShortestRoad || isActiveRoad ? "1" : "0.48"} /><text x={(road.x1 + road.x2) / 2} y={(road.y1 + road.y2) / 2 - 2} textAnchor="middle" fill="#dbeafe" fontSize="4.3" fontWeight="700">{road.weight}m</text></g>;
           })}
         </svg>
         <div className="relative z-10 h-full">
           {cityStops.map((stop, index) => {
             const isCurrent = routeState?.currentStop === stop.name;
             const isVisited = routeState?.visitedStops.includes(stop.name);
-            const isPathStop = isDfs && routeState?.pathStops.includes(stop.name);
+            const isPathStop = (isDfs || isDijkstra) && routeState?.pathStops.includes(stop.name);
             const isShortestStop = shortestPath.includes(stop.name);
             const isTarget = routeState?.targetStop === stop.name;
             const stateClasses = isCurrent
@@ -439,14 +474,15 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
                   : isTarget
                     ? "border-amber-200/80 bg-amber-300/15 text-amber-100"
                     : "border-sky-400/50 bg-[#11345d] text-sky-100";
-            const positionStyle = typeof stop.position === "string" ? { animationDelay: `${index * 60}ms` } : { left: stop.position.left, top: stop.position.top, transform: "translate(-50%, -50%)", animationDelay: `${index * 60}ms` };
-            return <div key={stop.name} className={`scene-object-pop absolute grid h-14 w-14 place-items-center rounded-full border text-center text-[9px] font-black ${typeof stop.position === "string" ? stop.position : ""} ${stateClasses}`} style={positionStyle}><span className="text-base">{stop.icon}</span><span>{stop.name}</span>{isTarget && <span className="absolute -left-1 -top-1 rounded-full bg-amber-300 px-1 text-[7px] font-black text-amber-950">TARGET</span>}{isVisited && !isCurrent && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-300 text-[9px] text-emerald-950">✓</span>}</div>;
+            const positionStyle = typeof stop.position === "string" ? { animationDelay: `${index * 60}ms` } : { left: `${stop.position.left}%`, top: `${stop.position.top}%`, transform: "translate(-50%, -50%)", animationDelay: `${index * 60}ms` };
+            const canDrag = Boolean(onNodePositionChange && routeState?.graph);
+            return <button key={stop.name} type="button" aria-label={canDrag ? `Drag ${stop.name} to rearrange the city map` : stop.name} data-draggable-city-node={canDrag ? stop.name : undefined} onPointerDown={(event) => { if (!canDrag) return; draggedStopRef.current = stop.name; moveCityStop(event, stop.name); }} onPointerMove={(event) => { if (draggedStopRef.current === stop.name) moveCityStop(event, stop.name); }} onPointerUp={() => { draggedStopRef.current = null; }} onPointerCancel={() => { draggedStopRef.current = null; }} onMouseDown={(event) => { if (!canDrag) return; event.preventDefault(); draggedStopRef.current = stop.name; moveCityStop(event, stop.name); }} className={`scene-object-pop absolute grid h-14 w-14 place-items-center rounded-full border text-center text-[9px] font-black ${typeof stop.position === "string" ? stop.position : ""} ${stateClasses} ${canDrag ? "cursor-grab touch-none active:cursor-grabbing" : "cursor-default"}`} style={positionStyle}><span className="text-base">{stop.icon}</span><span>{stop.name}</span>{canDrag && <GripVertical className="absolute -bottom-2 -right-2 h-4 w-4 rounded-full bg-sky-100 p-0.5 text-sky-950" aria-hidden="true" />}{isTarget && <span className="absolute -left-1 -top-1 rounded-full bg-amber-300 px-1 text-[7px] font-black text-amber-950">TARGET</span>}{isVisited && !isCurrent && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-300 text-[9px] text-emerald-950">✓</span>}</button>;
           })}
         </div>
         {routeState ? (
-          <div className="absolute inset-x-4 bottom-3 z-20 rounded-xl border border-sky-300/20 bg-[#07101d]/95 px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.32)]" data-route-state={routeState.algorithm} aria-label={`${isBfs ? "Breadth-first waiting line" : "Depth-first road stack"}: ${routeState.pendingStops.length ? routeState.pendingStops.join(", ") : "no stops waiting"}`} aria-live="polite">
-            <div className="flex items-center justify-between gap-3"><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-200">{isBfs ? "Waiting line — next stop first" : "Road stack — top road first"}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${routeState.phase === "backtrack" ? "bg-violet-300/20 text-violet-100" : "bg-sky-300/15 text-sky-100"}`}>{routeState.phase}</span></div>
-            <div className="mt-1.5 flex min-h-5 items-center gap-1.5 overflow-x-auto pb-0.5">{routeState.pendingStops.length ? routeState.pendingStops.map((stop, index) => <span key={`${stop}-${index}`} className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold ${isBfs && index === 0 ? "border-amber-200 bg-amber-300 text-amber-950" : isDfs && index === routeState.pendingStops.length - 1 ? "border-violet-200 bg-violet-300 text-violet-950" : "border-sky-300/25 bg-sky-300/10 text-sky-100"}`}>{stop}</span>) : <span className="text-[10px] text-[#a9c5e6]">No stops waiting</span>}</div>
+          <div className="absolute inset-x-4 bottom-3 z-20 rounded-xl border border-sky-300/20 bg-[#07101d]/95 px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.32)]" data-route-state={routeState.algorithm} aria-label={`${isBfs ? "Breadth-first waiting line" : isDijkstra ? "Dijkstra travel-time list" : "Depth-first road stack"}: ${routeState.pendingStops.length ? routeState.pendingStops.join(", ") : "no stops waiting"}`} aria-live="polite">
+            <div className="flex items-center justify-between gap-3"><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-200">{isBfs ? "Waiting line — next stop first" : isDijkstra ? "Travel-time list — lowest minutes first" : "Road stack — top road first"}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${routeState.phase === "backtrack" ? "bg-violet-300/20 text-violet-100" : isDijkstra ? "bg-amber-300/15 text-amber-100" : "bg-sky-300/15 text-sky-100"}`}>{routeState.phase}</span></div>
+            <div className="mt-1.5 flex min-h-5 items-center gap-1.5 overflow-x-auto pb-0.5">{routeState.pendingStops.length ? routeState.pendingStops.map((stop, index) => <span key={`${stop}-${index}`} className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold ${isBfs && index === 0 ? "border-amber-200 bg-amber-300 text-amber-950" : isDijkstra && index === 0 ? "border-amber-200 bg-amber-300 text-amber-950" : isDfs && index === routeState.pendingStops.length - 1 ? "border-violet-200 bg-violet-300 text-violet-950" : "border-sky-300/25 bg-sky-300/10 text-sky-100"}`}>{stop}</span>) : <span className="text-[10px] text-[#a9c5e6]">No stops waiting</span>}</div>
             <p className="mt-1 text-[10px] font-medium leading-4 text-[#d7e8fb]">{routeState.actionLabel}</p>
             {shortestPath.length > 1 && <p className="mt-1 rounded-md bg-amber-300/15 px-2 py-1 text-[9px] font-bold text-amber-100">Shortest route: {shortestPath.join(" → ")}</p>}
           </div>
@@ -546,6 +582,7 @@ export default function Home() {
   const [comparisonRun, setComparisonRun] = useState<CityComparisonRun | null>(null);
   const [comparisonStepIndex, setComparisonStepIndex] = useState(0);
   const [comparisonPlaying, setComparisonPlaying] = useState(false);
+  const [comparisonNodePositions, setComparisonNodePositions] = useState<Record<string, CityNodePosition>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
@@ -553,9 +590,11 @@ export default function Home() {
   const customGraphStops = (() => {
     try { return parseCityGraph(customGraphText).stops; } catch { return []; }
   })();
-  const comparisonLength = comparisonRun ? Math.max(comparisonRun.bfs.length, comparisonRun.dfs.length) : 0;
+  const comparisonLength = comparisonRun ? Math.max(comparisonRun.bfs.length, comparisonRun.dfs.length, comparisonRun.dijkstra.length) : 0;
   const comparisonBfsState = comparisonRun?.bfs[Math.min(comparisonStepIndex, Math.max(comparisonRun.bfs.length - 1, 0))];
   const comparisonDfsState = comparisonRun?.dfs[Math.min(comparisonStepIndex, Math.max(comparisonRun.dfs.length - 1, 0))];
+  const comparisonDijkstraState = comparisonRun?.dijkstra[Math.min(comparisonStepIndex, Math.max(comparisonRun.dijkstra.length - 1, 0))];
+  const comparisonNarration = comparisonBfsState && comparisonDfsState && comparisonDijkstraState ? getCityLiveNarration({ bfs: comparisonBfsState, dfs: comparisonDfsState, dijkstra: comparisonDijkstraState }) : null;
 
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
@@ -631,19 +670,21 @@ export default function Home() {
       const parsed = parseCityGraph(customGraphText);
       if (!parsed.stops.includes(customStartStop) || !parsed.stops.includes(customTargetStop)) throw new Error("Choose a start and target stop from your map.");
       if (customStartStop === customTargetStop) throw new Error("Choose two different stops so the route has somewhere to go.");
-      const bfs = createCityRouteWalkthrough(parsed.graph, "bfs", customStartStop, customTargetStop);
-      const dfs = createCityRouteWalkthrough(parsed.graph, "dfs", customStartStop, customTargetStop);
-      const generatedCode = createCustomCityCode(parsed.graph, customStartStop, customTargetStop);
+      const bfs = createCityRouteWalkthrough(parsed.graph, "bfs", customStartStop, customTargetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
+      const dfs = createCityRouteWalkthrough(parsed.graph, "dfs", customStartStop, customTargetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
+      const dijkstra = createDijkstraRouteWalkthrough(parsed.weightedGraph, customStartStop, customTargetStop);
+      const generatedCode = createCustomCityCode(parsed.weightedGraph, customStartStop, customTargetStop);
       setUserCode(generatedCode);
       setUserProblem(`Compare two ways to travel from ${customStartStop} to ${customTargetStop}`);
       setSelectedLang("python");
       setSelectedWalkthrough(null);
-      setComparisonRun({ graph: parsed.graph, stops: parsed.stops, startStop: customStartStop, targetStop: customTargetStop, bfs, dfs });
+      setComparisonRun({ graph: parsed.graph, weightedGraph: parsed.weightedGraph, stops: parsed.stops, startStop: customStartStop, targetStop: customTargetStop, bfs, dfs, dijkstra });
+      setComparisonNodePositions(getCityGraphPositions(parsed.stops));
       setComparisonStepIndex(0);
       setComparisonPlaying(false);
       setActiveView("comparison");
       saveSubmission.mutate({ problemTitle: `City Map: ${customStartStop} to ${customTargetStop}`, language: "python", code: generatedCode });
-      toast.success("Your custom City Map is ready for a BFS and DFS race.");
+      toast.success("Your custom City Map is ready for a BFS, DFS, and Dijkstra race.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Please check the City Map details.");
     }
@@ -781,10 +822,10 @@ export default function Home() {
                 </div>
                 <section className="rounded-3xl border border-sky-300/20 bg-[#081426]/80 p-4 shadow-[inset_0_0_30px_rgba(59,130,246,0.05)]" data-custom-city-editor>
                   <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Custom City Map Lab</p><h3 className="mt-1 text-sm font-black text-white">Build your own roads, then compare both explorers.</h3></div><button type="button" onClick={() => { setCustomGraphText(customCityGraphExample); setCustomStartStop("Cafe"); setCustomTargetStop("Restaurant"); }} className="rounded-xl border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-[10px] font-bold text-sky-100 transition hover:bg-sky-300/20">Load example</button></div>
-                  <p className="mt-2 text-[11px] leading-relaxed text-[#a8c7eb]">Use one line per stop: <code className="rounded bg-sky-300/10 px-1 text-sky-100">Cafe: Library, Park</code>. Roads work in the direction you list them.</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#a8c7eb]">Use one line per stop. Add a travel time in brackets when you need it: <code className="rounded bg-sky-300/10 px-1 text-sky-100">Cafe: Library (4), Park (2)</code>. Roads work in the direction you list them; a missing time is 1 minute.</p>
                   <Textarea aria-label="Custom city graph" value={customGraphText} onChange={(event) => { const next = event.target.value; setCustomGraphText(next); try { const parsed = parseCityGraph(next); setCustomStartStop((current) => parsed.stops.includes(current) ? current : parsed.stops[0] ?? ""); setCustomTargetStop((current) => parsed.stops.includes(current) ? current : parsed.stops.at(-1) ?? ""); } catch { /* Keep the last valid selections while the learner edits. */ } }} rows={6} className="mt-3 resize-y rounded-2xl border-sky-300/20 bg-[#06101e] font-mono text-xs leading-6 text-sky-50 focus-visible:ring-sky-300" placeholder="Cafe: Library, Park\nLibrary: Museum\nPark:" />
                   <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Start stop<select aria-label="Custom city start stop" value={customStartStop} onChange={(event) => setCustomStartStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Target stop<select aria-label="Custom city target stop" value={customTargetStop} onChange={(event) => setCustomTargetStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label></div>
-                  <Button type="button" onClick={startCityComparison} disabled={customGraphStops.length < 2} className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 text-xs font-black text-[#06101e] shadow-[0_0_28px_rgba(56,189,248,0.24)] hover:from-white hover:to-cyan-200 disabled:opacity-40">Compare BFS and DFS on my map <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                  <Button type="button" onClick={startCityComparison} disabled={customGraphStops.length < 2} className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 text-xs font-black text-[#06101e] shadow-[0_0_28px_rgba(56,189,248,0.24)] hover:from-white hover:to-cyan-200 disabled:opacity-40">Compare BFS, DFS, and Dijkstra <ArrowRight className="ml-2 h-4 w-4" /></Button>
                 </section>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">What does this code try to do?</Label><Input value={userProblem} onChange={(event) => setUserProblem(event.target.value)} className="h-12 rounded-xl border-[#39291f] bg-[#0b0705] text-white focus-visible:ring-[#f59e0b]" placeholder="For example: Find an apple in a basket" /></div>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => { setUserCode(event.target.value); setSelectedWalkthrough(null); }} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
@@ -835,17 +876,19 @@ export default function Home() {
         </main>
       )}
 
-      {activeView === "comparison" && comparisonRun && comparisonBfsState && comparisonDfsState && (
+      {activeView === "comparison" && comparisonRun && comparisonBfsState && comparisonDfsState && comparisonDijkstraState && (
         <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-8 md:py-12" data-city-comparison>
-          <div className="flex flex-wrap items-start justify-between gap-5"><div><button type="button" onClick={() => setActiveView("landing")} className="inline-flex items-center gap-1 text-xs font-bold text-[#d6a87e] transition hover:text-white"><ChevronLeft className="h-4 w-4" /> Edit city map</button><Badge className="ml-3 rounded-full border border-sky-300/25 bg-sky-300/10 px-3 py-1 text-[10px] font-bold text-sky-100">CUSTOM CITY MAP</Badge><h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-5xl">BFS and DFS, <span className="bg-gradient-to-r from-sky-200 to-violet-200 bg-clip-text text-transparent">side by side.</span></h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c8b7a7]">Both explorers start at <strong className="text-white">{comparisonRun.startStop}</strong> and look for <strong className="text-amber-100">{comparisonRun.targetStop}</strong>. Use one control bar to watch their different choices at the same time.</p></div><div className="rounded-2xl border border-white/10 bg-[#120d0a] px-4 py-3 text-right"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]">Map size</p><p className="mt-1 text-sm font-black text-white">{comparisonRun.stops.length} stops · {getCityGraphEdges(comparisonRun.graph).length} roads</p></div></div>
+          <div className="flex flex-wrap items-start justify-between gap-5"><div><button type="button" onClick={() => setActiveView("landing")} className="inline-flex items-center gap-1 text-xs font-bold text-[#d6a87e] transition hover:text-white"><ChevronLeft className="h-4 w-4" /> Edit city map</button><Badge className="ml-3 rounded-full border border-sky-300/25 bg-sky-300/10 px-3 py-1 text-[10px] font-bold text-sky-100">CUSTOM CITY MAP</Badge><h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-5xl">Three explorers, <span className="bg-gradient-to-r from-sky-200 via-violet-200 to-amber-200 bg-clip-text text-transparent">one city map.</span></h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c8b7a7]">BFS, DFS, and Dijkstra all start at <strong className="text-white">{comparisonRun.startStop}</strong> and look for <strong className="text-amber-100">{comparisonRun.targetStop}</strong>. They share the same map, but Dijkstra also uses the road travel times.</p></div><div className="rounded-2xl border border-white/10 bg-[#120d0a] px-4 py-3 text-right"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]">Map size</p><p className="mt-1 text-sm font-black text-white">{comparisonRun.stops.length} stops · {getCityWeightedEdges(comparisonRun.weightedGraph).length} roads</p><p className="mt-1 text-[10px] text-amber-100">Drag any city stop to rearrange the map.</p></div></div>
 
           <section className="mt-8 rounded-[28px] border border-[#37271d] bg-[#15100d] p-4 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-5" aria-label="Shared comparison controls">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center"><div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex - 1)} disabled={comparisonStepIndex === 0} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronLeft className="h-4 w-4" /></Button><Button onClick={() => setComparisonPlaying((playing) => !playing)} className="h-11 min-w-28 rounded-xl bg-gradient-to-r from-sky-200 to-violet-200 text-xs font-black text-[#0a0712] hover:from-white hover:to-violet-100">{comparisonPlaying ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4 fill-current" /> Play both</>}</Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex + 1)} disabled={comparisonStepIndex >= comparisonLength - 1} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronRight className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(0)} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10" title="Restart both explorers"><RotateCcw className="h-4 w-4" /></Button></div><div className="min-w-0 flex-1"><div className="mb-1.5 flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]"><span>Shared moment</span><span>Step {comparisonStepIndex + 1} of {comparisonLength}</span></div><input aria-label="Comparison progress" type="range" min="0" max={Math.max(comparisonLength - 1, 0)} value={comparisonStepIndex} onChange={(event) => goToComparisonStep(Number(event.target.value))} className="w-full accent-sky-300" /></div><label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a89787]">Speed<select aria-label="Comparison speed" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="h-9 rounded-xl border border-white/10 bg-[#0c0806] px-2 text-xs text-white"><option value={3000}>Slow</option><option value={2200}>Normal</option><option value={1400}>Fast</option></select></label></div>
           </section>
 
-          <section className="mt-6 grid gap-6 xl:grid-cols-2"><CityComparisonPanel routeState={comparisonBfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.bfs.length)} visualTheme={visualTheme} /><CityComparisonPanel routeState={comparisonDfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dfs.length)} visualTheme={visualTheme} /></section>
+          <section className="mt-6 grid gap-6 xl:grid-cols-3"><CityComparisonPanel routeState={comparisonBfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.bfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDijkstraState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dijkstra.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /></section>
 
-          <section className="mt-6 rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.3)]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump both explorers together</p><h2 className="mt-1 text-sm font-black text-white">Choose any comparison moment</h2></div><p className="text-xs text-[#b9a898]">BFS may finish first; its final shortest route stays visible.</p></div><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: comparisonLength }, (_, index) => { const bfs = comparisonRun.bfs[Math.min(index, comparisonRun.bfs.length - 1)]!; const dfs = comparisonRun.dfs[Math.min(index, comparisonRun.dfs.length - 1)]!; const active = index === comparisonStepIndex; return <button key={index} type="button" onClick={() => goToComparisonStep(index)} className={`rounded-2xl border p-3 text-left transition ${active ? "border-sky-300/55 bg-sky-300/10 shadow-[0_0_20px_rgba(125,211,252,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#6e5b4c]"}`}><span className="block text-[10px] font-black uppercase tracking-wider text-sky-200">Moment {index + 1}</span><span className="mt-1 block truncate text-xs font-bold text-white">BFS: {bfs.currentStop}</span><span className="mt-0.5 block truncate text-xs font-bold text-violet-200">DFS: {dfs.currentStop}</span></button>; })}</div></section>
+          {comparisonNarration && <section className="mt-6 rounded-[28px] border border-sky-300/20 bg-[#0b1728] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.26)]" data-live-algorithm-narration aria-live="polite"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Live route commentary</p><h2 className="mt-1 text-lg font-black text-white">What each explorer is doing right now</h2></div><p className="max-w-sm text-xs leading-5 text-[#a9c5e6]">Move a city stop by dragging it; every explorer sees the same rearranged map.</p></div><div className="mt-4 grid gap-3 lg:grid-cols-3"><div className="rounded-2xl border border-sky-300/20 bg-sky-300/5 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-sky-200">{comparisonNarration.bfs.heading}</p><p className="mt-2 text-sm font-semibold leading-6 text-white">{comparisonNarration.bfs.detail}</p><p className="mt-2 text-xs text-[#afd7fb]">{comparisonNarration.bfs.context}</p></div><div className="rounded-2xl border border-violet-300/20 bg-violet-300/5 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-200">{comparisonNarration.dfs.heading}</p><p className="mt-2 text-sm font-semibold leading-6 text-white">{comparisonNarration.dfs.detail}</p><p className="mt-2 text-xs text-[#d8c2fb]">{comparisonNarration.dfs.context}</p></div><div className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">{comparisonNarration.dijkstra.heading}</p><p className="mt-2 text-sm font-semibold leading-6 text-white">{comparisonNarration.dijkstra.detail}</p><p className="mt-2 text-xs text-[#ffe4a8]">{comparisonNarration.dijkstra.context}</p></div></div></section>}
+
+          <section className="mt-6 rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.3)]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump all explorers together</p><h2 className="mt-1 text-sm font-black text-white">Choose any comparison moment</h2></div><p className="text-xs text-[#b9a898]">BFS highlights the fewest roads; Dijkstra highlights the lowest travel time.</p></div><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: comparisonLength }, (_, index) => { const bfs = comparisonRun.bfs[Math.min(index, comparisonRun.bfs.length - 1)]!; const dfs = comparisonRun.dfs[Math.min(index, comparisonRun.dfs.length - 1)]!; const dijkstra = comparisonRun.dijkstra[Math.min(index, comparisonRun.dijkstra.length - 1)]!; const active = index === comparisonStepIndex; return <button key={index} type="button" onClick={() => goToComparisonStep(index)} className={`rounded-2xl border p-3 text-left transition ${active ? "border-sky-300/55 bg-sky-300/10 shadow-[0_0_20px_rgba(125,211,252,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#6e5b4c]"}`}><span className="block text-[10px] font-black uppercase tracking-wider text-sky-200">Moment {index + 1}</span><span className="mt-1 block truncate text-xs font-bold text-white">BFS: {bfs.currentStop}</span><span className="mt-0.5 block truncate text-xs font-bold text-violet-200">DFS: {dfs.currentStop}</span><span className="mt-0.5 block truncate text-xs font-bold text-amber-200">Dijkstra: {dijkstra.currentStop}</span></button>; })}</div></section>
         </main>
       )}
     </div>

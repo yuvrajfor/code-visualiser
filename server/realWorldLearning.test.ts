@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
-import { createCityRouteStory, createCityRouteWalkthrough, findShortestCityPath, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
+import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {
@@ -147,6 +147,58 @@ describe("createRealWorldStory", () => {
     const graph = parseCityGraph("Cafe: Library\nLibrary:\nPark:").graph;
 
     expect(findShortestCityPath(graph, "Cafe", "Park")).toBeNull();
+  });
+
+  it("parses optional road times while preserving the normal city-map neighbors", () => {
+    const parsed = parseCityGraph("Cafe: Library (4), Park (2)\nLibrary: Restaurant (7)\nPark: Restaurant (3)\nRestaurant:");
+
+    expect(parsed.graph.Cafe).toEqual(["Library", "Park"]);
+    expect(parsed.weightedGraph.Cafe).toEqual([{ to: "Library", weight: 4 }, { to: "Park", weight: 2 }]);
+    expect(parsed.weightedGraph.Restaurant).toEqual([]);
+  });
+
+  it("uses Dijkstra to prefer the quickest travel-time route over an earlier longer road", () => {
+    const parsed = parseCityGraph("Cafe: Library (4), Park (2)\nLibrary: Restaurant (7)\nPark: Restaurant (3)\nRestaurant:");
+    const steps = createDijkstraRouteWalkthrough(parsed.weightedGraph, "Cafe", "Restaurant");
+    const result = steps.at(-1);
+    const story = createCityRouteStory(result!);
+
+    expect(result?.shortestPath).toEqual(["Cafe", "Park", "Restaurant"]);
+    expect(result?.shortestTravelTime).toBe(5);
+    expect(result?.travelTime).toBe(5);
+    expect(story.plainEnglish).toContain("Dijkstra");
+    expect(story.whatChanged).toContain("5 minutes");
+  });
+
+  it("creates synchronized live commentary for BFS, DFS, and Dijkstra states", () => {
+    const parsed = parseCityGraph("Home: Market (9), Park (2)\nMarket: Clinic (2)\nPark: Clinic (2)\nClinic:");
+    const narration = getCityLiveNarration({
+      bfs: createCityRouteWalkthrough(parsed.graph, "bfs", "Home", "Clinic")[0]!,
+      dfs: createCityRouteWalkthrough(parsed.graph, "dfs", "Home", "Clinic")[0]!,
+      dijkstra: createDijkstraRouteWalkthrough(parsed.weightedGraph, "Home", "Clinic")[0]!,
+    });
+
+    expect(narration.bfs).toEqual(expect.objectContaining({ heading: "BFS · nearby first", context: "At Home. It cares about the fewest roads." }));
+    expect(narration.dfs.heading).toBe("DFS · one road deep");
+    expect(narration.dijkstra).toEqual(expect.objectContaining({ heading: "Dijkstra · lowest time", context: "At Home. Best known time: 0 minutes." }));
+  });
+
+  it("creates stable bounded positions for every custom node so a shared drag layout can be reused", () => {
+    const stops = ["Home", "Market", "Park", "Clinic"];
+    const firstLayout = getCityGraphPositions(stops);
+    const secondLayout = getCityGraphPositions(stops);
+
+    expect(secondLayout).toEqual(firstLayout);
+    expect(Object.keys(firstLayout)).toEqual(stops);
+    expect(Object.values(firstLayout).every(({ left, top }) => left >= 0 && left <= 100 && top >= 0 && top <= 100)).toBe(true);
+    expect(new Set(Object.values(firstLayout).map(({ left, top }) => `${left}-${top}`)).size).toBe(stops.length);
+  });
+
+  it("returns no fastest route when a weighted target is unreachable and supplies numeric default positions", () => {
+    const parsed = parseCityGraph("Cafe: Library (2)\nLibrary:\nPark:");
+
+    expect(findFastestCityPath(parsed.weightedGraph, "Cafe", "Park")).toBeNull();
+    expect(getCityGraphPositions(["Cafe", "Library"]).Cafe).toEqual(expect.objectContaining({ left: expect.any(Number), top: expect.any(Number) }));
   });
 
   it("saves and restores a learner's visual-world preference", () => {
