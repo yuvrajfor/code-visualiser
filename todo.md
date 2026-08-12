@@ -57,4 +57,4 @@
 - [x] Add draggable custom city nodes and preserve their layout while the comparison runs.
 - [x] Add Vitest coverage for weighted graph parsing, Dijkstra routing, narration state, and node-position helpers.
 - [x] Verify narration, weighted comparisons, and dragging on desktop and mobile, then save a checkpoint.
-- [ ] Save a checkpoint for live narration, weighted Dijkstra routing, and draggable City Map nodes.
+- [x] Save a checkpoint for live narration, weighted Dijkstra routing, and draggable City Map nodes.
