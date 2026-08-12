@@ -30,7 +30,11 @@ const apiCodeStoryResponseSchema = z.object({
 });
 
 export type ApiCodeStoryStep = RealWorldStory & { lineNumber: number };
-export type ApiCodeStory = { summary: string; steps: ApiCodeStoryStep[] };
+export type ApiCodeStory = {
+  summary: string;
+  steps: ApiCodeStoryStep[];
+  source: "api" | "fallback";
+};
 
 export class CodeStoryInterpreterError extends Error {
   constructor(message: string) {
@@ -46,6 +50,17 @@ export function getMeaningfulSourceLines(code: string) {
     .filter(({ code }) => code.length > 0 && !code.startsWith("//") && !code.startsWith("#"));
 }
 
+function getValidatedSourceLines(code: string) {
+  const sourceLines = getMeaningfulSourceLines(code);
+  if (!sourceLines.length) {
+    throw new CodeStoryInterpreterError("Paste at least one line of code before creating a visual story.");
+  }
+  if (sourceLines.length > 80) {
+    throw new CodeStoryInterpreterError("For a clear visual story, please use 80 or fewer meaningful code lines.");
+  }
+  return sourceLines;
+}
+
 /**
  * Validates that the generated story follows the user's real source lines in
  * order. The model supplies the learning language; the source remains the
@@ -53,15 +68,7 @@ export function getMeaningfulSourceLines(code: string) {
  */
 export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCodeStory {
   const parsed = apiCodeStoryResponseSchema.parse(candidate);
-  const sourceLines = getMeaningfulSourceLines(code);
-
-  if (!sourceLines.length) {
-    throw new CodeStoryInterpreterError("Paste at least one line of code before creating a visual story.");
-  }
-
-  if (sourceLines.length > 80) {
-    throw new CodeStoryInterpreterError("For a clear visual story, please use 80 or fewer meaningful code lines.");
-  }
+  const sourceLines = getValidatedSourceLines(code);
 
   const expectedLineNumbers = sourceLines.map(({ lineNumber }) => lineNumber);
   const returnedLineNumbers = parsed.steps.map(({ lineNumber }) => lineNumber).sort((left, right) => left - right);
@@ -72,6 +79,7 @@ export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCode
 
   return {
     summary: parsed.summary,
+    source: "api",
     steps: [...parsed.steps]
       .sort((left, right) => left.lineNumber - right.lineNumber)
       .map((step) => {
@@ -80,6 +88,44 @@ export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCode
         return { ...localVisual, ...step };
       }),
   };
+}
+
+/**
+ * Valid source code should always reach the learning player, even when a model
+ * response is empty, incomplete, or temporarily unavailable.
+ */
+export function createFallbackApiCodeStory(code: string): ApiCodeStory {
+  const sourceLines = getValidatedSourceLines(code);
+  return {
+    source: "fallback",
+    summary: "Here is a clear visual guide for the code you pasted. You can try again later for an extra code-specific interpretation.",
+    steps: sourceLines.map((source) => ({
+      ...createRealWorldStory(source.code, source.lineNumber),
+      lineNumber: source.lineNumber,
+    })),
+  };
+}
+
+export function getInterpreterTextContent(content: unknown) {
+  if (typeof content === "string") return content.trim();
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter((part): part is { type: "text"; text: string } =>
+      Boolean(part && typeof part === "object" && "type" in part && "text" in part && (part as { type?: unknown }).type === "text" && typeof (part as { text?: unknown }).text === "string")
+    )
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+}
+
+export function resolveInterpreterStory(code: string, content: unknown): ApiCodeStory {
+  const text = getInterpreterTextContent(content);
+  if (!text) return createFallbackApiCodeStory(code);
+  try {
+    return normalizeApiCodeStory(code, JSON.parse(text));
+  } catch {
+    return createFallbackApiCodeStory(code);
+  }
 }
 
 const codeStoryResponseSchema = {
@@ -134,29 +180,24 @@ ${input.code}`;
 
 /** Calls the built-in server-side model. Credentials never reach the browser. */
 export async function interpretCodeAsVisualStory(input: { code: string; language: string; problemTitle?: string }) {
-  const response = await invokeLLM({
-    model: "gpt-5-mini",
-    maxTokens: 1800,
-    reasoning: { effort: "minimal" },
-    messages: [
-      {
-        role: "system",
-        content: "You are a careful code-learning interpreter. Produce only the validated JSON schema requested by the user message.",
-      },
-      { role: "user", content: buildInterpreterPrompt(input) },
-    ],
-    response_format: codeStoryResponseSchema,
-  });
-
-  const content = response.choices[0]?.message.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new CodeStoryInterpreterError("The code interpreter did not return a visual story. Please try again.");
-  }
-
+  getValidatedSourceLines(input.code);
   try {
-    return normalizeApiCodeStory(input.code, JSON.parse(content));
+    const response = await invokeLLM({
+      model: "gpt-5-mini",
+      maxTokens: 1800,
+      reasoning: { effort: "minimal" },
+      messages: [
+        {
+          role: "system",
+          content: "You are a careful code-learning interpreter. Produce only the validated JSON schema requested by the user message.",
+        },
+        { role: "user", content: buildInterpreterPrompt(input) },
+      ],
+      response_format: codeStoryResponseSchema,
+    });
+    return resolveInterpreterStory(input.code, response.choices[0]?.message.content);
   } catch (error) {
     if (error instanceof CodeStoryInterpreterError) throw error;
-    throw new CodeStoryInterpreterError("The code interpreter returned an incomplete story. Please try again.");
+    return createFallbackApiCodeStory(input.code);
   }
 }

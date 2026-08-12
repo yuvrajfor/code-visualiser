@@ -104,3 +104,6 @@
 - [x] Reduce API-story generation delay and provide honest staged progress feedback while a code-specific visual story is being created.
 - [x] Add API-contract tests and verify the code-to-visual-story flow on desktop and mobile.
 - [x] Save a checkpoint for the API-powered Code Story Studio.
+- [x] Fix the API interpreter mutation so valid code submissions never fail with an empty visual-story response.
+- [x] Add a regression test for empty or partial interpreter API output and verify the corrected flow on desktop and mobile.
+- [x] Save a checkpoint for the interpreter empty-story error fix.

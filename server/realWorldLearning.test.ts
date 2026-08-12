@@ -7,7 +7,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
-import { CodeStoryInterpreterError, getMeaningfulSourceLines, normalizeApiCodeStory } from "./codeStoryInterpreter";
+import { CodeStoryInterpreterError, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -116,6 +116,18 @@ describe("createRealWorldStory", () => {
     };
 
     expect(() => normalizeApiCodeStory(source, incomplete)).toThrow(CodeStoryInterpreterError);
+  });
+
+  it("returns a complete local visual guide when model output is empty or partial", () => {
+    const source = "let apples = 2;\nreturn apples;";
+    const emptyStory = resolveInterpreterStory(source, "");
+    const partialStory = resolveInterpreterStory(source, JSON.stringify({ summary: "Only one line is ready.", steps: [] }));
+
+    expect(emptyStory.source).toBe("fallback");
+    expect(emptyStory.steps.map((step) => step.lineNumber)).toEqual([1, 2]);
+    expect(partialStory.source).toBe("fallback");
+    expect(partialStory.steps).toHaveLength(2);
+    expect(getInterpreterTextContent([{ type: "text", text: '{"summary":"ready"}' }])).toBe('{"summary":"ready"}');
   });
 
   it("marks exactly the story-driving source line as active", () => {

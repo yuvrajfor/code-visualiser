@@ -746,9 +746,12 @@ export default function Home() {
         generatedSteps = apiStory.steps.map((story, index) => ({
           step: index + 1,
           line: story.lineNumber,
-          code: sourceLines[story.lineNumber - 1]?.trim() || `Line ${story.lineNumber}`,
+          code: sourceLines[story.lineNumber - 1] ?? "",
           story,
         }));
+        if (apiStory.source === "fallback") {
+          toast.info("We opened a clear visual guide while the code-specific interpreter is unavailable. You can try again anytime.");
+        }
       } catch {
         generatedSteps = buildSteps(userCode);
         toast.warning("The code interpreter is busy, so we opened a simple visual guide. Try creating the story again for code-specific scenes.");

@@ -25,3 +25,5 @@ After the performance refinement, the primary action now says “Building your s
 The compact-response smoke test also reached the final “Writing simple-English explanations…” stage without a browser error while the server generated the requested story.
 
 The compact API response completed into the visual player for the submitted `findApple` function. The learner reached a ten-step story with real source-line labels, the active code line, visual scenes, and plain-English explanations. The completed run did not show the local-fallback warning.
+
+During the empty-response recovery smoke test, Code Studio immediately showed staged preparation feedback and did not surface the former mutation error while the server-side request remained pending. The recovery contract is also covered by automated tests for both empty and partial model content.
