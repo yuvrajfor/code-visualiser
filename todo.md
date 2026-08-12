@@ -69,4 +69,7 @@
 - [x] Create a polished graph-first lab layout with persistent algorithm comparison controls, live insight cards, and responsive learning progress cues.
 - [x] Move preset galleries, the full code editor, and the custom graph editor behind focused Code Studio and Algorithm Lab entry screens so the landing page presents only two first-session choices.
 - [x] Add or update automated tests for the redesigned landing and workspace navigation between Code Studio and Algorithm Lab.
-- [ ] Save a checkpoint for the premium learning-platform and interactive algorithm-lab redesign.
+- [x] Save a checkpoint for the premium learning-platform and interactive algorithm-lab redesign.
+- [x] Verify the redesigned learning home on mobile, including its two-choice entry flow and responsive layout.
+- [x] Verify the focused Code Studio workflow on mobile after entering from the redesigned learning home.
+- [x] Run the final automated regression suite and TypeScript check after the focused-workspace redesign.
