@@ -23,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
+import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
+import { getVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -106,13 +108,45 @@ const learningPresets: LearningPreset[] = [
   return greeting;
 }`,
   },
+  {
+    name: "Paper-tag chain",
+    icon: "🔗",
+    description: "Linked lists become name tags tied together in a chain.",
+    problem: "Add a new paper tag to the end of a chain of stops",
+    language: "javascript",
+    code: `class Stop {
+  constructor(name) {
+    this.name = name;
+    this.next = null;
+  }
+}
+
+const firstStop = new Stop("Bakery");
+const nextStop = new Stop("Library");
+firstStop.next = nextStop;`,
+  },
+  {
+    name: "Staircase helper",
+    icon: "🪜",
+    description: "Recursion becomes walking down and up a staircase.",
+    problem: "Count the steps down a staircase, then carry the answer back up",
+    language: "python",
+    code: `def count_steps(steps):
+    if steps == 0:
+        return 0
+    return 1 + count_steps(steps - 1)
+
+total = count_steps(3)`,
+  },
 ];
 
 const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string; label: string }> = {
   "workbench": { accent: "#a78bfa", wash: "rgba(167,139,250,0.16)", label: "workbench" },
   "storage-shelf": { accent: "#f59e0b", wash: "rgba(245,158,11,0.16)", label: "storage shelf" },
   "sorting-tray": { accent: "#38bdf8", wash: "rgba(56,189,248,0.16)", label: "sorting tray" },
+  "linked-chain": { accent: "#f472b6", wash: "rgba(244,114,182,0.16)", label: "paper-tag chain" },
   "conveyor-loop": { accent: "#34d399", wash: "rgba(52,211,153,0.16)", label: "repeat route" },
+  "recursion-stairs": { accent: "#c084fc", wash: "rgba(192,132,252,0.16)", label: "staircase" },
   "decision-gate": { accent: "#fb7185", wash: "rgba(251,113,133,0.16)", label: "decision gate" },
   "workshop": { accent: "#f97316", wash: "rgba(249,115,22,0.16)", label: "workshop" },
   "delivery-desk": { accent: "#eab308", wash: "rgba(234,179,8,0.16)", label: "delivery desk" },
@@ -145,14 +179,14 @@ function SceneHeader({ story, step }: { story: RealWorldStory; step: LearningSte
   );
 }
 
-function RealWorldScene({ story }: { story: RealWorldStory }) {
+function RealWorldScene({ story, visualTheme }: { story: RealWorldStory; visualTheme: VisualTheme }) {
   const style = sceneStyles[story.kind];
   const common = "border border-white/10 bg-[#17100c]/90 shadow-[0_16px_35px_rgba(0,0,0,0.3)]";
   const label = "text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]";
 
   if (story.kind === "storage-shelf") {
     return (
-      <div className="relative flex h-[270px] items-end justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#100b08] p-7 story-scene-enter">
+      <div className="relative flex h-[270px] items-end justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#100b08] p-7 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#22130c] to-transparent" />
         <div className="absolute left-7 top-5 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">Kitchen storage shelf</div>
         <div className="relative z-10 w-full max-w-[520px] rounded-2xl border-4 border-[#7c4a2d] bg-[#3e2417] p-4 shadow-[0_0_35px_rgba(245,158,11,0.2)]">
@@ -173,7 +207,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "sorting-tray") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1217] p-6 story-scene-enter">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1217] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(56,189,248,.17) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
         <div className="relative w-full max-w-[540px] rounded-[28px] border-8 border-[#0e7490] bg-[#155e75]/50 p-6 shadow-[0_0_34px_rgba(56,189,248,0.2)]">
           <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-sky-200">Sorting tray</p>
@@ -190,9 +224,40 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
     );
   }
 
+  if (story.kind === "linked-chain") {
+    return (
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#180915] p-6 story-scene-enter" data-scene-world={visualTheme}>
+        <div className="absolute left-6 top-5 rounded-full border border-pink-300/20 bg-pink-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pink-100">Follow the string</div>
+        <div className="relative flex w-full max-w-[560px] items-center justify-center gap-1 sm:gap-3">
+          {["Bakery", "Library", "Park"].map((stop, index) => (
+            <React.Fragment key={stop}>
+              <div className={`scene-object-pop grid h-20 w-20 place-items-center rounded-2xl border text-center text-xs font-black ${index === 1 ? "border-pink-200 bg-pink-300 text-[#34091f] shadow-[0_0_26px_rgba(244,114,182,0.48)]" : "border-pink-400/40 bg-[#3a102e] text-pink-100"}`} style={{ animationDelay: `${index * 75}ms` }}><span className="text-lg">🏷️</span><span>{stop}</span></div>
+              {index < 2 && <div className="scene-object-pop text-2xl text-pink-200" style={{ animationDelay: `${index * 75 + 30}ms` }}>⟶</div>}
+            </React.Fragment>
+          ))}
+        </div>
+        <p className="absolute bottom-5 text-center text-xs font-semibold text-pink-100">Each tag knows where to find the tag that comes after it.</p>
+      </div>
+    );
+  }
+
+  if (story.kind === "recursion-stairs") {
+    return (
+      <div className="relative flex h-[270px] items-end justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#130c1f] p-6 story-scene-enter" data-scene-world={visualTheme}>
+        <div className="absolute left-6 top-5 rounded-full border border-violet-300/20 bg-violet-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-100">One smaller job each time</div>
+        <div className="relative flex items-end gap-1.5">
+          {["3", "2", "1", "0"].map((stepNumber, index) => (
+            <div key={stepNumber} className={`scene-object-pop grid w-20 place-items-center rounded-t-xl border border-violet-300/40 text-sm font-black ${index === 3 ? "h-24 bg-violet-300 text-[#1d102d] shadow-[0_0_28px_rgba(192,132,252,0.45)]" : "bg-[#32174d] text-violet-100"}`} style={{ height: `${84 + index * 28}px`, animationDelay: `${index * 75}ms` }}><span>Step</span><span className="text-xl">{stepNumber}</span></div>
+          ))}
+        </div>
+        <p className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-violet-100">🧍 Walk down to the easy stop, then bring the answer back up.</p>
+      </div>
+    );
+  }
+
   if (story.kind === "conveyor-loop") {
     return (
-      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#08130f] p-6 story-scene-enter">
+      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#08130f] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute left-6 top-5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200">One item at a time</div>
         <div className="absolute inset-x-8 bottom-12 h-14 rounded-full border-4 border-[#166534] bg-[#14532d] shadow-[inset_0_0_18px_rgba(0,0,0,0.5)]" />
         <div className="absolute inset-x-12 bottom-[4.8rem] flex justify-between">
@@ -209,7 +274,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "decision-gate") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#18080e] p-6 story-scene-enter">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#18080e] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute left-8 top-6 rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-200">Question checkpoint</div>
         <div className="relative z-10 grid place-items-center">
           <div className="scene-decision-pulse grid h-24 w-24 place-items-center rounded-full border-4 border-rose-300 bg-rose-400/20 text-4xl shadow-[0_0_35px_rgba(251,113,133,0.45)]">?</div>
@@ -223,7 +288,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "workshop") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1b0d05] p-6 story-scene-enter">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1b0d05] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.18),transparent_60%)]" />
         <div className="relative z-10 w-full max-w-[450px] rounded-2xl border-2 border-orange-300/60 bg-[#29130a] p-5 shadow-[0_0_35px_rgba(249,115,22,0.35)]">
           <div className="flex items-center justify-between border-b border-orange-200/15 pb-3"><span className={label}>Recipe card</span><span className="text-lg">🛠️</span></div>
@@ -236,7 +301,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "delivery-desk") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#171407] p-6 story-scene-enter">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#171407] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-amber-700/15 to-transparent" />
         <div className="relative z-10 grid place-items-center">
           <div className="scene-delivery-pop relative grid h-36 w-44 place-items-center rounded-2xl border-4 border-amber-300 bg-amber-500/45 text-5xl shadow-[0_0_42px_rgba(234,179,8,0.42)]">📦<span className="absolute -right-4 -top-4 rounded-full bg-emerald-300 px-3 py-1 text-xs font-black text-emerald-950">READY</span></div>
@@ -247,7 +312,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
   }
 
   return (
-    <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#110d1b] p-6 story-scene-enter">
+    <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#110d1b] p-6 story-scene-enter" data-scene-world={visualTheme}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.2),transparent_60%)]" />
       <div className={`relative z-10 w-full max-w-[440px] rounded-2xl p-5 ${common}`}>
         <p className={label}>Today’s task</p>
@@ -272,9 +337,11 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>("kitchen");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
+  const activeTheme = getVisualTheme(visualTheme);
 
   const playActionSound = (story?: RealWorldStory) => {
     if (!soundEnabled || typeof window === "undefined" || !story) return;
@@ -356,6 +423,30 @@ export default function Home() {
     };
   }, [isPlaying, speedMs, steps, soundEnabled]);
 
+  useEffect(() => {
+    if (activeView !== "studio") return;
+
+    const handleShortcut = (event: KeyboardEvent) => {
+      const action = getStoryShortcutAction(event);
+      if (!action) return;
+      event.preventDefault();
+
+      if (action === "toggle-play") setIsPlaying((value) => !value);
+      if (action === "previous" || action === "next" || action === "restart") {
+        setIsPlaying(false);
+        setCurrentStepIndex((index) => {
+          const nextIndex = action === "previous" ? Math.max(0, index - 1) : action === "next" ? Math.min(steps.length - 1, index + 1) : 0;
+          playActionSound(steps[nextIndex]?.story);
+          return nextIndex;
+        });
+      }
+      if (action === "toggle-sound") setSoundEnabled((value) => !value);
+    };
+
+    window.addEventListener("keydown", handleShortcut, { capture: true });
+    return () => window.removeEventListener("keydown", handleShortcut, { capture: true });
+  }, [activeView, steps, soundEnabled]);
+
   const visualDictionary = [
     ["🗃️", "Labelled boxes", "A variable: a named place that remembers something."],
     ["🧺", "Sorting tray", "A list or array: a group of items kept together."],
@@ -365,7 +456,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090604] text-[#f7f0e8] selection:bg-amber-300/30">
+    <div className={`visual-theme-${visualTheme} min-h-screen bg-[#090604] text-[#f7f0e8] selection:bg-amber-300/30`}>
       <header className="sticky top-0 z-50 border-b border-[#2c2018] bg-[#120d0a]/90 px-5 py-3 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <button onClick={() => setActiveView("landing")} className="flex items-center gap-3 text-left" aria-label="Go to code input">
@@ -398,6 +489,11 @@ export default function Home() {
               </div>
               <div className="relative mt-6 space-y-5">
                 <div>
+                  <div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Choose your visual world</Label><span className="text-[10px] text-[#8f7c6d]">You can change this later</span></div>
+                  <div className="grid grid-cols-3 gap-2">{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`rounded-2xl border p-3 text-left transition ${visualTheme === theme.id ? "border-amber-300/65 bg-amber-300/10 shadow-[0_0_18px_rgba(245,158,11,0.14)]" : "border-white/10 bg-[#0c0806] hover:border-[#694b35]"}`}><span className="text-lg">{theme.icon}</span><span className="ml-1.5 text-xs font-bold text-white">{theme.shortLabel}</span></button>)}</div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#a89787]">{activeTheme.description}</p>
+                </div>
+                <div>
                   <div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Try a ready-made everyday example</Label><span className="text-[10px] text-[#8f7c6d]">or write your own below</span></div>
                   <div className="grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); toast.success(`${preset.name} example loaded.`); }} className="group rounded-2xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-lg">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div>
                 </div>
@@ -421,25 +517,28 @@ export default function Home() {
           <div className="mb-6 flex flex-col justify-between gap-4 rounded-3xl border border-[#37271d] bg-[#15100d] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.32)] md:flex-row md:items-center">
             <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">Learning story</p><h1 className="mt-1 text-xl font-black text-white">{userProblem || "Your code story"}</h1><p className="mt-1 text-xs text-[#a89787]">Watch the highlighted scene, then read the simple explanation beside it.</p></div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => goToStep(0)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]" title="Start again"><RotateCcw className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex - 1)} disabled={currentStepIndex === 0} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={() => goToStep(0)} aria-label="Restart story" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]" title="Start again"><RotateCcw className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex - 1)} aria-label="Previous step" disabled={currentStepIndex === 0} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronLeft className="h-4 w-4" /></Button>
               <Button onClick={() => setIsPlaying((value) => !value)} className="h-10 rounded-xl bg-gradient-to-r from-[#ffbd7d] to-[#d86527] px-5 text-xs font-black text-[#160b06]">{isPlaying ? <Pause className="mr-1.5 h-4 w-4" /> : <Play className="mr-1.5 h-4 w-4" />}{isPlaying ? "Pause story" : "Play story"}</Button>
-              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex + 1)} disabled={currentStepIndex === steps.length - 1} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronRight className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex + 1)} aria-label="Next step" disabled={currentStepIndex === steps.length - 1} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronRight className="h-4 w-4" /></Button>
               <label className="ml-1 flex items-center gap-2 text-[11px] text-[#a89787]">Speed <input aria-label="Story playback speed" type="range" min="1000" max="4200" step="400" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="w-20 accent-[#f59e0b]" /></label>
             </div>
+            <div className="flex flex-wrap items-center gap-2 md:justify-end"><span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-[#8f7c6d]">World</span>{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`rounded-xl border px-2.5 py-1.5 text-[11px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/60 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}>{theme.icon} {theme.shortLabel}</button>)}</div>
           </div>
+
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#0c0806]/75 px-4 py-3 text-xs text-[#c3b2a1] md:flex-row md:items-center md:justify-between"><span><strong className="text-white">{activeTheme.name}:</strong> {activeTheme.sceneHint}</span><div className="flex flex-wrap gap-x-3 gap-y-1">{STORY_SHORTCUTS.map((shortcut) => <span key={shortcut.keys}><kbd className="rounded border border-[#624733] bg-[#21150e] px-1.5 py-0.5 font-mono text-[10px] text-amber-100">{shortcut.keys}</kbd> <span className="text-[10px] text-[#9e8a79]">{shortcut.label}</span></span>)}</div></div>
 
           <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-6">
               <SceneHeader story={currentStep.story} step={currentStep} />
-              <div key={`scene-${currentStep.step}-${currentStep.story.kind}`} className="mt-5"><RealWorldScene story={currentStep.story} /></div>
+              <div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step} className="mt-5"><RealWorldScene story={currentStep.story} visualTheme={visualTheme} /></div>
               <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0c0806] px-4 py-3 text-xs text-[#bdac9b]"><Box className="h-4 w-4 shrink-0 text-amber-200" /><span><strong className="text-white">What you are seeing:</strong> This picture represents a {sceneStyles[currentStep.story.kind].label}, not a hard-to-read memory diagram.</span></div>
             </div>
 
             <div className="rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-200" /><h2 className="text-sm font-bold text-white">What the computer is doing</h2></div><Badge className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-bold text-amber-200">Line {currentStep.line}</Badge></div>
               <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">The code says</p><code className="mt-2 block whitespace-pre-wrap break-words font-mono text-xs leading-6 text-[#f9e9d5]">{currentStep.code}</code></div>
-              <div key={`explanation-${currentStep.step}`} aria-live="polite" className="explanation-enter mt-4 rounded-2xl border border-[#3d2c21] bg-[#0c0806] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2bc89]">In everyday words</p><p className="mt-2 text-sm font-medium leading-7 text-white">{currentStep.story.plainEnglish}</p></div>
+              <div key={`explanation-${currentStep.step}`} data-story-explanation aria-live="polite" className="explanation-enter mt-4 rounded-2xl border border-[#3d2c21] bg-[#0c0806] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2bc89]">In everyday words</p><p className="mt-2 text-sm font-medium leading-7 text-white">{currentStep.story.plainEnglish}</p></div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200">What changed</p><p className="mt-2 text-xs leading-5 text-[#d7efe2]">{currentStep.story.whatChanged}</p></div><div className="rounded-2xl border border-sky-300/15 bg-sky-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">Everyday example</p><p className="mt-2 text-xs leading-5 text-[#d9eff8]">{currentStep.story.analogy}</p></div></div>
               <div className="mt-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump to any part of the story</p><div className="mt-3 max-h-[265px] space-y-2 overflow-y-auto pr-1">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`${step.line}-${step.code}`} onClick={() => goToStep(index)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition ${isActive ? "border-amber-300/60 bg-amber-300/10 shadow-[0_0_20px_rgba(245,158,11,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#694b35] hover:bg-[#17100d]"}`}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/5 text-lg">{step.story.icon}</span><span className="min-w-0 flex-1"><span className={`block text-xs font-bold ${isActive ? "text-white" : "text-[#d4c1b0]"}`}>Step {step.step}: {step.story.title}</span><span className="mt-0.5 block truncate font-mono text-[10px] text-[#8f7c6d]">Line {step.line}: {step.code}</span></span>{isActive && <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-200" />}</button>; })}</div></div>
             </div>

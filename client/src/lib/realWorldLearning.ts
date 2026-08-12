@@ -2,7 +2,9 @@ export type SceneKind =
   | "workbench"
   | "storage-shelf"
   | "sorting-tray"
+  | "linked-chain"
   | "conveyor-loop"
+  | "recursion-stairs"
   | "decision-gate"
   | "workshop"
   | "delivery-desk";
@@ -31,7 +33,9 @@ export function getActionSound(kind: SceneKind): ActionSound {
   const profiles: Record<SceneKind, ActionSound> = {
     "storage-shelf": { label: "soft pop", waveform: "sine", startHz: 360, endHz: 620, duration: 0.18, volume: 0.055 },
     "sorting-tray": { label: "item click", waveform: "triangle", startHz: 520, endHz: 680, duration: 0.16, volume: 0.045 },
+    "linked-chain": { label: "link click", waveform: "triangle", startHz: 420, endHz: 510, duration: 0.16, volume: 0.042 },
     "conveyor-loop": { label: "gentle tick", waveform: "sine", startHz: 250, endHz: 330, duration: 0.12, volume: 0.038 },
+    "recursion-stairs": { label: "stair chime", waveform: "sine", startHz: 390, endHz: 780, duration: 0.2, volume: 0.045 },
     "decision-gate": { label: "decision ping", waveform: "triangle", startHz: 480, endHz: 840, duration: 0.22, volume: 0.05 },
     workshop: { label: "tool chime", waveform: "sine", startHz: 340, endHz: 560, duration: 0.2, volume: 0.045 },
     "delivery-desk": { label: "delivery bell", waveform: "sine", startHz: 660, endHz: 990, duration: 0.25, volume: 0.055 },
@@ -55,6 +59,30 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   const trimmed = line.trim();
   const lower = trimmed.toLowerCase();
   const name = friendlyName(trimmed);
+
+  if (/\b(node|head|tail|next)\b/.test(lower) && /\b(next|node|head|tail|new)\b/.test(lower)) {
+    return {
+      kind: "linked-chain",
+      icon: "🔗",
+      title: "A chain of labelled stops is being connected",
+      plainEnglish: "The computer is joining one stop to the next. Each stop remembers who comes after it, so the chain can be followed in order.",
+      whatChanged: "One paper-tag stop now points to the next stop in the chain.",
+      analogy: "It is like tying name tags together with string so you can follow the trail from the first tag to the last.",
+      objectLabel: "Linked stop",
+    };
+  }
+
+  if (/\b(return)\b.*\b([a-z_]\w*)\s*\(/.test(lower) || /\b(recurs|factorial|fibonacci|countdown|stack_plates)\b/.test(lower)) {
+    return {
+      kind: "recursion-stairs",
+      icon: "🪜",
+      title: "The computer climbs one small step at a time",
+      plainEnglish: "The computer gives the same job a smaller version of itself. It keeps taking one step down until it reaches the easy stopping point, then carries the answers back up.",
+      whatChanged: "A new smaller job was placed on the step above the earlier job.",
+      analogy: "It is like walking down a staircase to pick up one item at a time, then carrying the items back up in order.",
+      objectLabel: "Stair step",
+    };
+  }
 
   if (/^(?:function|def\s+|class\s+|public\s+.*\(|private\s+.*\(|static\s+.*\()/.test(lower)) {
     return {

@@ -14,3 +14,15 @@
 - [x] Verify preset loading, step changes, sound toggling, and scene-transition presence with scripted in-browser checks.
 - [x] Verify that Play advances steps over time and updates the scene and explanation in sync.
 - [x] Save a new checkpoint after the animation, audio, preset, and reusable-skill updates.
+- [x] Add linked-list and recursion presets using clear real-world analogies.
+- [x] Add keyboard shortcuts for play, pause, previous step, next step, restart, and sound toggling.
+- [x] Add Kitchen, Office, and Game World theme choices that update the visual analogy styling.
+- [x] Add automated tests for advanced preset mappings, keyboard controls, and theme selection helpers.
+- [x] Verify the advanced presets, shortcuts, and all visual themes on desktop and mobile, then save a checkpoint.
+- [x] Run and confirm Vitest coverage for linked-list and recursion stories, keyboard shortcuts, and visual-theme helpers.
+- [x] Verify linked-list and recursion presets, keyboard shortcuts, and Kitchen/Office/Game themes in the running browser on desktop and mobile.
+- [x] Verify Kitchen, Office, and Game theme changes update the active scene in the running browser.
+- [x] Run an interactive mobile-size browser check for advanced presets and tap-equivalent story controls.
+- [x] Verify mobile tap controls for play, pause, previous, next, restart, sound, and playback speed stay synchronized with the scene and explanation.
+- [x] Verify on mobile that the active scene changes with next/play/restart and remains unchanged on pause, in sync with the explanation.
+- [ ] Save a new checkpoint after the advanced presets, keyboard controls, and theme verification updates.
