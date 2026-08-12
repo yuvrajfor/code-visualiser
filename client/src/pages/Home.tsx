@@ -12,6 +12,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Share2,
   Sparkles,
   GripVertical,
   Volume2,
@@ -30,6 +31,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 import { getLearningWorkspace, getLearningWorkspaceLabel, type LearningWorkspace } from "@/lib/workspaceNavigation";
+import { defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPreviousOnboardingStep, onboardingSteps, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, type OnboardingWorkspace, type OnboardingStatus, type SharedGraphScenario } from "@/lib/learningFlow";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -311,6 +313,21 @@ function CityComparisonPanel({ routeState, stepNumber, visualTheme, nodePosition
   );
 }
 
+function OnboardingCoach({ workspace, stepIndex, onBack, onNext, onSkip }: { workspace: OnboardingWorkspace; stepIndex: number; onBack: () => void; onNext: () => void; onSkip: () => void }) {
+  const steps = onboardingSteps[workspace];
+  const step = steps[stepIndex] ?? steps[0];
+  const isLast = stepIndex === steps.length - 1;
+  const accent = workspace === "code" ? "border-indigo-300/35 bg-[#10152a]/95" : "border-cyan-300/35 bg-[#071c2c]/95";
+  const icon = workspace === "code" ? <Code2 className="h-5 w-5 text-indigo-100" /> : <Lightbulb className="h-5 w-5 text-cyan-100" />;
+
+  return (
+    <aside className={`fixed right-4 top-[5.25rem] z-[70] w-[min(23rem,calc(100vw-2rem))] rounded-[22px] border p-4 shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl ${accent}`} aria-live="polite" data-onboarding-coach={workspace}>
+      <div className="flex items-start gap-3"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5">{icon}</div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/70">{workspace === "code" ? "Code Studio guide" : "Algorithm Lab guide"} · {stepIndex + 1}/{steps.length}</p><button type="button" onClick={onSkip} className="text-[11px] font-bold text-white/60 transition hover:text-white">Skip tour</button></div><h2 className="mt-1 text-sm font-black text-white">{step.title}</h2><p className="mt-1 text-xs leading-5 text-[#c9d3e5]">{step.description}</p></div></div>
+      <div className="mt-4 flex items-center justify-between gap-3"><div className="flex gap-1.5" aria-label={`${stepIndex + 1} of ${steps.length} onboarding steps`}>{steps.map((_, index) => <span key={index} className={`h-1.5 rounded-full transition-all ${index === stepIndex ? "w-5 bg-white" : "w-1.5 bg-white/25"}`} />)}</div><div className="flex items-center gap-2"><Button variant="outline" size="sm" onClick={onBack} disabled={stepIndex === 0} className="h-8 rounded-lg border-white/15 bg-white/5 px-3 text-[11px] text-white hover:bg-white/10">Back</Button><Button size="sm" onClick={onNext} className="h-8 rounded-lg bg-white px-3 text-[11px] font-black text-[#0b1424] hover:bg-sky-100">{isLast ? "Got it" : "Next"} <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button></div></div>
+    </aside>
+  );
+}
+
 function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodePositionChange }: { story: RealWorldStory; visualTheme: VisualTheme; routeState?: CityRouteState; nodePositions?: Record<string, CityNodePosition>; onNodePositionChange?: (stop: string, position: CityNodePosition) => void }) {
   const style = sceneStyles[story.kind];
   const common = "border border-white/10 bg-[#17100c]/90 shadow-[0_16px_35px_rgba(0,0,0,0.3)]";
@@ -585,6 +602,9 @@ export default function Home() {
   const [comparisonStepIndex, setComparisonStepIndex] = useState(0);
   const [comparisonPlaying, setComparisonPlaying] = useState(false);
   const [comparisonNodePositions, setComparisonNodePositions] = useState<Record<string, CityNodePosition>>({});
+  const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus>(() => typeof window === "undefined" ? { ...defaultOnboardingStatus } : readOnboardingStatus(window.localStorage));
+  const [onboardingWorkspace, setOnboardingWorkspace] = useState<OnboardingWorkspace | null>(null);
+  const [onboardingStepIndex, setOnboardingStepIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
@@ -601,6 +621,26 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
   }, [visualTheme]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("code-story-studio:onboarding-v1", JSON.stringify(onboardingStatus));
+  }, [onboardingStatus]);
+
+  const openLearningWorkspace = (workspace: OnboardingWorkspace) => {
+    setActiveView("landing");
+    setLandingWorkspace(getLearningWorkspace(workspace === "code" ? "open-code" : "open-algorithms"));
+    if (!onboardingStatus[workspace]) {
+      setOnboardingWorkspace(workspace);
+      setOnboardingStepIndex(0);
+    }
+  };
+
+  const finishOnboarding = (workspace: OnboardingWorkspace) => {
+    const completedTour = finishOnboardingTour(onboardingStatus, workspace);
+    setOnboardingStatus(completedTour.status);
+    setOnboardingWorkspace(completedTour.workspace);
+    setOnboardingStepIndex(completedTour.stepIndex);
+  };
 
   const playActionSound = (story?: RealWorldStory) => {
     if (!soundEnabled || typeof window === "undefined" || !story) return;
@@ -667,30 +707,61 @@ export default function Home() {
     toast.success("Your code is now ready as an everyday visual story.");
   };
 
-  const startCityComparison = () => {
+  const startCityComparison = (sharedScenario?: SharedGraphScenario) => {
     try {
-      const parsed = parseCityGraph(customGraphText);
-      if (!parsed.stops.includes(customStartStop) || !parsed.stops.includes(customTargetStop)) throw new Error("Choose a start and target stop from your map.");
-      if (customStartStop === customTargetStop) throw new Error("Choose two different stops so the route has somewhere to go.");
-      const bfs = createCityRouteWalkthrough(parsed.graph, "bfs", customStartStop, customTargetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
-      const dfs = createCityRouteWalkthrough(parsed.graph, "dfs", customStartStop, customTargetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
-      const dijkstra = createDijkstraRouteWalkthrough(parsed.weightedGraph, customStartStop, customTargetStop);
-      const generatedCode = createCustomCityCode(parsed.weightedGraph, customStartStop, customTargetStop);
+      const graphText = sharedScenario?.graphText ?? customGraphText;
+      const startStop = sharedScenario?.startStop ?? customStartStop;
+      const targetStop = sharedScenario?.targetStop ?? customTargetStop;
+      const parsed = parseCityGraph(graphText);
+      if (!parsed.stops.includes(startStop) || !parsed.stops.includes(targetStop)) throw new Error("Choose a start and target stop from your map.");
+      if (startStop === targetStop) throw new Error("Choose two different stops so the route has somewhere to go.");
+      const bfs = createCityRouteWalkthrough(parsed.graph, "bfs", startStop, targetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
+      const dfs = createCityRouteWalkthrough(parsed.graph, "dfs", startStop, targetStop).map((state) => ({ ...state, weightedGraph: parsed.weightedGraph }));
+      const dijkstra = createDijkstraRouteWalkthrough(parsed.weightedGraph, startStop, targetStop);
+      const generatedCode = createCustomCityCode(parsed.weightedGraph, startStop, targetStop);
+      setCustomGraphText(graphText);
+      setCustomStartStop(startStop);
+      setCustomTargetStop(targetStop);
       setUserCode(generatedCode);
-      setUserProblem(`Compare two ways to travel from ${customStartStop} to ${customTargetStop}`);
+      setUserProblem(`Compare three ways to travel from ${startStop} to ${targetStop}`);
       setSelectedLang("python");
       setSelectedWalkthrough(null);
-      setComparisonRun({ graph: parsed.graph, weightedGraph: parsed.weightedGraph, stops: parsed.stops, startStop: customStartStop, targetStop: customTargetStop, bfs, dfs, dijkstra });
-      setComparisonNodePositions(getCityGraphPositions(parsed.stops));
+      setComparisonRun({ graph: parsed.graph, weightedGraph: parsed.weightedGraph, stops: parsed.stops, startStop, targetStop, bfs, dfs, dijkstra });
+      setComparisonNodePositions(sharedScenario?.nodePositions ?? getCityGraphPositions(parsed.stops));
       setComparisonStepIndex(0);
       setComparisonPlaying(false);
       setActiveView("comparison");
-      saveSubmission.mutate({ problemTitle: `City Map: ${customStartStop} to ${customTargetStop}`, language: "python", code: generatedCode });
+      saveSubmission.mutate({ problemTitle: `City Map: ${startStop} to ${targetStop}`, language: "python", code: generatedCode });
       toast.success("Your custom City Map is ready for a BFS, DFS, and Dijkstra race.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Please check the City Map details.");
     }
   };
+
+  const shareCurrentComparison = async () => {
+    if (!comparisonRun) return;
+    const query = serializeGraphScenario({ version: 1, graphText: customGraphText, startStop: comparisonRun.startStop, targetStop: comparisonRun.targetStop, nodePositions: comparisonNodePositions });
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${query}`;
+    if (shareUrl.length > 8_000) {
+      toast.error("This map is too large for a share link. Try fewer city stops or roads.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Share link copied. It will reopen this City Map exactly as arranged.");
+    } catch {
+      window.prompt("Copy your share link", shareUrl);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const scenario = parseGraphScenario(window.location.search);
+    if (!scenario) return;
+    setLandingWorkspace(getLearningWorkspace("open-algorithms"));
+    startCityComparison(scenario);
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const goToStep = (index: number) => {
     setIsPlaying(false);
@@ -786,16 +857,28 @@ export default function Home() {
             <div><p className="text-base font-extrabold tracking-tight text-white">Code Story Studio</p><p className="text-[10px] font-semibold tracking-[0.12em] text-indigo-200">VISUAL LEARNING LAB</p></div>
           </button>
           <nav className="hidden items-center gap-1 rounded-xl border border-white/8 bg-white/[0.025] p-1 md:flex" aria-label="Workspace navigation">
-            <button type="button" data-active={landingWorkspace === "code" || activeView === "studio"} onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("open-code")); }} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Code studio</button>
-            <button type="button" data-active={landingWorkspace === "algorithms" || activeView === "comparison"} onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("open-algorithms")); }} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Algorithm lab</button>
+            <button type="button" data-active={landingWorkspace === "code" || activeView === "studio"} onClick={() => openLearningWorkspace("code")} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Code studio</button>
+            <button type="button" data-active={landingWorkspace === "algorithms" || activeView === "comparison"} onClick={() => openLearningWorkspace("algorithms")} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Algorithm lab</button>
           </nav>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button>
             <Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
-            {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("home")); }} className="rounded-xl border-white/10 bg-white/5 text-xs text-white hover:bg-white/10">Back to workspace</Button> : <Button onClick={() => setLandingWorkspace(getLearningWorkspace("open-code"))} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button>}
+            {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("home")); }} className="rounded-xl border-white/10 bg-white/5 text-xs text-white hover:bg-white/10">Back to workspace</Button> : <Button onClick={() => openLearningWorkspace("code")} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button>}
           </div>
         </div>
       </header>
+
+      {onboardingWorkspace && <OnboardingCoach
+        workspace={onboardingWorkspace}
+        stepIndex={onboardingStepIndex}
+        onBack={() => setOnboardingStepIndex((step) => getPreviousOnboardingStep(step))}
+        onNext={() => {
+          const nextStep = getNextOnboardingStep(onboardingWorkspace, onboardingStepIndex);
+          if (nextStep.isComplete) finishOnboarding(onboardingWorkspace);
+          else setOnboardingStepIndex(nextStep.stepIndex);
+        }}
+        onSkip={() => finishOnboarding(onboardingWorkspace)}
+      />}
 
       {showShortcutHelp && <aside id="shortcut-help" role="dialog" aria-label="Keyboard shortcuts" className="fixed right-4 top-[4.8rem] z-[60] w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-amber-300/25 bg-[#17100d]/95 p-4 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Story controls</p><h2 className="mt-1 text-sm font-black text-white">Keyboard shortcuts</h2></div><Button variant="ghost" size="icon" onClick={() => setShowShortcutHelp(false)} className="h-8 w-8 rounded-xl text-[#c5ad98] hover:bg-white/10 hover:text-white" aria-label="Close shortcut help"><X className="h-4 w-4" /></Button></div><p className="mt-2 text-xs leading-relaxed text-[#aa9684]">Shortcuts work while viewing a story. They never interrupt typing in the editor.</p><div className="mt-4 space-y-2">{STORY_SHORTCUTS.map((shortcut) => <div key={shortcut.label} className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0c0806] px-3 py-2"><span className="text-xs text-[#d8c4b2]">{shortcut.label}</span><kbd className="rounded-md border border-[#5e4432] bg-[#241711] px-2 py-1 font-mono text-[10px] font-bold text-amber-100">{shortcut.keys}</kbd></div>)}</div></aside>}
 
@@ -806,7 +889,7 @@ export default function Home() {
               <Badge className="rounded-full border border-indigo-300/25 bg-indigo-300/10 px-4 py-1.5 text-[11px] font-bold text-indigo-100">VISUAL PROGRAMMING FOR BEGINNERS</Badge>
               <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-[-0.045em] text-white md:text-6xl">Learn code by watching the <span className="bg-gradient-to-r from-indigo-200 via-sky-200 to-cyan-200 bg-clip-text text-transparent">idea move.</span></h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#aebad0] md:text-lg">One focused workspace for two kinds of learning: turn everyday code into a visual story, or build a map and watch algorithms make different decisions.</p>
-              <div className="mt-7 flex flex-wrap gap-3"><Button onClick={() => setLandingWorkspace(getLearningWorkspace("open-code"))} className="h-11 rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e]">Start with my code <ArrowRight className="ml-2 h-4 w-4" /></Button><Button variant="outline" onClick={() => setLandingWorkspace(getLearningWorkspace("open-algorithms"))} className="h-11 rounded-xl border-white/12 bg-white/[0.035] px-5 text-xs font-bold text-white hover:bg-white/10">Explore algorithms</Button></div>
+              <div className="mt-7 flex flex-wrap gap-3"><Button onClick={() => openLearningWorkspace("code")} className="h-11 rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e]">Start with my code <ArrowRight className="ml-2 h-4 w-4" /></Button><Button variant="outline" onClick={() => openLearningWorkspace("algorithms")} className="h-11 rounded-xl border-white/12 bg-white/[0.035] px-5 text-xs font-bold text-white hover:bg-white/10">Explore algorithms</Button></div>
             </div>
             <aside className="lab-surface rounded-[28px] p-5 md:p-6">
               <p className="lab-kicker">Your learning path</p><h2 className="mt-2 text-xl font-extrabold tracking-tight text-white">Pick a lens, not a complicated setup.</h2>
@@ -816,8 +899,8 @@ export default function Home() {
           </section>
 
           {landingWorkspace === "overview" && <section className="mt-10 grid gap-4 md:grid-cols-2" aria-label="Choose your learning workspace">
-            <button type="button" data-testid="open-code-studio" onClick={() => setLandingWorkspace(getLearningWorkspace("open-code"))} className="lab-surface group rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-indigo-300/35"><div className="flex items-start justify-between gap-4"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-300/12 text-indigo-100"><Code2 className="h-6 w-6" /></div><span className="rounded-full border border-indigo-300/20 bg-indigo-300/10 px-3 py-1 text-[10px] font-bold text-indigo-100">ONE CODE IDEA</span></div><p className="mt-7 lab-kicker">01 · Code studio</p><h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Turn code into a story you can follow.</h2><p className="mt-3 text-sm leading-relaxed text-[#aebad0]">Paste a small program, pick a visual world, and walk through every idea in plain English.</p><span className="mt-6 inline-flex items-center text-xs font-black text-indigo-100">Open Code Studio <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></span></button>
-            <button type="button" data-testid="open-algorithm-lab" onClick={() => setLandingWorkspace(getLearningWorkspace("open-algorithms"))} className="lab-surface group rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-cyan-300/35"><div className="flex items-start justify-between gap-4"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-300/12 text-cyan-100"><Lightbulb className="h-6 w-6" /></div><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-bold text-cyan-100">CITY MAPS</span></div><p className="mt-7 lab-kicker">02 · Algorithm lab</p><h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Build a route. Watch three strategies think.</h2><p className="mt-3 text-sm leading-relaxed text-[#aebad0]">Create a weighted city map, then compare BFS, DFS, and Dijkstra in one live workspace.</p><span className="mt-6 inline-flex items-center text-xs font-black text-cyan-100">Open Algorithm Lab <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></span></button>
+            <button type="button" data-testid="open-code-studio" onClick={() => openLearningWorkspace("code")} className="lab-surface group rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-indigo-300/35"><div className="flex items-start justify-between gap-4"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-300/12 text-indigo-100"><Code2 className="h-6 w-6" /></div><span className="rounded-full border border-indigo-300/20 bg-indigo-300/10 px-3 py-1 text-[10px] font-bold text-indigo-100">ONE CODE IDEA</span></div><p className="mt-7 lab-kicker">01 · Code studio</p><h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Turn code into a story you can follow.</h2><p className="mt-3 text-sm leading-relaxed text-[#aebad0]">Paste a small program, pick a visual world, and walk through every idea in plain English.</p><span className="mt-6 inline-flex items-center text-xs font-black text-indigo-100">Open Code Studio <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></span></button>
+            <button type="button" data-testid="open-algorithm-lab" onClick={() => openLearningWorkspace("algorithms")} className="lab-surface group rounded-[28px] p-6 text-left transition hover:-translate-y-1 hover:border-cyan-300/35"><div className="flex items-start justify-between gap-4"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-300/12 text-cyan-100"><Lightbulb className="h-6 w-6" /></div><span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-bold text-cyan-100">CITY MAPS</span></div><p className="mt-7 lab-kicker">02 · Algorithm lab</p><h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white">Build a route. Watch three strategies think.</h2><p className="mt-3 text-sm leading-relaxed text-[#aebad0]">Create a weighted city map, then compare BFS, DFS, and Dijkstra in one live workspace.</p><span className="mt-6 inline-flex items-center text-xs font-black text-cyan-100">Open Algorithm Lab <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></span></button>
           </section>}
 
           <section data-detailed-workspaces className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
@@ -844,7 +927,7 @@ export default function Home() {
                   <p className="mt-2 text-[11px] leading-relaxed text-[#a8c7eb]">Use one line per stop. Add a travel time in brackets when you need it: <code className="rounded bg-sky-300/10 px-1 text-sky-100">Cafe: Library (4), Park (2)</code>. Roads work in the direction you list them; a missing time is 1 minute.</p>
                   <Textarea aria-label="Custom city graph" value={customGraphText} onChange={(event) => { const next = event.target.value; setCustomGraphText(next); try { const parsed = parseCityGraph(next); setCustomStartStop((current) => parsed.stops.includes(current) ? current : parsed.stops[0] ?? ""); setCustomTargetStop((current) => parsed.stops.includes(current) ? current : parsed.stops.at(-1) ?? ""); } catch { /* Keep the last valid selections while the learner edits. */ } }} rows={6} className="mt-3 resize-y rounded-2xl border-sky-300/20 bg-[#06101e] font-mono text-xs leading-6 text-sky-50 focus-visible:ring-sky-300" placeholder="Cafe: Library, Park\nLibrary: Museum\nPark:" />
                   <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Start stop<select aria-label="Custom city start stop" value={customStartStop} onChange={(event) => setCustomStartStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Target stop<select aria-label="Custom city target stop" value={customTargetStop} onChange={(event) => setCustomTargetStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label></div>
-                  <Button type="button" onClick={startCityComparison} disabled={customGraphStops.length < 2} className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 text-xs font-black text-[#06101e] shadow-[0_0_28px_rgba(56,189,248,0.24)] hover:from-white hover:to-cyan-200 disabled:opacity-40">Compare BFS, DFS, and Dijkstra <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                  <Button type="button" onClick={() => startCityComparison()} disabled={customGraphStops.length < 2} className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 text-xs font-black text-[#06101e] shadow-[0_0_28px_rgba(56,189,248,0.24)] hover:from-white hover:to-cyan-200 disabled:opacity-40">Compare BFS, DFS, and Dijkstra <ArrowRight className="ml-2 h-4 w-4" /></Button>
                 </section>
                 <div data-code-only><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">What does this code try to do?</Label><Input value={userProblem} onChange={(event) => setUserProblem(event.target.value)} className="h-12 rounded-xl border-[#39291f] bg-[#0b0705] text-white focus-visible:ring-[#f59e0b]" placeholder="For example: Find an apple in a basket" /></div>
                 <div data-code-only><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => { setUserCode(event.target.value); setSelectedWalkthrough(null); }} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
@@ -902,6 +985,10 @@ export default function Home() {
           <section className="lab-surface mt-6 rounded-[28px] p-4 md:p-5" aria-label="Shared comparison controls">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center"><div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex - 1)} disabled={comparisonStepIndex === 0} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronLeft className="h-4 w-4" /></Button><Button onClick={() => setComparisonPlaying((playing) => !playing)} className="h-11 min-w-28 rounded-xl bg-gradient-to-r from-sky-200 to-violet-200 text-xs font-black text-[#0a0712] hover:from-white hover:to-violet-100">{comparisonPlaying ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4 fill-current" /> Play both</>}</Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex + 1)} disabled={comparisonStepIndex >= comparisonLength - 1} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronRight className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(0)} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10" title="Restart both explorers"><RotateCcw className="h-4 w-4" /></Button></div><div className="min-w-0 flex-1"><div className="mb-1.5 flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]"><span>Shared moment</span><span>Step {comparisonStepIndex + 1} of {comparisonLength}</span></div><input aria-label="Comparison progress" type="range" min="0" max={Math.max(comparisonLength - 1, 0)} value={comparisonStepIndex} onChange={(event) => goToComparisonStep(Number(event.target.value))} className="w-full accent-sky-300" /></div><label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a89787]">Speed<select aria-label="Comparison speed" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="h-9 rounded-xl border border-white/10 bg-[#0c0806] px-2 text-xs text-white"><option value={3000}>Slow</option><option value={2200}>Normal</option><option value={1400}>Fast</option></select></label></div>
           </section>
+
+          <div className="mt-3 flex justify-end">
+            <Button variant="outline" onClick={() => void shareCurrentComparison()} className="h-10 rounded-xl border-cyan-300/25 bg-cyan-300/10 px-3 text-xs font-black text-cyan-100 hover:bg-cyan-300/20"><Share2 className="mr-1.5 h-4 w-4" /> Share this city map</Button>
+          </div>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-3"><CityComparisonPanel routeState={comparisonBfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.bfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDijkstraState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dijkstra.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /></section>
 

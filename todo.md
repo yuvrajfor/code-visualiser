@@ -73,3 +73,12 @@
 - [x] Verify the redesigned learning home on mobile, including its two-choice entry flow and responsive layout.
 - [x] Verify the focused Code Studio workflow on mobile after entering from the redesigned learning home.
 - [x] Run the final automated regression suite and TypeScript check after the focused-workspace redesign.
+- [x] Audit the active Code Studio and Algorithm Lab controls to determine the exact onboarding sequence and share-action placement: guide Code Studio immediately after it opens, guide Algorithm Lab at map setup and comparison launch, and offer sharing only after a custom comparison has been created.
+- [x] Add contextual first-time onboarding tooltips for Code Studio with a skip, back, and completion flow.
+- [x] Add contextual first-time onboarding tooltips for Algorithm Lab with a skip, back, and completion flow.
+- [x] Implement versioned, URL-safe shareable custom graph scenarios that restore graph, start, target, and layout state on load.
+- [x] Add automated coverage for onboarding progression and share-link serialization and parsing.
+- [x] Verify onboarding and shared-link workflows on desktop and mobile, then save a checkpoint.
+- [x] Add automated tests covering onboarding step progression, back navigation, skip behavior, and completion.
+- [x] Add explicit automated coverage for the skip action clearing the active coaching card and completing only its selected workspace.
+- [x] Save a final checkpoint for the verified contextual onboarding and shared City Map link flow.

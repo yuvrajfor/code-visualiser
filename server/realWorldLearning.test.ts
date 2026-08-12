@@ -4,6 +4,7 @@ import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
 import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
 import { getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
+import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario } from "../client/src/lib/learningFlow";
 
 describe("premium learning workspace navigation", () => {
   it("keeps the landing home focused until a learner chooses code or algorithms", () => {
@@ -16,6 +17,38 @@ describe("premium learning workspace navigation", () => {
     expect(getLearningWorkspaceLabel("overview")).toBe("Learning home");
     expect(getLearningWorkspaceLabel("code")).toBe("Code Studio");
     expect(getLearningWorkspaceLabel("algorithms")).toBe("Algorithm Lab");
+  });
+});
+
+describe("contextual onboarding and shared graph scenarios", () => {
+  it("keeps first-time guidance separate for Code Studio and Algorithm Lab", () => {
+    const afterCode = completeOnboarding(defaultOnboardingStatus, "code");
+    const storage = { getItem: () => JSON.stringify(afterCode) };
+
+    expect(afterCode).toEqual({ code: true, algorithms: false });
+    expect(readOnboardingStatus(storage)).toEqual({ code: true, algorithms: false });
+  });
+
+  it("moves a coaching card forward and back, completing only after its final step or a skip", () => {
+    expect(getPreviousOnboardingStep(0)).toBe(0);
+    expect(getPreviousOnboardingStep(2)).toBe(1);
+    expect(getNextOnboardingStep("code", 0)).toEqual({ stepIndex: 1, isComplete: false });
+    expect(getNextOnboardingStep("code", 1)).toEqual({ stepIndex: 2, isComplete: false });
+    expect(getNextOnboardingStep("code", 2)).toEqual({ stepIndex: 2, isComplete: true });
+    expect(completeOnboarding(defaultOnboardingStatus, "algorithms")).toEqual({ code: false, algorithms: true });
+  });
+
+  it("lets a learner skip one guide without marking the other guide complete", () => {
+    const skippedTour = finishOnboardingTour(defaultOnboardingStatus, "code");
+
+    expect(skippedTour).toEqual({ status: { code: true, algorithms: false }, workspace: null, stepIndex: 0 });
+  });
+
+  it("round-trips a versioned city-map scenario with its learner-arranged layout", () => {
+    const scenario = { version: 1 as const, graphText: "Cafe: Park (2)\nPark: Restaurant (3)\nRestaurant:", startStop: "Cafe", targetStop: "Restaurant", nodePositions: { Cafe: { left: 18, top: 72 }, Park: { left: 48, top: 28 }, Restaurant: { left: 82, top: 54 } } };
+
+    expect(parseGraphScenario(serializeGraphScenario(scenario))).toEqual(scenario);
+    expect(parseGraphScenario("?scenario=not-json")).toBeNull();
   });
 });
 
