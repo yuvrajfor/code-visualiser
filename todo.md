@@ -44,3 +44,10 @@
 - [x] Verify mobile play/pause, previous, restart, speed, and step-jump controls for both BFS and DFS walkthroughs.
 - [x] Make the mobile route-label checks positively confirm BFS waiting-line and DFS road-stack states, then rerun the verification.
 - [x] Verify direct mobile step-jump behavior for the BFS walkthrough and confirm its queue scene and explanation synchronize.
+- [x] Add a validated custom city-graph editor with start and target stop selection.
+- [x] Generate BFS and DFS traversal states from the learner’s custom graph.
+- [x] Build a side-by-side BFS versus DFS comparison player with synchronized controls.
+- [x] Highlight and explain the BFS shortest route to the selected target.
+- [x] Add Vitest coverage for graph parsing, traversal generation, and shortest-path routing.
+- [x] Verify the custom graph and comparison flow on desktop and mobile, then save a checkpoint.
+- [ ] Save a checkpoint for the custom City Map comparison and shortest-route feature.

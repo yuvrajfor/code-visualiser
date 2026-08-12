@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
-import { createCityRouteStory, getCityRouteWalkthrough, type CityRouteAlgorithm, type CityRouteState } from "@/lib/cityRoutes";
+import { createCityRouteStory, createCityRouteWalkthrough, getCityGraphEdges, getCityGraphPositions, getCityRouteWalkthrough, parseCityGraph, type CityGraph, type CityRouteAlgorithm, type CityRouteState } from "@/lib/cityRoutes";
 import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 
@@ -38,6 +38,26 @@ type LearningStep = {
   story: RealWorldStory;
   routeState?: CityRouteState;
 };
+
+type CityComparisonRun = {
+  graph: CityGraph;
+  stops: string[];
+  startStop: string;
+  targetStop: string;
+  bfs: CityRouteState[];
+  dfs: CityRouteState[];
+};
+
+const customCityGraphExample = `Cafe: Library, Park
+Library: Museum, Restaurant
+Park: Restaurant
+Museum: Restaurant
+Restaurant:`;
+
+function createCustomCityCode(graph: CityGraph, startStop: string, targetStop: string): string {
+  const entries = Object.entries(graph).map(([stop, neighbors]) => `  "${stop}": [${neighbors.map((neighbor) => `"${neighbor}"`).join(", ")}],`).join("\n");
+  return `city_map = {\n${entries}\n}\nstart = "${startStop}"\ntarget = "${targetStop}"\n# Compare BFS and DFS on this map`;
+}
 
 const defaultCode = `function findApple(basket, wantedApple) {
   let answer = "not found";
@@ -265,6 +285,21 @@ function SceneHeader({ story, step }: { story: RealWorldStory; step: LearningSte
   );
 }
 
+function CityComparisonPanel({ routeState, stepNumber, visualTheme }: { routeState: CityRouteState; stepNumber: number; visualTheme: VisualTheme }) {
+  const story = createCityRouteStory(routeState);
+  const step: LearningStep = { step: stepNumber, line: routeState.line, code: routeState.code, story, routeState };
+  const isBfs = routeState.algorithm === "bfs";
+
+  return (
+    <section className={`rounded-[28px] border p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] ${isBfs ? "border-sky-300/25 bg-[#0d1828]" : "border-violet-300/25 bg-[#160d28]"}`} data-comparison-panel={routeState.algorithm}>
+      <div className="mb-4 flex items-center justify-between gap-3"><div><p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${isBfs ? "text-sky-200" : "text-violet-200"}`}>{isBfs ? "BFS · nearby-first" : "DFS · one road deep"}</p><h2 className="mt-1 text-base font-black text-white">{isBfs ? "City waiting line" : "City road stack"}</h2></div><Badge className={`rounded-full border px-3 py-1 text-[10px] font-black ${isBfs ? "border-sky-200/35 bg-sky-300/10 text-sky-100" : "border-violet-200/35 bg-violet-300/10 text-violet-100"}`}>Step {stepNumber}</Badge></div>
+      <RealWorldScene story={story} visualTheme={visualTheme} routeState={routeState} />
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d9c9b8]">In everyday words</p><p className="mt-2 text-sm font-medium leading-6 text-white">{story.plainEnglish}</p><p className="mt-3 text-xs leading-5 text-[#c9bcd8]"><strong className="text-white">What changed:</strong> {story.whatChanged}</p></div>
+      {isBfs && routeState.phase === "complete" && <div className="mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/10 p-4" data-shortest-path-result><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Shortest route</p>{routeState.shortestPath?.length ? <><p className="mt-2 text-sm font-black text-amber-100">{routeState.shortestPath.join(" → ")}</p><p className="mt-1 text-xs leading-5 text-[#ffe6a7]">This glowing path uses the fewest roads from {routeState.shortestPath[0]} to {routeState.shortestPath.at(-1)}.</p></> : <p className="mt-2 text-xs leading-5 text-[#ffe6a7]">There is no road route from the chosen start stop to the target stop.</p>}</div>}
+    </section>
+  );
+}
+
 function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldStory; visualTheme: VisualTheme; routeState?: CityRouteState }) {
   const style = sceneStyles[story.kind];
   const common = "border border-white/10 bg-[#17100c]/90 shadow-[0_16px_35px_rgba(0,0,0,0.3)]";
@@ -357,19 +392,24 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
   }
 
   if (story.kind === "city-map") {
-    const cityStops = [
+    const defaultCityStops = [
       { name: "Cafe", icon: "☕", position: "left-[8%] top-[41%]" },
       { name: "Library", icon: "📚", position: "left-[52%] top-[18%]" },
       { name: "Park", icon: "🌳", position: "left-[54%] top-[58%]" },
       { name: "Museum", icon: "🏛️", position: "right-[4%] top-[39%]" },
     ];
-    const roads: Array<{ from: string; to: string; x1: number; y1: number; x2: number; y2: number }> = [
+    const defaultRoads: Array<{ from: string; to: string; x1: number; y1: number; x2: number; y2: number }> = [
       { from: "Cafe", to: "Library", x1: 23, y1: 51, x2: 59, y2: 29 },
       { from: "Cafe", to: "Park", x1: 23, y1: 51, x2: 60, y2: 66 },
       { from: "Library", to: "Museum", x1: 65, y1: 30, x2: 88, y2: 48 },
     ];
+    const graphStops = routeState?.graph ? Object.keys(routeState.graph) : [];
+    const graphPositions = getCityGraphPositions(graphStops);
+    const cityStops = routeState?.graph ? graphStops.map((name, index) => ({ name, icon: ["☕", "📚", "🌳", "🏛️", "🍽️", "🚏", "🏠", "🎪", "🎨", "🎬"][index] ?? "📍", position: graphPositions[name] })) : defaultCityStops;
+    const roads = routeState?.graph ? getCityGraphEdges(routeState.graph).map(([from, to]) => ({ from, to, x1: parseFloat(graphPositions[from]?.left ?? "50"), y1: parseFloat(graphPositions[from]?.top ?? "50"), x2: parseFloat(graphPositions[to]?.left ?? "50"), y2: parseFloat(graphPositions[to]?.top ?? "50") })) : defaultRoads;
     const isBfs = routeState?.algorithm === "bfs";
     const isDfs = routeState?.algorithm === "dfs";
+    const shortestPath = routeState?.phase === "complete" ? routeState.shortestPath ?? [] : [];
     return (
       <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#081324] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,.22) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
@@ -377,7 +417,8 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           {roads.map((road) => {
             const isActiveRoad = routeState?.activeRoad?.includes(road.from) && routeState?.activeRoad?.includes(road.to);
-            return <line key={`${road.from}-${road.to}`} x1={road.x1} y1={road.y1} x2={road.x2} y2={road.y2} stroke={isActiveRoad ? (isDfs ? "#c084fc" : "#7dd3fc") : "#4b83b8"} strokeWidth={isActiveRoad ? "1.7" : "0.65"} strokeLinecap="round" opacity={isActiveRoad ? "1" : "0.48"} />;
+            const isShortestRoad = shortestPath.some((stop, index) => index > 0 && ((shortestPath[index - 1] === road.from && stop === road.to) || (shortestPath[index - 1] === road.to && stop === road.from)));
+            return <line key={`${road.from}-${road.to}`} x1={road.x1} y1={road.y1} x2={road.x2} y2={road.y2} stroke={isShortestRoad ? "#fbbf24" : isActiveRoad ? (isDfs ? "#c084fc" : "#7dd3fc") : "#4b83b8"} strokeWidth={isShortestRoad ? "2.3" : isActiveRoad ? "1.7" : "0.65"} strokeLinecap="round" opacity={isShortestRoad || isActiveRoad ? "1" : "0.48"} />;
           })}
         </svg>
         <div className="relative z-10 h-full">
@@ -385,14 +426,21 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
             const isCurrent = routeState?.currentStop === stop.name;
             const isVisited = routeState?.visitedStops.includes(stop.name);
             const isPathStop = isDfs && routeState?.pathStops.includes(stop.name);
+            const isShortestStop = shortestPath.includes(stop.name);
+            const isTarget = routeState?.targetStop === stop.name;
             const stateClasses = isCurrent
               ? "border-sky-100 bg-sky-200 text-sky-950 shadow-[0_0_28px_rgba(125,211,252,0.78)]"
+              : isShortestStop
+                ? "border-amber-100 bg-amber-300 text-amber-950 shadow-[0_0_26px_rgba(251,191,36,0.62)]"
               : isVisited
                 ? "border-emerald-300/80 bg-emerald-300/15 text-emerald-100"
                 : isPathStop
                   ? "border-violet-300/70 bg-violet-300/15 text-violet-100"
-                  : "border-sky-400/50 bg-[#11345d] text-sky-100";
-            return <div key={stop.name} className={`scene-object-pop absolute grid h-14 w-14 place-items-center rounded-full border text-center text-[9px] font-black ${stop.position} ${stateClasses}`} style={{ animationDelay: `${index * 60}ms` }}><span className="text-base">{stop.icon}</span><span>{stop.name}</span>{isVisited && !isCurrent && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-300 text-[9px] text-emerald-950">✓</span>}</div>;
+                  : isTarget
+                    ? "border-amber-200/80 bg-amber-300/15 text-amber-100"
+                    : "border-sky-400/50 bg-[#11345d] text-sky-100";
+            const positionStyle = typeof stop.position === "string" ? { animationDelay: `${index * 60}ms` } : { left: stop.position.left, top: stop.position.top, transform: "translate(-50%, -50%)", animationDelay: `${index * 60}ms` };
+            return <div key={stop.name} className={`scene-object-pop absolute grid h-14 w-14 place-items-center rounded-full border text-center text-[9px] font-black ${typeof stop.position === "string" ? stop.position : ""} ${stateClasses}`} style={positionStyle}><span className="text-base">{stop.icon}</span><span>{stop.name}</span>{isTarget && <span className="absolute -left-1 -top-1 rounded-full bg-amber-300 px-1 text-[7px] font-black text-amber-950">TARGET</span>}{isVisited && !isCurrent && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-300 text-[9px] text-emerald-950">✓</span>}</div>;
           })}
         </div>
         {routeState ? (
@@ -400,6 +448,7 @@ function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldSt
             <div className="flex items-center justify-between gap-3"><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-200">{isBfs ? "Waiting line — next stop first" : "Road stack — top road first"}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${routeState.phase === "backtrack" ? "bg-violet-300/20 text-violet-100" : "bg-sky-300/15 text-sky-100"}`}>{routeState.phase}</span></div>
             <div className="mt-1.5 flex min-h-5 items-center gap-1.5 overflow-x-auto pb-0.5">{routeState.pendingStops.length ? routeState.pendingStops.map((stop, index) => <span key={`${stop}-${index}`} className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold ${isBfs && index === 0 ? "border-amber-200 bg-amber-300 text-amber-950" : isDfs && index === routeState.pendingStops.length - 1 ? "border-violet-200 bg-violet-300 text-violet-950" : "border-sky-300/25 bg-sky-300/10 text-sky-100"}`}>{stop}</span>) : <span className="text-[10px] text-[#a9c5e6]">No stops waiting</span>}</div>
             <p className="mt-1 text-[10px] font-medium leading-4 text-[#d7e8fb]">{routeState.actionLabel}</p>
+            {shortestPath.length > 1 && <p className="mt-1 rounded-md bg-amber-300/15 px-2 py-1 text-[9px] font-bold text-amber-100">Shortest route: {shortestPath.join(" → ")}</p>}
           </div>
         ) : <p className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-sky-100">The computer follows roads between nearby places without visiting the same stop twice.</p>}
       </div>
@@ -479,7 +528,7 @@ export default function Home() {
     onSuccess: () => toast.success("Your code session has been saved."),
     onError: () => toast.error("Your visual still works, but this session could not be saved."),
   });
-  const [activeView, setActiveView] = useState<"landing" | "studio">("landing");
+  const [activeView, setActiveView] = useState<"landing" | "studio" | "comparison">("landing");
   const [selectedLang, setSelectedLang] = useState<Language>("javascript");
   const [userProblem, setUserProblem] = useState("Find an apple in a basket");
   const [userCode, setUserCode] = useState(defaultCode);
@@ -491,10 +540,22 @@ export default function Home() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => typeof window === "undefined" ? "kitchen" : getSavedVisualTheme(window.localStorage) ?? "kitchen");
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
+  const [customGraphText, setCustomGraphText] = useState(customCityGraphExample);
+  const [customStartStop, setCustomStartStop] = useState("Cafe");
+  const [customTargetStop, setCustomTargetStop] = useState("Restaurant");
+  const [comparisonRun, setComparisonRun] = useState<CityComparisonRun | null>(null);
+  const [comparisonStepIndex, setComparisonStepIndex] = useState(0);
+  const [comparisonPlaying, setComparisonPlaying] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
   const activeTheme = getVisualTheme(visualTheme);
+  const customGraphStops = (() => {
+    try { return parseCityGraph(customGraphText).stops; } catch { return []; }
+  })();
+  const comparisonLength = comparisonRun ? Math.max(comparisonRun.bfs.length, comparisonRun.dfs.length) : 0;
+  const comparisonBfsState = comparisonRun?.bfs[Math.min(comparisonStepIndex, Math.max(comparisonRun.bfs.length - 1, 0))];
+  const comparisonDfsState = comparisonRun?.dfs[Math.min(comparisonStepIndex, Math.max(comparisonRun.dfs.length - 1, 0))];
 
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
@@ -565,11 +626,39 @@ export default function Home() {
     toast.success("Your code is now ready as an everyday visual story.");
   };
 
+  const startCityComparison = () => {
+    try {
+      const parsed = parseCityGraph(customGraphText);
+      if (!parsed.stops.includes(customStartStop) || !parsed.stops.includes(customTargetStop)) throw new Error("Choose a start and target stop from your map.");
+      if (customStartStop === customTargetStop) throw new Error("Choose two different stops so the route has somewhere to go.");
+      const bfs = createCityRouteWalkthrough(parsed.graph, "bfs", customStartStop, customTargetStop);
+      const dfs = createCityRouteWalkthrough(parsed.graph, "dfs", customStartStop, customTargetStop);
+      const generatedCode = createCustomCityCode(parsed.graph, customStartStop, customTargetStop);
+      setUserCode(generatedCode);
+      setUserProblem(`Compare two ways to travel from ${customStartStop} to ${customTargetStop}`);
+      setSelectedLang("python");
+      setSelectedWalkthrough(null);
+      setComparisonRun({ graph: parsed.graph, stops: parsed.stops, startStop: customStartStop, targetStop: customTargetStop, bfs, dfs });
+      setComparisonStepIndex(0);
+      setComparisonPlaying(false);
+      setActiveView("comparison");
+      saveSubmission.mutate({ problemTitle: `City Map: ${customStartStop} to ${customTargetStop}`, language: "python", code: generatedCode });
+      toast.success("Your custom City Map is ready for a BFS and DFS race.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Please check the City Map details.");
+    }
+  };
+
   const goToStep = (index: number) => {
     setIsPlaying(false);
     const nextIndex = Math.max(0, Math.min(index, steps.length - 1));
     setCurrentStepIndex(nextIndex);
     playActionSound(steps[nextIndex]?.story);
+  };
+
+  const goToComparisonStep = (index: number) => {
+    setComparisonPlaying(false);
+    setComparisonStepIndex(Math.max(0, Math.min(index, comparisonLength - 1)));
   };
 
   useEffect(() => {
@@ -590,28 +679,52 @@ export default function Home() {
   }, [isPlaying, speedMs, steps, soundEnabled]);
 
   useEffect(() => {
-    if (activeView !== "studio") return;
+    if (!comparisonPlaying || comparisonLength < 2) return;
+    timerRef.current = setInterval(() => {
+      setComparisonStepIndex((index) => {
+        if (index >= comparisonLength - 1) {
+          setComparisonPlaying(false);
+          return index;
+        }
+        return index + 1;
+      });
+    }, speedMs);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [comparisonPlaying, comparisonLength, speedMs]);
+
+  useEffect(() => {
+    if (activeView !== "studio" && activeView !== "comparison") return;
 
     const handleShortcut = (event: KeyboardEvent) => {
       const action = getStoryShortcutAction(event);
       if (!action) return;
       event.preventDefault();
 
-      if (action === "toggle-play") setIsPlaying((value) => !value);
+      if (action === "toggle-play") {
+        if (activeView === "comparison") setComparisonPlaying((value) => !value);
+        else setIsPlaying((value) => !value);
+      }
       if (action === "previous" || action === "next" || action === "restart") {
-        setIsPlaying(false);
-        setCurrentStepIndex((index) => {
-          const nextIndex = action === "previous" ? Math.max(0, index - 1) : action === "next" ? Math.min(steps.length - 1, index + 1) : 0;
-          playActionSound(steps[nextIndex]?.story);
-          return nextIndex;
-        });
+        if (activeView === "comparison") {
+          setComparisonPlaying(false);
+          setComparisonStepIndex((index) => action === "previous" ? Math.max(0, index - 1) : action === "next" ? Math.min(comparisonLength - 1, index + 1) : 0);
+        } else {
+          setIsPlaying(false);
+          setCurrentStepIndex((index) => {
+            const nextIndex = action === "previous" ? Math.max(0, index - 1) : action === "next" ? Math.min(steps.length - 1, index + 1) : 0;
+            playActionSound(steps[nextIndex]?.story);
+            return nextIndex;
+          });
+        }
       }
       if (action === "toggle-sound") setSoundEnabled((value) => !value);
     };
 
     window.addEventListener("keydown", handleShortcut, { capture: true });
     return () => window.removeEventListener("keydown", handleShortcut, { capture: true });
-  }, [activeView, steps, soundEnabled]);
+  }, [activeView, steps, soundEnabled, comparisonLength]);
 
   const visualDictionary = [
     ["🗃️", "Labelled boxes", "A variable: a named place that remembers something."],
@@ -632,7 +745,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button>
             <Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
-            {activeView === "studio" ? <Button variant="outline" onClick={() => setActiveView("landing")} className="rounded-xl border-[#3c2b20] bg-[#1a120e] text-xs text-white hover:bg-[#271a13]">Change code</Button> : <Button onClick={startVisualStory} className="rounded-xl bg-gradient-to-r from-[#ffbd7d] to-[#d86527] px-5 text-xs font-black text-[#160b06] shadow-[0_0_28px_rgba(229,155,99,0.35)] hover:from-[#ffd0a2] hover:to-[#ed7b3b]">Make my code visual <ArrowRight className="ml-1 h-4 w-4" /></Button>}
+            {activeView !== "landing" ? <Button variant="outline" onClick={() => setActiveView("landing")} className="rounded-xl border-[#3c2b20] bg-[#1a120e] text-xs text-white hover:bg-[#271a13]">Change code</Button> : <Button onClick={startVisualStory} className="rounded-xl bg-gradient-to-r from-[#ffbd7d] to-[#d86527] px-5 text-xs font-black text-[#160b06] shadow-[0_0_28px_rgba(229,155,99,0.35)] hover:from-[#ffd0a2] hover:to-[#ed7b3b]">Make my code visual <ArrowRight className="ml-1 h-4 w-4" /></Button>}
           </div>
         </div>
       </header>
@@ -666,6 +779,13 @@ export default function Home() {
                   <div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Try a ready-made everyday example</Label><span className="text-[10px] text-[#8f7c6d]">or write your own below</span></div>
                   <div className="grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); setSelectedWalkthrough(preset.walkthrough ?? null); toast.success(`${preset.name} example loaded.`); }} className="group rounded-2xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-lg">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div>
                 </div>
+                <section className="rounded-3xl border border-sky-300/20 bg-[#081426]/80 p-4 shadow-[inset_0_0_30px_rgba(59,130,246,0.05)]" data-custom-city-editor>
+                  <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-200">Custom City Map Lab</p><h3 className="mt-1 text-sm font-black text-white">Build your own roads, then compare both explorers.</h3></div><button type="button" onClick={() => { setCustomGraphText(customCityGraphExample); setCustomStartStop("Cafe"); setCustomTargetStop("Restaurant"); }} className="rounded-xl border border-sky-300/25 bg-sky-300/10 px-3 py-2 text-[10px] font-bold text-sky-100 transition hover:bg-sky-300/20">Load example</button></div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#a8c7eb]">Use one line per stop: <code className="rounded bg-sky-300/10 px-1 text-sky-100">Cafe: Library, Park</code>. Roads work in the direction you list them.</p>
+                  <Textarea aria-label="Custom city graph" value={customGraphText} onChange={(event) => { const next = event.target.value; setCustomGraphText(next); try { const parsed = parseCityGraph(next); setCustomStartStop((current) => parsed.stops.includes(current) ? current : parsed.stops[0] ?? ""); setCustomTargetStop((current) => parsed.stops.includes(current) ? current : parsed.stops.at(-1) ?? ""); } catch { /* Keep the last valid selections while the learner edits. */ } }} rows={6} className="mt-3 resize-y rounded-2xl border-sky-300/20 bg-[#06101e] font-mono text-xs leading-6 text-sky-50 focus-visible:ring-sky-300" placeholder="Cafe: Library, Park\nLibrary: Museum\nPark:" />
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Start stop<select aria-label="Custom city start stop" value={customStartStop} onChange={(event) => setCustomStartStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label><label className="block text-[10px] font-bold uppercase tracking-wider text-sky-100">Target stop<select aria-label="Custom city target stop" value={customTargetStop} onChange={(event) => setCustomTargetStop(event.target.value)} disabled={!customGraphStops.length} className="mt-1.5 h-10 w-full rounded-xl border border-sky-300/20 bg-[#06101e] px-3 text-xs font-semibold text-white disabled:opacity-50">{customGraphStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label></div>
+                  <Button type="button" onClick={startCityComparison} disabled={customGraphStops.length < 2} className="mt-4 h-11 w-full rounded-xl bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 text-xs font-black text-[#06101e] shadow-[0_0_28px_rgba(56,189,248,0.24)] hover:from-white hover:to-cyan-200 disabled:opacity-40">Compare BFS and DFS on my map <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                </section>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">What does this code try to do?</Label><Input value={userProblem} onChange={(event) => setUserProblem(event.target.value)} className="h-12 rounded-xl border-[#39291f] bg-[#0b0705] text-white focus-visible:ring-[#f59e0b]" placeholder="For example: Find an apple in a basket" /></div>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => { setUserCode(event.target.value); setSelectedWalkthrough(null); }} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
               </div>
@@ -712,6 +832,20 @@ export default function Home() {
               <div className="mt-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump to any part of the story</p><div className="mt-3 max-h-[265px] space-y-2 overflow-y-auto pr-1">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`${step.line}-${step.code}`} onClick={() => goToStep(index)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition ${isActive ? "border-amber-300/60 bg-amber-300/10 shadow-[0_0_20px_rgba(245,158,11,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#694b35] hover:bg-[#17100d]"}`}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/5 text-lg">{step.story.icon}</span><span className="min-w-0 flex-1"><span className={`block text-xs font-bold ${isActive ? "text-white" : "text-[#d4c1b0]"}`}>Step {step.step}: {step.story.title}</span><span className="mt-0.5 block truncate font-mono text-[10px] text-[#8f7c6d]">Line {step.line}: {step.code}</span></span>{isActive && <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-200" />}</button>; })}</div></div>
             </div>
           </section>
+        </main>
+      )}
+
+      {activeView === "comparison" && comparisonRun && comparisonBfsState && comparisonDfsState && (
+        <main className="mx-auto w-full max-w-7xl px-5 py-10 md:px-8 md:py-12" data-city-comparison>
+          <div className="flex flex-wrap items-start justify-between gap-5"><div><button type="button" onClick={() => setActiveView("landing")} className="inline-flex items-center gap-1 text-xs font-bold text-[#d6a87e] transition hover:text-white"><ChevronLeft className="h-4 w-4" /> Edit city map</button><Badge className="ml-3 rounded-full border border-sky-300/25 bg-sky-300/10 px-3 py-1 text-[10px] font-bold text-sky-100">CUSTOM CITY MAP</Badge><h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-5xl">BFS and DFS, <span className="bg-gradient-to-r from-sky-200 to-violet-200 bg-clip-text text-transparent">side by side.</span></h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c8b7a7]">Both explorers start at <strong className="text-white">{comparisonRun.startStop}</strong> and look for <strong className="text-amber-100">{comparisonRun.targetStop}</strong>. Use one control bar to watch their different choices at the same time.</p></div><div className="rounded-2xl border border-white/10 bg-[#120d0a] px-4 py-3 text-right"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]">Map size</p><p className="mt-1 text-sm font-black text-white">{comparisonRun.stops.length} stops · {getCityGraphEdges(comparisonRun.graph).length} roads</p></div></div>
+
+          <section className="mt-8 rounded-[28px] border border-[#37271d] bg-[#15100d] p-4 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-5" aria-label="Shared comparison controls">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center"><div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex - 1)} disabled={comparisonStepIndex === 0} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronLeft className="h-4 w-4" /></Button><Button onClick={() => setComparisonPlaying((playing) => !playing)} className="h-11 min-w-28 rounded-xl bg-gradient-to-r from-sky-200 to-violet-200 text-xs font-black text-[#0a0712] hover:from-white hover:to-violet-100">{comparisonPlaying ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4 fill-current" /> Play both</>}</Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex + 1)} disabled={comparisonStepIndex >= comparisonLength - 1} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronRight className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(0)} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10" title="Restart both explorers"><RotateCcw className="h-4 w-4" /></Button></div><div className="min-w-0 flex-1"><div className="mb-1.5 flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]"><span>Shared moment</span><span>Step {comparisonStepIndex + 1} of {comparisonLength}</span></div><input aria-label="Comparison progress" type="range" min="0" max={Math.max(comparisonLength - 1, 0)} value={comparisonStepIndex} onChange={(event) => goToComparisonStep(Number(event.target.value))} className="w-full accent-sky-300" /></div><label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a89787]">Speed<select aria-label="Comparison speed" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="h-9 rounded-xl border border-white/10 bg-[#0c0806] px-2 text-xs text-white"><option value={3000}>Slow</option><option value={2200}>Normal</option><option value={1400}>Fast</option></select></label></div>
+          </section>
+
+          <section className="mt-6 grid gap-6 xl:grid-cols-2"><CityComparisonPanel routeState={comparisonBfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.bfs.length)} visualTheme={visualTheme} /><CityComparisonPanel routeState={comparisonDfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dfs.length)} visualTheme={visualTheme} /></section>
+
+          <section className="mt-6 rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.3)]"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump both explorers together</p><h2 className="mt-1 text-sm font-black text-white">Choose any comparison moment</h2></div><p className="text-xs text-[#b9a898]">BFS may finish first; its final shortest route stays visible.</p></div><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: comparisonLength }, (_, index) => { const bfs = comparisonRun.bfs[Math.min(index, comparisonRun.bfs.length - 1)]!; const dfs = comparisonRun.dfs[Math.min(index, comparisonRun.dfs.length - 1)]!; const active = index === comparisonStepIndex; return <button key={index} type="button" onClick={() => goToComparisonStep(index)} className={`rounded-2xl border p-3 text-left transition ${active ? "border-sky-300/55 bg-sky-300/10 shadow-[0_0_20px_rgba(125,211,252,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#6e5b4c]"}`}><span className="block text-[10px] font-black uppercase tracking-wider text-sky-200">Moment {index + 1}</span><span className="mt-1 block truncate text-xs font-bold text-white">BFS: {bfs.currentStop}</span><span className="mt-0.5 block truncate text-xs font-bold text-violet-200">DFS: {dfs.currentStop}</span></button>; })}</div></section>
         </main>
       )}
     </div>

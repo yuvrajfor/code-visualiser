@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
-import { createCityRouteStory, getCityRouteWalkthrough } from "../client/src/lib/cityRoutes";
+import { createCityRouteStory, createCityRouteWalkthrough, findShortestCityPath, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {
@@ -110,6 +110,43 @@ describe("createRealWorldStory", () => {
     expect(steps.map((step) => step.currentStop)).toEqual(["Cafe", "Cafe", "Library", "Museum", "Library", "Park"]);
     expect(backtrack?.pathStops).toEqual(["Cafe", "Library"]);
     expect(story.plainEnglish).toContain("Depth-first search");
+  });
+
+  it("parses a learner-defined city map and adds stops that only appear at the end of a road", () => {
+    const parsed = parseCityGraph("Cafe: Library, Park\nLibrary: Museum\nPark:");
+
+    expect(parsed.stops).toEqual(["Cafe", "Library", "Park", "Museum"]);
+    expect(parsed.graph.Library).toEqual(["Museum"]);
+    expect(parsed.graph.Museum).toEqual([]);
+  });
+
+  it("explains invalid custom city-map entries with a clear validation error", () => {
+    expect(() => parseCityGraph("Cafe: Library\nCafe: Park")).toThrow("appears more than once");
+    expect(() => parseCityGraph("Cafe - Library\nLibrary:")).toThrow("format");
+  });
+
+  it("builds a custom BFS route that reaches the target through the fewest roads", () => {
+    const graph = parseCityGraph("Cafe: Library, Park\nLibrary: Museum\nPark: Restaurant\nMuseum: Restaurant\nRestaurant:").graph;
+    const steps = createCityRouteWalkthrough(graph, "bfs", "Cafe", "Restaurant");
+    const result = steps.find((step) => step.phase === "complete");
+
+    expect(result?.currentStop).toBe("Restaurant");
+    expect(result?.shortestPath).toEqual(["Cafe", "Park", "Restaurant"]);
+    expect(result?.actionLabel).toContain("fewest roads");
+  });
+
+  it("builds a contrasting custom DFS route with an explicit return from a deeper road", () => {
+    const graph = parseCityGraph("Cafe: Library, Park\nLibrary: Museum\nPark:\nMuseum:").graph;
+    const steps = createCityRouteWalkthrough(graph, "dfs", "Cafe", "Park");
+
+    expect(steps.map((step) => step.currentStop)).toContain("Museum");
+    expect(steps.find((step) => step.phase === "backtrack")?.pathStops).toEqual(["Cafe", "Park"]);
+  });
+
+  it("returns no shortest route when the target cannot be reached on directed roads", () => {
+    const graph = parseCityGraph("Cafe: Library\nLibrary:\nPark:").graph;
+
+    expect(findShortestCityPath(graph, "Cafe", "Park")).toBeNull();
   });
 
   it("saves and restores a learner's visual-world preference", () => {

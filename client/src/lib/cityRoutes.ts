@@ -13,7 +13,205 @@ export type CityRouteState = {
   activeRoad?: [string, string];
   phase: "prepare" | "visit" | "queue" | "explore" | "backtrack" | "complete";
   actionLabel: string;
+  graph?: CityGraph;
+  targetStop?: string;
+  shortestPath?: string[] | null;
 };
+
+export type CityGraph = Record<string, string[]>;
+
+export type ParsedCityGraph = {
+  graph: CityGraph;
+  stops: string[];
+};
+
+const stopNamePattern = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,23}$/;
+
+export function parseCityGraph(input: string): ParsedCityGraph {
+  const graph: CityGraph = {};
+  const lines = input.split("\n").map((line) => line.trim()).filter(Boolean);
+
+  if (lines.length < 2) throw new Error("Add at least two stops, with one stop on each line.");
+
+  for (const line of lines) {
+    const separator = line.indexOf(":");
+    if (separator < 1) throw new Error('Use the format "Stop: Nearby stop, Another stop" on each line.');
+
+    const stop = line.slice(0, separator).trim();
+    const neighborText = line.slice(separator + 1).trim();
+    if (!stopNamePattern.test(stop)) throw new Error(`"${stop}" is not a valid stop name.`);
+    if (graph[stop]) throw new Error(`"${stop}" appears more than once.`);
+
+    const neighbors = neighborText ? neighborText.split(",").map((neighbor) => neighbor.trim()).filter(Boolean) : [];
+    if (neighbors.some((neighbor) => !stopNamePattern.test(neighbor))) throw new Error("Stop names can use letters, numbers, spaces, dashes, and underscores.");
+    if (neighbors.includes(stop)) throw new Error(`"${stop}" cannot list itself as a nearby stop.`);
+    if (new Set(neighbors).size !== neighbors.length) throw new Error(`"${stop}" lists the same nearby stop more than once.`);
+    graph[stop] = neighbors;
+  }
+
+  for (const neighbors of Object.values(graph)) {
+    for (const neighbor of neighbors) {
+      if (!graph[neighbor]) graph[neighbor] = [];
+    }
+  }
+
+  const stops = Object.keys(graph);
+  if (stops.length > 10) throw new Error("Use up to 10 stops so the learning map stays easy to read.");
+  if (!Object.values(graph).some((neighbors) => neighbors.length)) throw new Error("Add at least one road between two stops.");
+
+  return { graph, stops };
+}
+
+export function findShortestCityPath(graph: CityGraph, startStop: string, targetStop: string): string[] | null {
+  if (!graph[startStop] || !graph[targetStop]) return null;
+  const queue = [startStop];
+  const parent = new Map<string, string | null>([[startStop, null]]);
+
+  while (queue.length) {
+    const current = queue.shift()!;
+    if (current === targetStop) {
+      const path: string[] = [];
+      let cursor: string | null = current;
+      while (cursor) {
+        path.unshift(cursor);
+        cursor = parent.get(cursor) ?? null;
+      }
+      return path;
+    }
+    for (const neighbor of graph[current] ?? []) {
+      if (!parent.has(neighbor)) {
+        parent.set(neighbor, current);
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return null;
+}
+
+export function getCityGraphEdges(graph: CityGraph): Array<[string, string]> {
+  const seen = new Set<string>();
+  const edges: Array<[string, string]> = [];
+  for (const [stop, neighbors] of Object.entries(graph)) {
+    for (const neighbor of neighbors) {
+      const key = [stop, neighbor].sort().join("\u0000");
+      if (!seen.has(key)) {
+        seen.add(key);
+        edges.push([stop, neighbor]);
+      }
+    }
+  }
+  return edges;
+}
+
+export function getCityGraphPositions(stops: string[]): Record<string, { left: string; top: string }> {
+  return Object.fromEntries(stops.map((stop, index) => {
+    const angle = -Math.PI / 2 + (Math.PI * 2 * index) / Math.max(stops.length, 1);
+    const left = 50 + Math.cos(angle) * 37;
+    const top = 50 + Math.sin(angle) * 33;
+    return [stop, { left: `${left}%`, top: `${top}%` }];
+  }));
+}
+
+function makeDynamicRouteState(
+  algorithm: CityRouteAlgorithm,
+  graph: CityGraph,
+  targetStop: string,
+  currentStop: string,
+  pendingStops: string[],
+  visitedStops: string[],
+  pathStops: string[],
+  phase: CityRouteState["phase"],
+  actionLabel: string,
+  line: number,
+  code: string,
+  activeRoad?: [string, string],
+  shortestPath?: string[] | null,
+): CityRouteState {
+  return { algorithm, graph, targetStop, currentStop, pendingStops: [...pendingStops], visitedStops: [...visitedStops], pathStops: [...pathStops], phase, actionLabel, line, code, activeRoad, shortestPath };
+}
+
+export function createCityRouteWalkthrough(graph: CityGraph, algorithm: CityRouteAlgorithm, startStop: string, targetStop: string): CityRouteState[] {
+  if (!graph[startStop] || !graph[targetStop]) throw new Error("Choose a start and target stop that exist on the map.");
+  const shortestPath = findShortestCityPath(graph, startStop, targetStop);
+  const states: CityRouteState[] = [];
+
+  if (algorithm === "bfs") {
+    const queue = [startStop];
+    const queued = new Set(queue);
+    const visited: string[] = [];
+    const parent = new Map<string, string | null>([[startStop, null]]);
+    states.push(makeDynamicRouteState("bfs", graph, targetStop, startStop, queue, visited, [startStop], "prepare", `Put ${startStop} at the front of the waiting line.`, 1, `queue = ["${startStop}"]`));
+
+    while (queue.length) {
+      const current = queue.shift()!;
+      visited.push(current);
+      const currentPath = (() => {
+        const path: string[] = [];
+        let cursor: string | null = current;
+        while (cursor) {
+          path.unshift(cursor);
+          cursor = parent.get(cursor) ?? null;
+        }
+        return path;
+      })();
+
+      if (current === targetStop) {
+        states.push(makeDynamicRouteState("bfs", graph, targetStop, current, queue, visited, currentPath, "complete", `${targetStop} is reached. The glowing route shows the fewest roads from ${startStop}.`, 4, `target reached: "${targetStop}"`, currentPath.length > 1 ? [currentPath.at(-2)!, current] : undefined, shortestPath));
+        break;
+      }
+
+      states.push(makeDynamicRouteState("bfs", graph, targetStop, current, queue, visited, currentPath, "visit", `Visit ${current}, then check its nearby roads.`, 2, `stop = queue.shift()`));
+      const newStops: string[] = [];
+      for (const neighbor of graph[current] ?? []) {
+        if (!queued.has(neighbor)) {
+          queued.add(neighbor);
+          parent.set(neighbor, current);
+          queue.push(neighbor);
+          newStops.push(neighbor);
+        }
+      }
+      if (newStops.length) states.push(makeDynamicRouteState("bfs", graph, targetStop, current, queue, visited, currentPath, "queue", `Add ${newStops.join(" and ")} to the back of the waiting line.`, 3, `queue.push(nearbyStop)`, [current, newStops[0]]));
+    }
+
+    if (!states.some((state) => state.phase === "complete")) {
+      const lastStop = visited.at(-1) ?? startStop;
+      states.push(makeDynamicRouteState("bfs", graph, targetStop, lastStop, [], visited, [lastStop], "complete", `${targetStop} cannot be reached from ${startStop} on these roads.`, 4, `target not reached: "${targetStop}"`, undefined, null));
+    }
+    return states;
+  }
+
+  const stack: Array<{ stop: string; path: string[] }> = [{ stop: startStop, path: [startStop] }];
+  const queued = new Set([startStop]);
+  const visited: string[] = [];
+  let previousPath = [startStop];
+  states.push(makeDynamicRouteState("dfs", graph, targetStop, startStop, [startStop], [], [startStop], "prepare", `Put ${startStop} on the road stack.`, 1, `stack = ["${startStop}"]`));
+
+  while (stack.length) {
+    const entry = stack.pop()!;
+    const { stop, path } = entry;
+    visited.push(stop);
+    const isBacktracking = path.length < previousPath.length;
+    const phase = isBacktracking ? "backtrack" : "visit";
+    const action = isBacktracking ? `The last road ended, so return to ${path.at(-1)} and try another road.` : `Visit ${stop}, then follow one road as far as it can go.`;
+    states.push(makeDynamicRouteState("dfs", graph, targetStop, stop, stack.map((item) => item.stop), visited, path, phase, action, 2, `stop = stack.pop()`, path.length > 1 ? [path.at(-2)!, stop] : undefined));
+    previousPath = path;
+
+    const newStops = (graph[stop] ?? []).filter((neighbor) => !queued.has(neighbor));
+    for (const neighbor of [...newStops].reverse()) {
+      queued.add(neighbor);
+      stack.push({ stop: neighbor, path: [...path, neighbor] });
+    }
+    if (newStops.length) {
+      const nextPath = [...path, newStops[0]];
+      states.push(makeDynamicRouteState("dfs", graph, targetStop, newStops[0], stack.map((item) => item.stop), visited, nextPath, "explore", `Choose ${newStops[0]} first and keep following that road.`, 3, `stack.push(nearbyStop)`, [stop, newStops[0]]));
+    }
+  }
+
+  const lastStop = visited.at(-1) ?? startStop;
+  states.push(makeDynamicRouteState("dfs", graph, targetStop, lastStop, [], visited, previousPath, "complete", `Depth-first search has checked every reachable road from ${startStop}.`, 4, `roads checked`, undefined, shortestPath));
+  return states;
+}
 
 const bfsRoute: CityRouteState[] = [
   {
