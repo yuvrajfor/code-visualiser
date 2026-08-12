@@ -50,4 +50,4 @@
 - [x] Highlight and explain the BFS shortest route to the selected target.
 - [x] Add Vitest coverage for graph parsing, traversal generation, and shortest-path routing.
 - [x] Verify the custom graph and comparison flow on desktop and mobile, then save a checkpoint.
-- [ ] Save a checkpoint for the custom City Map comparison and shortest-route feature.
+- [x] Save a checkpoint for the custom City Map comparison and shortest-route feature.
