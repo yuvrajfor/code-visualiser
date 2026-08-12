@@ -7,6 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Code2,
+  Download,
+  FileJson,
+  ImageDown,
   Keyboard,
   Lightbulb,
   Pause,
@@ -32,6 +35,7 @@ import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 import { getLearningWorkspace, getLearningWorkspaceLabel, type LearningWorkspace } from "@/lib/workspaceNavigation";
 import { defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPreviousOnboardingStep, onboardingSteps, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, type OnboardingWorkspace, type OnboardingStatus, type SharedGraphScenario } from "@/lib/learningFlow";
+import { createCityMapExportData, getCityMapExportFileBase } from "@/lib/cityMapExports";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -754,6 +758,182 @@ export default function Home() {
     }
   };
 
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  };
+
+  const getCurrentCityMapExport = () => {
+    if (!comparisonRun) return null;
+    return createCityMapExportData({
+      graphText: customGraphText,
+      startStop: comparisonRun.startStop,
+      targetStop: comparisonRun.targetStop,
+      stops: comparisonRun.stops,
+      weightedGraph: comparisonRun.weightedGraph,
+      nodePositions: comparisonNodePositions,
+      algorithmOutcomes: {
+        bfsPath: comparisonRun.bfs.at(-1)?.shortestPath ?? null,
+        dfsPath: comparisonRun.dfs.at(-1)?.shortestPath ?? null,
+        dijkstraPath: comparisonRun.dijkstra.at(-1)?.shortestPath ?? null,
+        dijkstraTravelMinutes: comparisonRun.dijkstra.at(-1)?.shortestTravelTime ?? null,
+      },
+    });
+  };
+
+  const downloadCityMapJson = () => {
+    const exportData = getCurrentCityMapExport();
+    if (!exportData || !comparisonRun) return;
+    const fileBase = getCityMapExportFileBase(comparisonRun.startStop, comparisonRun.targetStop);
+    downloadBlob(new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" }), `${fileBase}.json`);
+    toast.success("JSON download started. It includes roads, travel times, stops, and your layout.");
+  };
+
+  const downloadCityMapPng = () => {
+    if (!comparisonRun) return;
+    const width = 1600;
+    const height = 1060;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      toast.error("Your browser could not prepare this PNG. Please try JSON export instead.");
+      return;
+    }
+
+    const positions = { ...getCityGraphPositions(comparisonRun.stops), ...comparisonNodePositions };
+    const map = { x: 76, y: 182, width: 1448, height: 590 };
+    const pointFor = (stop: string) => {
+      const position = positions[stop] ?? { left: 50, top: 50 };
+      return { x: map.x + (position.left / 100) * map.width, y: map.y + (position.top / 100) * map.height };
+    };
+    const roundRect = (x: number, y: number, w: number, h: number, radius: number) => {
+      context.beginPath();
+      context.roundRect(x, y, w, h, radius);
+    };
+    const routeSegments = (path?: string[] | null) => new Set((path ?? []).slice(1).map((stop, index) => [path?.[index], stop].sort().join("\u0000")));
+    const bfsRoute = routeSegments(comparisonRun.bfs.at(-1)?.shortestPath);
+    const dijkstraRoute = routeSegments(comparisonRun.dijkstra.at(-1)?.shortestPath);
+
+    context.fillStyle = "#070b14";
+    context.fillRect(0, 0, width, height);
+    const gradient = context.createRadialGradient(1170, 160, 0, 1170, 160, 820);
+    gradient.addColorStop(0, "rgba(59,130,246,0.24)");
+    gradient.addColorStop(1, "rgba(7,11,20,0)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height);
+
+    context.fillStyle = "#7dd3fc";
+    context.font = "700 20px Inter, system-ui, sans-serif";
+    context.fillText("CODE STORY STUDIO  /  CUSTOM CITY MAP", 76, 74);
+    context.fillStyle = "#ffffff";
+    context.font = "800 42px Inter, system-ui, sans-serif";
+    context.fillText(`${comparisonRun.startStop}  →  ${comparisonRun.targetStop}`, 76, 126);
+    context.fillStyle = "#b6c7dc";
+    context.font = "500 22px Inter, system-ui, sans-serif";
+    context.fillText("A learner-arranged map with weighted roads and three route strategies.", 76, 160);
+
+    roundRect(map.x, map.y, map.width, map.height, 34);
+    context.fillStyle = "rgba(10, 19, 35, 0.94)";
+    context.fill();
+    context.strokeStyle = "rgba(125, 211, 252, 0.30)";
+    context.lineWidth = 2;
+    context.stroke();
+    context.strokeStyle = "rgba(148, 163, 184, 0.13)";
+    context.lineWidth = 1;
+    for (let x = map.x + 40; x < map.x + map.width; x += 80) {
+      context.beginPath(); context.moveTo(x, map.y); context.lineTo(x, map.y + map.height); context.stroke();
+    }
+    for (let y = map.y + 40; y < map.y + map.height; y += 80) {
+      context.beginPath(); context.moveTo(map.x, y); context.lineTo(map.x + map.width, y); context.stroke();
+    }
+
+    const weightedRoads = Object.entries(comparisonRun.weightedGraph).flatMap(([from, roads]) => roads.map((road) => ({ from, ...road })));
+    for (const road of weightedRoads) {
+      const from = pointFor(road.from);
+      const to = pointFor(road.to);
+      const key = [road.from, road.to].sort().join("\u0000");
+      const isDijkstraRoad = dijkstraRoute.has(key);
+      const isBfsRoad = bfsRoute.has(key);
+      context.strokeStyle = isDijkstraRoad ? "#fbbf24" : isBfsRoad ? "#38bdf8" : "rgba(148, 163, 184, 0.56)";
+      context.lineWidth = isDijkstraRoad || isBfsRoad ? 8 : 4;
+      context.beginPath(); context.moveTo(from.x, from.y); context.lineTo(to.x, to.y); context.stroke();
+      const midX = (from.x + to.x) / 2;
+      const midY = (from.y + to.y) / 2;
+      roundRect(midX - 28, midY - 18, 56, 36, 18);
+      context.fillStyle = "#111827";
+      context.fill();
+      context.strokeStyle = "rgba(255,255,255,0.18)";
+      context.lineWidth = 1;
+      context.stroke();
+      context.fillStyle = "#f8fafc";
+      context.font = "800 17px Inter, system-ui, sans-serif";
+      context.textAlign = "center";
+      context.fillText(`${road.weight}m`, midX, midY + 6);
+      context.textAlign = "left";
+    }
+
+    for (const stop of comparisonRun.stops) {
+      const point = pointFor(stop);
+      const isStart = stop === comparisonRun.startStop;
+      const isTarget = stop === comparisonRun.targetStop;
+      context.beginPath(); context.arc(point.x, point.y, 35, 0, Math.PI * 2);
+      context.fillStyle = isStart ? "#38bdf8" : isTarget ? "#fda4af" : "#a78bfa";
+      context.fill();
+      context.lineWidth = 5;
+      context.strokeStyle = "#ffffff";
+      context.stroke();
+      context.fillStyle = "#ffffff";
+      context.font = "800 19px Inter, system-ui, sans-serif";
+      context.textAlign = "center";
+      context.fillText(stop, point.x, point.y + 62);
+      context.textAlign = "left";
+    }
+
+    const fastestTime = comparisonRun.dijkstra.at(-1)?.shortestTravelTime;
+    const summaryCards = [
+      { title: "BFS", detail: "Fewest roads", value: comparisonRun.bfs.at(-1)?.shortestPath?.join(" → ") || "No route", color: "#38bdf8" },
+      { title: "DFS", detail: "One road deep", value: comparisonRun.dfs.at(-1)?.shortestPath?.join(" → ") || "No route", color: "#a78bfa" },
+      { title: "DIJKSTRA", detail: "Lowest travel time", value: fastestTime == null ? "No route" : `${fastestTime} minutes`, color: "#fbbf24" },
+    ];
+    summaryCards.forEach((card, index) => {
+      const x = 76 + index * 490;
+      roundRect(x, 820, 460, 162, 26);
+      context.fillStyle = "rgba(17, 24, 39, 0.95)";
+      context.fill();
+      context.strokeStyle = `${card.color}70`;
+      context.lineWidth = 2;
+      context.stroke();
+      context.fillStyle = card.color;
+      context.font = "800 18px Inter, system-ui, sans-serif";
+      context.fillText(card.title, x + 28, 858);
+      context.fillStyle = "#b6c7dc";
+      context.font = "600 16px Inter, system-ui, sans-serif";
+      context.fillText(card.detail, x + 28, 888);
+      context.fillStyle = "#ffffff";
+      context.font = "700 18px Inter, system-ui, sans-serif";
+      const clipped = card.value.length > 40 ? `${card.value.slice(0, 38)}…` : card.value;
+      context.fillText(clipped, x + 28, 932);
+    });
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        toast.error("The City Map PNG could not be created. Please try again.");
+        return;
+      }
+      const fileBase = getCityMapExportFileBase(comparisonRun.startStop, comparisonRun.targetStop);
+      downloadBlob(blob, `${fileBase}.png`);
+      toast.success("PNG download started. It is ready to add to your presentation.");
+    }, "image/png");
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const scenario = parseGraphScenario(window.location.search);
@@ -980,15 +1160,16 @@ export default function Home() {
 
       {activeView === "comparison" && comparisonRun && comparisonBfsState && comparisonDfsState && comparisonDijkstraState && (
         <main className="lab-grid mx-auto w-full max-w-7xl px-5 py-10 md:px-8 md:py-12" data-city-comparison>
-          <div className="lab-surface flex flex-wrap items-start justify-between gap-5 rounded-[28px] p-5 md:p-7"><div><button type="button" onClick={() => setActiveView("landing")} className="inline-flex items-center gap-1 text-xs font-bold text-indigo-200 transition hover:text-white"><ChevronLeft className="h-4 w-4" /> Edit city map</button><Badge className="ml-3 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-bold text-cyan-100">CUSTOM ALGORITHM LAB</Badge><h1 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-white md:text-5xl">Three explorers, <span className="bg-gradient-to-r from-sky-200 via-violet-200 to-amber-200 bg-clip-text text-transparent">one live map.</span></h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c8b7a7]">BFS, DFS, and Dijkstra all start at <strong className="text-white">{comparisonRun.startStop}</strong> and look for <strong className="text-amber-100">{comparisonRun.targetStop}</strong>. Watch their decisions change in real time, then drag a stop to reshape the map.</p></div><div className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-right"><p className="lab-kicker">Map size</p><p className="mt-1 text-sm font-black text-white">{comparisonRun.stops.length} stops · {getCityWeightedEdges(comparisonRun.weightedGraph).length} roads</p><p className="mt-1 text-[10px] text-cyan-100">Drag any city stop to rearrange the map.</p></div></div>
+          <div className="lab-surface flex flex-wrap items-start justify-between gap-5 rounded-[28px] p-5 md:p-7"><div><button type="button" onClick={() => setActiveView("landing")} className="inline-flex items-center gap-1 text-xs font-bold text-indigo-200 transition hover:text-white"><ChevronLeft className="h-4 w-4" /> Edit city map</button><Badge className="ml-3 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1 text-[10px] font-bold text-cyan-100">CUSTOM ALGORITHM LAB</Badge><h1 className="mt-4 text-3xl font-extrabold tracking-[-0.04em] text-white md:text-5xl">Three explorers, <span className="bg-gradient-to-r from-sky-200 via-violet-200 to-amber-200 bg-clip-text text-transparent">one live map.</span></h1><p className="mt-3 max-w-2xl text-sm leading-6 text-[#c8b7a7]">BFS, DFS, and Dijkstra all start at <strong className="text-white">{comparisonRun.startStop}</strong> and look for <strong className="text-amber-100">{comparisonRun.targetStop}</strong>. Watch their decisions change in real time, then drag a stop to reshape the map.</p><div className="mt-4 flex flex-wrap gap-2" data-presentation-demo-path><span className="rounded-full border border-sky-300/25 bg-sky-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-100">1 · Explain the map</span><span className="rounded-full border border-violet-300/25 bg-violet-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">2 · Compare decisions</span><span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">3 · Export the proof</span></div></div><div className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-right"><p className="lab-kicker">Map size</p><p className="mt-1 text-sm font-black text-white">{comparisonRun.stops.length} stops · {getCityWeightedEdges(comparisonRun.weightedGraph).length} roads</p><p className="mt-1 text-[10px] text-cyan-100">Drag any city stop to rearrange the map.</p></div></div>
 
           <section className="lab-surface mt-6 rounded-[28px] p-4 md:p-5" aria-label="Shared comparison controls">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center"><div className="flex items-center gap-2"><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex - 1)} disabled={comparisonStepIndex === 0} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronLeft className="h-4 w-4" /></Button><Button onClick={() => setComparisonPlaying((playing) => !playing)} className="h-11 min-w-28 rounded-xl bg-gradient-to-r from-sky-200 to-violet-200 text-xs font-black text-[#0a0712] hover:from-white hover:to-violet-100">{comparisonPlaying ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4 fill-current" /> Play both</>}</Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(comparisonStepIndex + 1)} disabled={comparisonStepIndex >= comparisonLength - 1} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10"><ChevronRight className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => goToComparisonStep(0)} className="h-11 w-11 rounded-xl border-white/10 bg-[#0c0806] text-white hover:bg-white/10" title="Restart both explorers"><RotateCcw className="h-4 w-4" /></Button></div><div className="min-w-0 flex-1"><div className="mb-1.5 flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-[#a89787]"><span>Shared moment</span><span>Step {comparisonStepIndex + 1} of {comparisonLength}</span></div><input aria-label="Comparison progress" type="range" min="0" max={Math.max(comparisonLength - 1, 0)} value={comparisonStepIndex} onChange={(event) => goToComparisonStep(Number(event.target.value))} className="w-full accent-sky-300" /></div><label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#a89787]">Speed<select aria-label="Comparison speed" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="h-9 rounded-xl border border-white/10 bg-[#0c0806] px-2 text-xs text-white"><option value={3000}>Slow</option><option value={2200}>Normal</option><option value={1400}>Fast</option></select></label></div>
           </section>
 
-          <div className="mt-3 flex justify-end">
-            <Button variant="outline" onClick={() => void shareCurrentComparison()} className="h-10 rounded-xl border-cyan-300/25 bg-cyan-300/10 px-3 text-xs font-black text-cyan-100 hover:bg-cyan-300/20"><Share2 className="mr-1.5 h-4 w-4" /> Share this city map</Button>
-          </div>
+          <section className="mt-5 rounded-[24px] border border-cyan-300/20 bg-gradient-to-r from-cyan-300/10 via-[#11182a] to-violet-300/10 p-4" data-city-map-exports>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100">Presentation kit</p><h2 className="mt-1 text-sm font-black text-white">Share the exact City Map you built</h2><p className="mt-1 text-xs leading-5 text-[#b6c7dc]">PNG is a slide-ready visual. JSON preserves every road, travel time, route choice, and dragged stop position.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => void shareCurrentComparison()} className="h-10 rounded-xl border-cyan-300/25 bg-cyan-300/10 px-3 text-xs font-black text-cyan-100 hover:bg-cyan-300/20"><Share2 className="mr-1.5 h-4 w-4" /> Share link</Button><Button variant="outline" onClick={downloadCityMapPng} className="h-10 rounded-xl border-sky-300/25 bg-sky-300/10 px-3 text-xs font-black text-sky-100 hover:bg-sky-300/20" data-export-city-map-png><ImageDown className="mr-1.5 h-4 w-4" /> Download PNG</Button><Button variant="outline" onClick={downloadCityMapJson} className="h-10 rounded-xl border-violet-300/25 bg-violet-300/10 px-3 text-xs font-black text-violet-100 hover:bg-violet-300/20" data-export-city-map-json><FileJson className="mr-1.5 h-4 w-4" /> Download JSON</Button></div></div>
+            <p className="mt-3 flex items-center gap-2 text-[11px] font-medium text-[#90a8c4]"><Download className="h-3.5 w-3.5 text-cyan-200" /> For your demo: build a map, show the three strategies, then download the PNG as your evidence.</p>
+          </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-3"><CityComparisonPanel routeState={comparisonBfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.bfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDfsState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dfs.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /><CityComparisonPanel routeState={comparisonDijkstraState} stepNumber={Math.min(comparisonStepIndex + 1, comparisonRun.dijkstra.length)} visualTheme={visualTheme} nodePositions={comparisonNodePositions} onNodePositionChange={(stop, position) => setComparisonNodePositions((current) => ({ ...current, [stop]: position }))} /></section>
 

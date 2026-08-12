@@ -82,3 +82,9 @@
 - [x] Add automated tests covering onboarding step progression, back navigation, skip behavior, and completion.
 - [x] Add explicit automated coverage for the skip action clearing the active coaching card and completing only its selected workspace.
 - [x] Save a final checkpoint for the verified contextual onboarding and shared City Map link flow.
+- [x] Add a presentation-ready PNG download for the generated Custom City Map comparison.
+- [x] Add a structured JSON download containing the custom graph, weights, selected stops, and arranged node layout.
+- [x] Clarify the Algorithm Lab’s first-minute demonstration path and explain what each export contains.
+- [x] Add automated export-data coverage and verify PNG/JSON downloads on desktop and mobile.
+- [x] Verify the PNG and JSON download actions in a desktop browser flow, including both files’ content and format.
+- [x] Save a checkpoint for the presentation-ready City Map export experience.

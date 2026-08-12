@@ -5,6 +5,7 @@ import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } fr
 import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
 import { getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario } from "../client/src/lib/learningFlow";
+import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
 
 describe("premium learning workspace navigation", () => {
   it("keeps the landing home focused until a learner chooses code or algorithms", () => {
@@ -49,6 +50,21 @@ describe("contextual onboarding and shared graph scenarios", () => {
 
     expect(parseGraphScenario(serializeGraphScenario(scenario))).toEqual(scenario);
     expect(parseGraphScenario("?scenario=not-json")).toBeNull();
+  });
+
+  it("creates an export-ready City Map file with weighted roads and the learner-arranged layout", () => {
+    const exportData = createCityMapExportData({
+      graphText: "Cafe: Park (2)\nPark: Restaurant (3)\nRestaurant:",
+      startStop: "Cafe",
+      targetStop: "Restaurant",
+      stops: ["Cafe", "Park", "Restaurant"],
+      weightedGraph: { Cafe: [{ to: "Park", weight: 2 }], Park: [{ to: "Restaurant", weight: 3 }], Restaurant: [] },
+      nodePositions: { Cafe: { left: 18, top: 72 }, Park: { left: 48, top: 28 }, Restaurant: { left: 82, top: 54 } },
+      algorithmOutcomes: { bfsPath: ["Cafe", "Park", "Restaurant"], dfsPath: ["Cafe", "Park", "Restaurant"], dijkstraPath: ["Cafe", "Park", "Restaurant"], dijkstraTravelMinutes: 5 },
+    });
+
+    expect(exportData).toEqual(expect.objectContaining({ format: "code-story-studio-city-map", version: 1, map: expect.objectContaining({ directed: true, travelTimeUnit: "minutes", roads: [{ from: "Cafe", to: "Park", travelMinutes: 2 }, { from: "Park", to: "Restaurant", travelMinutes: 3 }] }), scenario: expect.objectContaining({ startStop: "Cafe", targetStop: "Restaurant", nodePositions: expect.objectContaining({ Park: { left: 48, top: 28 } }) }), comparison: expect.objectContaining({ dijkstra: { objective: "lowest travel time", route: ["Cafe", "Park", "Restaurant"], travelMinutes: 5 } }) }));
+    expect(getCityMapExportFileBase("Cafe & Corner", "The Restaurant")).toBe("city-map-cafe-corner-to-the-restaurant");
   });
 });
 
