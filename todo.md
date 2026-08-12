@@ -58,3 +58,15 @@
 - [x] Add Vitest coverage for weighted graph parsing, Dijkstra routing, narration state, and node-position helpers.
 - [x] Verify narration, weighted comparisons, and dragging on desktop and mobile, then save a checkpoint.
 - [x] Save a checkpoint for live narration, weighted Dijkstra routing, and draggable City Map nodes.
+- [x] Audit the current interface against the intended code-to-visual-story workflow and document the specific experience gaps: the landing page competes with too many equally prominent choices, the primary journey is not obvious on first view, and the editor, graph lab, and visual learning goals feel like separate tools rather than one focused workspace.
+- [x] Establish a contemporary visual system with clearer hierarchy, refined typography, and focused interaction states.
+- [x] Simplify the landing and learning journey so user code, visual output, and beginner explanation match the intended flow.
+- [x] Modernize the custom City Map comparison without losing its BFS, DFS, Dijkstra, or drag capabilities.
+- [x] Add or update automated coverage for any redesigned interaction behavior.
+- [ ] Verify the redesigned experience on desktop and mobile, then save a checkpoint.
+- [x] Reframe the product around a premium learning dashboard with an algorithm-lab workspace as the primary visual focus.
+- [x] Replace the crowded preset-heavy landing surface with a focused first-session path: choose a lesson or start exploring a graph.
+- [x] Create a polished graph-first lab layout with persistent algorithm comparison controls, live insight cards, and responsive learning progress cues.
+- [x] Move preset galleries, the full code editor, and the custom graph editor behind focused Code Studio and Algorithm Lab entry screens so the landing page presents only two first-session choices.
+- [x] Add or update automated tests for the redesigned landing and workspace navigation between Code Studio and Algorithm Lab.
+- [ ] Save a checkpoint for the premium learning-platform and interactive algorithm-lab redesign.

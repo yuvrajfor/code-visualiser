@@ -3,6 +3,21 @@ import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorl
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
 import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
+import { getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
+
+describe("premium learning workspace navigation", () => {
+  it("keeps the landing home focused until a learner chooses code or algorithms", () => {
+    expect(getLearningWorkspace("home")).toBe("overview");
+    expect(getLearningWorkspace("open-code")).toBe("code");
+    expect(getLearningWorkspace("open-algorithms")).toBe("algorithms");
+  });
+
+  it("uses clear labels for the focused entry states", () => {
+    expect(getLearningWorkspaceLabel("overview")).toBe("Learning home");
+    expect(getLearningWorkspaceLabel("code")).toBe("Code Studio");
+    expect(getLearningWorkspaceLabel("algorithms")).toBe("Algorithm Lab");
+  });
+});
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {

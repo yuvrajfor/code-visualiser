@@ -119,6 +119,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    min-width: 320px;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -132,6 +134,104 @@
     @apply cursor-pointer;
   }
 }
+
+/* Premium learning-lab shell. These deliberate overrides migrate the original
+   warm prototype palette into a calmer, product-grade midnight interface while
+   preserving the existing interactive scenes and their accessibility states. */
+.lab-shell {
+  --lab-ink: #070b17;
+  --lab-panel: rgba(15, 22, 40, 0.84);
+  --lab-line: rgba(148, 163, 184, 0.15);
+  --lab-muted: #9ba9c2;
+  background:
+    radial-gradient(1200px 540px at 12% -4%, rgba(84, 112, 255, 0.20), transparent 57%),
+    radial-gradient(720px 440px at 92% 8%, rgba(43, 201, 191, 0.11), transparent 62%),
+    #070b17;
+  color: #f4f7ff;
+}
+
+.lab-shell ::selection { background: rgba(129, 140, 248, 0.35); color: #fff; }
+.lab-shell .font-mono, .lab-shell code, .lab-shell textarea { font-family: "DM Mono", ui-monospace, monospace; }
+
+.lab-shell header {
+  border-color: rgba(148, 163, 184, 0.13) !important;
+  background: rgba(7, 11, 23, 0.78) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.lab-shell [class*="bg-[#15100d]"],
+.lab-shell [class*="bg-[#120e0b]"],
+.lab-shell [class*="bg-[#120d0a]"],
+.lab-shell [class*="bg-[#17100d]"],
+.lab-shell [class*="bg-[#0c0806]"],
+.lab-shell [class*="bg-[#0b0705]"],
+.lab-shell [class*="bg-[#1a120e]"] {
+  background-color: var(--lab-panel) !important;
+}
+
+.lab-shell [class*="border-[#37271d]"],
+.lab-shell [class*="border-[#3c2b20]"],
+.lab-shell [class*="border-[#39291f]"],
+.lab-shell [class*="border-[#2c2018]"] {
+  border-color: var(--lab-line) !important;
+}
+
+.lab-shell [class*="text-[#a89787]"],
+.lab-shell [class*="text-[#8f7c6d]"],
+.lab-shell [class*="text-[#bba797]"],
+.lab-shell [class*="text-[#c0aea0]"],
+.lab-shell [class*="text-[#c8b7a7]"] { color: var(--lab-muted) !important; }
+
+.lab-shell [class*="from-[#ffbd7d]"],
+.lab-shell [class*="from-[#ffbc80]"] {
+  --tw-gradient-from: #7c8cff var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(124 140 255 / 0) var(--tw-gradient-to-position) !important;
+}
+.lab-shell [class*="to-[#d86527]"],
+.lab-shell [class*="to-[#c34d20]"],
+.lab-shell [class*="to-[#8d3519]"] {
+  --tw-gradient-to: #3bd6c4 var(--tw-gradient-to-position) !important;
+}
+
+.lab-surface {
+  border: 1px solid var(--lab-line);
+  background: linear-gradient(145deg, rgba(23, 33, 59, 0.88), rgba(10, 15, 30, 0.92));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.27), inset 0 1px 0 rgba(255,255,255,0.035);
+}
+
+.lab-grid {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.lab-kicker {
+  color: #93a4ff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lab-tab {
+  border: 1px solid transparent;
+  color: #9ba9c2;
+  transition: color 160ms cubic-bezier(0.23, 1, 0.32, 1), background 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lab-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.lab-tab[data-active="true"] { border-color: rgba(129, 140, 248, 0.44); background: rgba(99, 102, 241, 0.14); color: #dfe4ff; }
+.lab-focus-ring:focus-visible { outline: 2px solid #7c8cff; outline-offset: 3px; }
+
+.landing-mode-code [data-algorithm-only],
+.landing-mode-algorithms [data-code-only] { display: none; }
+
+.landing-mode-overview [data-detailed-workspaces] { display: none; }
+.landing-mode-code [data-learning-hero],
+.landing-mode-algorithms [data-learning-hero] { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lab-surface { animation: lab-surface-in 460ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+}
+@keyframes lab-surface-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 @layer components {
   /**
