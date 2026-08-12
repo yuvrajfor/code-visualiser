@@ -76,6 +76,30 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
     };
   }
 
+  if (/\b(bfs|breadth[_\s-]?first|queue|popleft|deque)\b/.test(lower)) {
+    return {
+      kind: "city-map",
+      icon: "🚏",
+      title: "The city waiting line checks nearby stops first",
+      plainEnglish: "The computer visits all nearby places first before going farther away, like checking every shop on your street before moving to the next street.",
+      whatChanged: "A city stop was placed into, or taken from, the waiting line for nearby stops.",
+      analogy: "It is like a queue at a bus stop: the place that has waited longest is visited next.",
+      objectLabel: "Nearby stop",
+    };
+  }
+
+  if (/\b(dfs|depth[_\s-]?first|stack|path\.pop|path\.append)\b/.test(lower)) {
+    return {
+      kind: "city-map",
+      icon: "🧭",
+      title: "The city explorer follows one road deeply",
+      plainEnglish: "The computer follows one road as far as it can go, then comes back and tries another road, like exploring a maze.",
+      whatChanged: "One road was placed on, or removed from, the explorer's route stack.",
+      analogy: "It is like walking through a maze until a dead end, then retracing your steps to the last turn.",
+      objectLabel: "Explorer road",
+    };
+  }
+
   if (/(?:\bcity_map\b|\bcitymap\b|\bgraph\b|\bvertex\b|\bedge\b|\bneighbor\b|\bneighbour\b|\badjacency\b|\bvisited\b|\bbfs\b|\bdfs\b|\broute\b)/.test(lower)) {
     return {
       kind: "city-map",

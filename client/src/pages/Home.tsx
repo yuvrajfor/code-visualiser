@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
+import { createCityRouteStory, getCityRouteWalkthrough, type CityRouteAlgorithm, type CityRouteState } from "@/lib/cityRoutes";
 import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 
@@ -35,6 +36,7 @@ type LearningStep = {
   line: number;
   code: string;
   story: RealWorldStory;
+  routeState?: CityRouteState;
 };
 
 const defaultCode = `function findApple(basket, wantedApple) {
@@ -55,6 +57,7 @@ type LearningPreset = {
   problem: string;
   language: Language;
   code: string;
+  walkthrough?: CityRouteAlgorithm;
 };
 
 const learningPresets: LearningPreset[] = [
@@ -175,6 +178,50 @@ for stop in city_map["Cafe"]:
     visited.append(stop)
 return visited`,
   },
+  {
+    name: "BFS City Explorer",
+    icon: "🚏",
+    description: "Visit every nearby stop first by using a city waiting line.",
+    problem: "Visit nearby city stops first, then move farther away",
+    language: "python",
+    walkthrough: "bfs",
+    code: `from collections import deque
+
+city_map = {
+    "Cafe": ["Library", "Park"],
+    "Library": ["Museum"],
+    "Park": []
+}
+queue = deque(["Cafe"])
+visited = set()
+
+while queue:
+    stop = queue.popleft()
+    visited.add(stop)
+    for next_stop in city_map[stop]:
+        queue.append(next_stop)`,
+  },
+  {
+    name: "DFS City Adventure",
+    icon: "🧭",
+    description: "Follow one road all the way, then turn back for the next road.",
+    problem: "Explore one city road fully before backtracking",
+    language: "python",
+    walkthrough: "dfs",
+    code: `city_map = {
+    "Cafe": ["Library", "Park"],
+    "Library": ["Museum"],
+    "Park": []
+}
+path = ["Cafe"]
+visited = set()
+
+while path:
+    stop = path.pop()
+    visited.add(stop)
+    for next_stop in city_map[stop]:
+        path.append(next_stop)`,
+  },
 ];
 
 const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string; label: string }> = {
@@ -218,7 +265,7 @@ function SceneHeader({ story, step }: { story: RealWorldStory; step: LearningSte
   );
 }
 
-function RealWorldScene({ story, visualTheme }: { story: RealWorldStory; visualTheme: VisualTheme }) {
+function RealWorldScene({ story, visualTheme, routeState }: { story: RealWorldStory; visualTheme: VisualTheme; routeState?: CityRouteState }) {
   const style = sceneStyles[story.kind];
   const common = "border border-white/10 bg-[#17100c]/90 shadow-[0_16px_35px_rgba(0,0,0,0.3)]";
   const label = "text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]";
@@ -310,13 +357,51 @@ function RealWorldScene({ story, visualTheme }: { story: RealWorldStory; visualT
   }
 
   if (story.kind === "city-map") {
+    const cityStops = [
+      { name: "Cafe", icon: "☕", position: "left-[8%] top-[41%]" },
+      { name: "Library", icon: "📚", position: "left-[52%] top-[18%]" },
+      { name: "Park", icon: "🌳", position: "left-[54%] top-[58%]" },
+      { name: "Museum", icon: "🏛️", position: "right-[4%] top-[39%]" },
+    ];
+    const roads: Array<{ from: string; to: string; x1: number; y1: number; x2: number; y2: number }> = [
+      { from: "Cafe", to: "Library", x1: 23, y1: 51, x2: 59, y2: 29 },
+      { from: "Cafe", to: "Park", x1: 23, y1: 51, x2: 60, y2: 66 },
+      { from: "Library", to: "Museum", x1: 65, y1: 30, x2: 88, y2: 48 },
+    ];
+    const isBfs = routeState?.algorithm === "bfs";
+    const isDfs = routeState?.algorithm === "dfs";
     return (
       <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#081324] p-6 story-scene-enter" data-scene-world={visualTheme}>
         <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,.22) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-        <div className="absolute left-6 top-5 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-100">City map</div>
-        <div className="absolute left-[22%] top-[44%] h-1 w-[54%] rotate-[18deg] rounded-full bg-sky-300/35" /><div className="absolute left-[24%] top-[44%] h-1 w-[39%] -rotate-[27deg] rounded-full bg-sky-300/35" />
-        <div className="relative z-10 h-full"><div className="scene-object-pop absolute left-[17%] top-[40%] grid h-16 w-16 place-items-center rounded-full border border-sky-200 bg-sky-300 text-center text-[10px] font-black text-sky-950 shadow-[0_0_26px_rgba(96,165,250,0.48)]">☕<span>Cafe</span></div><div className="scene-object-pop absolute right-[18%] top-[25%] grid h-16 w-16 place-items-center rounded-full border border-sky-400/50 bg-[#11345d] text-center text-[10px] font-black text-sky-100" style={{ animationDelay: "85ms" }}>📚<span>Library</span></div><div className="scene-object-pop absolute right-[26%] bottom-[22%] grid h-16 w-16 place-items-center rounded-full border border-sky-400/50 bg-[#11345d] text-center text-[10px] font-black text-sky-100" style={{ animationDelay: "150ms" }}>🌳<span>Park</span></div></div>
-        <p className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-sky-100">The computer follows roads between nearby places without visiting the same stop twice.</p>
+        <div className="absolute left-6 top-5 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-100">{isBfs ? "Breadth-first city route" : isDfs ? "Depth-first city route" : "City map"}</div>
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {roads.map((road) => {
+            const isActiveRoad = routeState?.activeRoad?.includes(road.from) && routeState?.activeRoad?.includes(road.to);
+            return <line key={`${road.from}-${road.to}`} x1={road.x1} y1={road.y1} x2={road.x2} y2={road.y2} stroke={isActiveRoad ? (isDfs ? "#c084fc" : "#7dd3fc") : "#4b83b8"} strokeWidth={isActiveRoad ? "1.7" : "0.65"} strokeLinecap="round" opacity={isActiveRoad ? "1" : "0.48"} />;
+          })}
+        </svg>
+        <div className="relative z-10 h-full">
+          {cityStops.map((stop, index) => {
+            const isCurrent = routeState?.currentStop === stop.name;
+            const isVisited = routeState?.visitedStops.includes(stop.name);
+            const isPathStop = isDfs && routeState?.pathStops.includes(stop.name);
+            const stateClasses = isCurrent
+              ? "border-sky-100 bg-sky-200 text-sky-950 shadow-[0_0_28px_rgba(125,211,252,0.78)]"
+              : isVisited
+                ? "border-emerald-300/80 bg-emerald-300/15 text-emerald-100"
+                : isPathStop
+                  ? "border-violet-300/70 bg-violet-300/15 text-violet-100"
+                  : "border-sky-400/50 bg-[#11345d] text-sky-100";
+            return <div key={stop.name} className={`scene-object-pop absolute grid h-14 w-14 place-items-center rounded-full border text-center text-[9px] font-black ${stop.position} ${stateClasses}`} style={{ animationDelay: `${index * 60}ms` }}><span className="text-base">{stop.icon}</span><span>{stop.name}</span>{isVisited && !isCurrent && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-300 text-[9px] text-emerald-950">✓</span>}</div>;
+          })}
+        </div>
+        {routeState ? (
+          <div className="absolute inset-x-4 bottom-3 z-20 rounded-xl border border-sky-300/20 bg-[#07101d]/95 px-3 py-2 shadow-[0_10px_24px_rgba(0,0,0,0.32)]" data-route-state={routeState.algorithm} aria-label={`${isBfs ? "Breadth-first waiting line" : "Depth-first road stack"}: ${routeState.pendingStops.length ? routeState.pendingStops.join(", ") : "no stops waiting"}`} aria-live="polite">
+            <div className="flex items-center justify-between gap-3"><p className="text-[9px] font-bold uppercase tracking-[0.13em] text-sky-200">{isBfs ? "Waiting line — next stop first" : "Road stack — top road first"}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${routeState.phase === "backtrack" ? "bg-violet-300/20 text-violet-100" : "bg-sky-300/15 text-sky-100"}`}>{routeState.phase}</span></div>
+            <div className="mt-1.5 flex min-h-5 items-center gap-1.5 overflow-x-auto pb-0.5">{routeState.pendingStops.length ? routeState.pendingStops.map((stop, index) => <span key={`${stop}-${index}`} className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold ${isBfs && index === 0 ? "border-amber-200 bg-amber-300 text-amber-950" : isDfs && index === routeState.pendingStops.length - 1 ? "border-violet-200 bg-violet-300 text-violet-950" : "border-sky-300/25 bg-sky-300/10 text-sky-100"}`}>{stop}</span>) : <span className="text-[10px] text-[#a9c5e6]">No stops waiting</span>}</div>
+            <p className="mt-1 text-[10px] font-medium leading-4 text-[#d7e8fb]">{routeState.actionLabel}</p>
+          </div>
+        ) : <p className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-sky-100">The computer follows roads between nearby places without visiting the same stop twice.</p>}
       </div>
     );
   }
@@ -398,6 +483,7 @@ export default function Home() {
   const [selectedLang, setSelectedLang] = useState<Language>("javascript");
   const [userProblem, setUserProblem] = useState("Find an apple in a basket");
   const [userCode, setUserCode] = useState(defaultCode);
+  const [selectedWalkthrough, setSelectedWalkthrough] = useState<CityRouteAlgorithm | null>(null);
   const [steps, setSteps] = useState<LearningStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -437,7 +523,16 @@ export default function Home() {
     }
   };
 
-  const buildSteps = (code: string): LearningStep[] => {
+  const buildSteps = (code: string, routeAlgorithm: CityRouteAlgorithm | null = selectedWalkthrough): LearningStep[] => {
+    if (routeAlgorithm) {
+      return getCityRouteWalkthrough(routeAlgorithm).map((routeState, index) => ({
+        step: index + 1,
+        line: routeState.line,
+        code: routeState.code,
+        story: createCityRouteStory(routeState),
+        routeState,
+      }));
+    }
     const sourceLines = code.split("\n");
     const executableLines = sourceLines
       .map((line, index) => ({ code: line.trim(), line: index + 1 }))
@@ -460,7 +555,7 @@ export default function Home() {
       toast.error("Please paste or write some code first.");
       return;
     }
-    const generatedSteps = buildSteps(userCode);
+    const generatedSteps = buildSteps(userCode, selectedWalkthrough);
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -569,10 +664,10 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Try a ready-made everyday example</Label><span className="text-[10px] text-[#8f7c6d]">or write your own below</span></div>
-                  <div className="grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); toast.success(`${preset.name} example loaded.`); }} className="group rounded-2xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-lg">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div>
+                  <div className="grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); setSelectedWalkthrough(preset.walkthrough ?? null); toast.success(`${preset.name} example loaded.`); }} className="group rounded-2xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-lg">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div>
                 </div>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">What does this code try to do?</Label><Input value={userProblem} onChange={(event) => setUserProblem(event.target.value)} className="h-12 rounded-xl border-[#39291f] bg-[#0b0705] text-white focus-visible:ring-[#f59e0b]" placeholder="For example: Find an apple in a basket" /></div>
-                <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => setUserCode(event.target.value)} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
+                <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => { setUserCode(event.target.value); setSelectedWalkthrough(null); }} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
               </div>
               <div className="relative mt-6 flex justify-end"><Button onClick={startVisualStory} className="h-12 rounded-xl bg-gradient-to-r from-[#ffbd7d] via-[#e07834] to-[#c34d20] px-6 text-sm font-black text-[#170b06] shadow-[0_0_32px_rgba(229,155,99,0.33)] hover:scale-[1.01]">Turn it into a visual story <ArrowRight className="ml-2 h-4 w-4" /></Button></div>
             </div>
@@ -605,7 +700,7 @@ export default function Home() {
           <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-6">
               <SceneHeader story={currentStep.story} step={currentStep} />
-              <div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step} className="mt-5"><RealWorldScene story={currentStep.story} visualTheme={visualTheme} /></div>
+              <div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step} className="mt-5"><RealWorldScene story={currentStep.story} visualTheme={visualTheme} routeState={currentStep.routeState} /></div>
               <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0c0806] px-4 py-3 text-xs text-[#bdac9b]"><Box className="h-4 w-4 shrink-0 text-amber-200" /><span><strong className="text-white">What you are seeing:</strong> This picture represents a {sceneStyles[currentStep.story.kind].label}, not a hard-to-read memory diagram.</span></div>
             </div>
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
+import { createCityRouteStory, getCityRouteWalkthrough } from "../client/src/lib/cityRoutes";
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {
@@ -75,6 +76,40 @@ describe("createRealWorldStory", () => {
 
     expect(story.kind).toBe("city-map");
     expect(story.plainEnglish).toContain("roads");
+  });
+
+  it("explains BFS as a nearby-first city waiting line", () => {
+    const story = createRealWorldStory('queue = deque(["Cafe"])', 7);
+
+    expect(story.kind).toBe("city-map");
+    expect(story.plainEnglish).toContain("nearby places first");
+    expect(story.analogy).toContain("queue");
+  });
+
+  it("explains DFS as a route that goes deep and then backtracks", () => {
+    const story = createRealWorldStory("path.append(next_stop)", 13);
+
+    expect(story.kind).toBe("city-map");
+    expect(story.plainEnglish).toContain("comes back");
+    expect(story.analogy).toContain("maze");
+  });
+
+  it("creates a BFS route that keeps closer stops ahead of farther stops", () => {
+    const steps = getCityRouteWalkthrough("bfs");
+
+    expect(steps.map((step) => step.currentStop)).toEqual(["Cafe", "Cafe", "Cafe", "Library", "Library", "Park", "Museum"]);
+    expect(steps[4]?.pendingStops).toEqual(["Park", "Museum"]);
+    expect(steps.at(-1)?.visitedStops).toEqual(["Cafe", "Library", "Park", "Museum"]);
+  });
+
+  it("creates a DFS route that follows one road and then returns", () => {
+    const steps = getCityRouteWalkthrough("dfs");
+    const backtrack = steps.find((step) => step.phase === "backtrack");
+    const story = createCityRouteStory(backtrack!);
+
+    expect(steps.map((step) => step.currentStop)).toEqual(["Cafe", "Cafe", "Library", "Museum", "Library", "Park"]);
+    expect(backtrack?.pathStops).toEqual(["Cafe", "Library"]);
+    expect(story.plainEnglish).toContain("Depth-first search");
   });
 
   it("saves and restores a learner's visual-world preference", () => {

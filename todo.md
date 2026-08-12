@@ -33,3 +33,14 @@
 - [x] Add automated tests for tree/graph mappings and visual-theme preference helpers.
 - [x] Verify presets, help-panel behavior, and visual-theme persistence in the browser, then save a checkpoint.
 - [x] Save a new checkpoint after the tree/graph presets, shortcut-help panel, localStorage theme persistence, tests, and browser verification are complete.
+- [x] Add a BFS City Map preset with queue-style routing steps and city visit visuals.
+- [x] Add a DFS City Map preset with route-backtracking visuals and city visit steps.
+- [x] Add plain-language BFS and DFS explanations that describe each route choice and city visit.
+- [x] Add automated tests for BFS and DFS story mappings and route state generation.
+- [x] Verify the BFS and DFS walkthroughs on desktop and mobile, then save a checkpoint.
+- [x] Connect the City Map scene to shared, deterministic BFS and DFS route-state helpers.
+- [x] Run interactive mobile-size verification for BFS and DFS player controls, visuals, and synchronized explanations.
+- [ ] Save a checkpoint after the completed BFS and DFS walkthrough verification.
+- [x] Verify mobile play/pause, previous, restart, speed, and step-jump controls for both BFS and DFS walkthroughs.
+- [x] Make the mobile route-label checks positively confirm BFS waiting-line and DFS road-stack states, then rerun the verification.
+- [x] Verify direct mobile step-jump behavior for the BFS walkthrough and confirm its queue scene and explanation synchronize.
