@@ -1,5 +1,7 @@
 export type VisualTheme = "kitchen" | "office" | "game";
 
+export const VISUAL_THEME_STORAGE_KEY = "code-story-studio:visual-theme";
+
 export const visualThemes: Array<{
   id: VisualTheme;
   icon: string;
@@ -36,4 +38,21 @@ export const visualThemes: Array<{
 
 export function getVisualTheme(id: VisualTheme) {
   return visualThemes.find((theme) => theme.id === id) ?? visualThemes[0];
+}
+
+export function getSavedVisualTheme(storage?: Pick<Storage, "getItem">): VisualTheme | null {
+  try {
+    const saved = storage?.getItem(VISUAL_THEME_STORAGE_KEY);
+    return visualThemes.some((theme) => theme.id === saved) ? (saved as VisualTheme) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveVisualTheme(theme: VisualTheme, storage?: Pick<Storage, "setItem">) {
+  try {
+    storage?.setItem(VISUAL_THEME_STORAGE_KEY, theme);
+  } catch {
+    // Preference storage is optional and should never stop the learning experience.
+  }
 }

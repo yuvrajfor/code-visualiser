@@ -3,8 +3,10 @@ export type SceneKind =
   | "storage-shelf"
   | "sorting-tray"
   | "linked-chain"
+  | "family-tree"
   | "conveyor-loop"
   | "recursion-stairs"
+  | "city-map"
   | "decision-gate"
   | "workshop"
   | "delivery-desk";
@@ -34,8 +36,10 @@ export function getActionSound(kind: SceneKind): ActionSound {
     "storage-shelf": { label: "soft pop", waveform: "sine", startHz: 360, endHz: 620, duration: 0.18, volume: 0.055 },
     "sorting-tray": { label: "item click", waveform: "triangle", startHz: 520, endHz: 680, duration: 0.16, volume: 0.045 },
     "linked-chain": { label: "link click", waveform: "triangle", startHz: 420, endHz: 510, duration: 0.16, volume: 0.042 },
+    "family-tree": { label: "branch chime", waveform: "sine", startHz: 460, endHz: 720, duration: 0.2, volume: 0.046 },
     "conveyor-loop": { label: "gentle tick", waveform: "sine", startHz: 250, endHz: 330, duration: 0.12, volume: 0.038 },
     "recursion-stairs": { label: "stair chime", waveform: "sine", startHz: 390, endHz: 780, duration: 0.2, volume: 0.045 },
+    "city-map": { label: "route ping", waveform: "triangle", startHz: 330, endHz: 660, duration: 0.19, volume: 0.043 },
     "decision-gate": { label: "decision ping", waveform: "triangle", startHz: 480, endHz: 840, duration: 0.22, volume: 0.05 },
     workshop: { label: "tool chime", waveform: "sine", startHz: 340, endHz: 560, duration: 0.2, volume: 0.045 },
     "delivery-desk": { label: "delivery bell", waveform: "sine", startHz: 660, endHz: 990, duration: 0.25, volume: 0.055 },
@@ -59,6 +63,30 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   const trimmed = line.trim();
   const lower = trimmed.toLowerCase();
   const name = friendlyName(trimmed);
+
+  if (/\b(tree|root|left|right|binary|parent|child)\b/.test(lower)) {
+    return {
+      kind: "family-tree",
+      icon: "🌳",
+      title: "A family-tree branch is being placed",
+      plainEnglish: "The computer is organizing people or items into a family shape. One main person sits at the top, and each branch can lead to smaller family members below.",
+      whatChanged: "A new place in the family tree is ready to connect to its parent or child branch.",
+      analogy: "It is like drawing a family tree, where a parent at the top can point to children on the left and right.",
+      objectLabel: "Family branch",
+    };
+  }
+
+  if (/(?:\bcity_map\b|\bcitymap\b|\bgraph\b|\bvertex\b|\bedge\b|\bneighbor\b|\bneighbour\b|\badjacency\b|\bvisited\b|\bbfs\b|\bdfs\b|\broute\b)/.test(lower)) {
+    return {
+      kind: "city-map",
+      icon: "🗺️",
+      title: "A route is being marked on a city map",
+      plainEnglish: "The computer is looking at places and the roads between them. It can choose a nearby place, remember where it has been, and keep exploring until it reaches the goal.",
+      whatChanged: "A city stop or road was added to the route the computer can explore.",
+      analogy: "It is like using a city map to choose which nearby street to follow next without getting lost.",
+      objectLabel: "Map stop",
+    };
+  }
 
   if (/\b(node|head|tail|next)\b/.test(lower) && /\b(next|node|head|tail|new)\b/.test(lower)) {
     return {

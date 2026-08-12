@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
-import { getVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
+import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {
@@ -61,5 +61,30 @@ describe("createRealWorldStory", () => {
   it("offers Kitchen, Office, and Game World themes", () => {
     expect(visualThemes.map((theme) => theme.id)).toEqual(["kitchen", "office", "game"]);
     expect(getVisualTheme("game").name).toBe("Game World");
+  });
+
+  it("turns a binary-tree line into a familiar family-tree scene", () => {
+    const story = createRealWorldStory("parent.left = new FamilyMember('Milo');", 9);
+
+    expect(story.kind).toBe("family-tree");
+    expect(story.analogy).toContain("family tree");
+  });
+
+  it("turns a graph line into a city-map scene", () => {
+    const story = createRealWorldStory("for stop in city_map['Cafe']:", 10);
+
+    expect(story.kind).toBe("city-map");
+    expect(story.plainEnglish).toContain("roads");
+  });
+
+  it("saves and restores a learner's visual-world preference", () => {
+    const entries = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => entries.get(key) ?? null,
+      setItem: (key: string, value: string) => entries.set(key, value),
+    };
+
+    saveVisualTheme("office", storage);
+    expect(getSavedVisualTheme(storage)).toBe("office");
   });
 });

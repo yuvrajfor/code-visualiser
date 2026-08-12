@@ -26,3 +26,10 @@
 - [x] Verify mobile tap controls for play, pause, previous, next, restart, sound, and playback speed stay synchronized with the scene and explanation.
 - [x] Verify on mobile that the active scene changes with next/play/restart and remains unchanged on pause, in sync with the explanation.
 - [x] Save a new checkpoint after the advanced presets, keyboard controls, and theme verification updates.
+- [x] Add a binary-tree preset using a family-tree analogy and dedicated visual story scenes.
+- [x] Add a graph preset using a city-map analogy and dedicated visual story scenes.
+- [x] Add a compact toggleable keyboard-shortcut help panel that is accessible on desktop and mobile.
+- [x] Save and restore the learner’s selected visual world using local storage.
+- [x] Add automated tests for tree/graph mappings and visual-theme preference helpers.
+- [x] Verify presets, help-panel behavior, and visual-theme persistence in the browser, then save a checkpoint.
+- [ ] Save a new checkpoint after the tree/graph presets, shortcut-help panel, localStorage theme persistence, tests, and browser verification are complete.

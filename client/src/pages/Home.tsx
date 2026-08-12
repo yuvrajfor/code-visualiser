@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Code2,
+  Keyboard,
   Lightbulb,
   Pause,
   Play,
@@ -14,6 +15,7 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +26,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
 import { getStoryShortcutAction, STORY_SHORTCUTS } from "@/lib/storyControls";
-import { getVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
+import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, type VisualTheme } from "@/lib/learningThemes";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -138,6 +140,41 @@ firstStop.next = nextStop;`,
 
 total = count_steps(3)`,
   },
+  {
+    name: "Family tree branches",
+    icon: "🌳",
+    description: "Binary trees become a family chart with left and right children.",
+    problem: "Place two children below a parent in a small family tree",
+    language: "javascript",
+    code: `class FamilyMember {
+  constructor(name) {
+    this.name = name;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+const parent = new FamilyMember("Asha");
+parent.left = new FamilyMember("Milo");
+parent.right = new FamilyMember("Nia");`,
+  },
+  {
+    name: "City map route",
+    icon: "🗺️",
+    description: "Graphs become city stops joined by roads.",
+    problem: "Connect city stops and visit nearby places one by one",
+    language: "python",
+    code: `city_map = {
+    "Cafe": ["Library", "Park"],
+    "Library": ["Cafe", "Museum"],
+    "Park": ["Cafe"]
+}
+
+visited = []
+for stop in city_map["Cafe"]:
+    visited.append(stop)
+return visited`,
+  },
 ];
 
 const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string; label: string }> = {
@@ -145,8 +182,10 @@ const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string
   "storage-shelf": { accent: "#f59e0b", wash: "rgba(245,158,11,0.16)", label: "storage shelf" },
   "sorting-tray": { accent: "#38bdf8", wash: "rgba(56,189,248,0.16)", label: "sorting tray" },
   "linked-chain": { accent: "#f472b6", wash: "rgba(244,114,182,0.16)", label: "paper-tag chain" },
+  "family-tree": { accent: "#4ade80", wash: "rgba(74,222,128,0.16)", label: "family tree" },
   "conveyor-loop": { accent: "#34d399", wash: "rgba(52,211,153,0.16)", label: "repeat route" },
   "recursion-stairs": { accent: "#c084fc", wash: "rgba(192,132,252,0.16)", label: "staircase" },
+  "city-map": { accent: "#60a5fa", wash: "rgba(96,165,250,0.16)", label: "city map" },
   "decision-gate": { accent: "#fb7185", wash: "rgba(251,113,133,0.16)", label: "decision gate" },
   "workshop": { accent: "#f97316", wash: "rgba(249,115,22,0.16)", label: "workshop" },
   "delivery-desk": { accent: "#eab308", wash: "rgba(234,179,8,0.16)", label: "delivery desk" },
@@ -255,6 +294,33 @@ function RealWorldScene({ story, visualTheme }: { story: RealWorldStory; visualT
     );
   }
 
+  if (story.kind === "family-tree") {
+    return (
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#07140d] p-6 story-scene-enter" data-scene-world={visualTheme}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,222,128,0.16),transparent_62%)]" />
+        <div className="absolute left-6 top-5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-100">Family branches</div>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="scene-object-pop grid h-16 w-28 place-items-center rounded-2xl border border-emerald-200 bg-emerald-300 text-center text-xs font-black text-emerald-950 shadow-[0_0_26px_rgba(74,222,128,0.42)]">🌳<span>Parent</span></div>
+          <div className="flex w-48 items-center justify-between px-7 text-emerald-200"><span className="-rotate-[25deg] text-2xl">↙</span><span className="rotate-[25deg] text-2xl">↘</span></div>
+          <div className="flex gap-8"><div className="scene-object-pop grid h-14 w-24 place-items-center rounded-2xl border border-emerald-400/40 bg-[#123c28] text-xs font-black text-emerald-100" style={{ animationDelay: "80ms" }}>🌱<span>Left child</span></div><div className="scene-object-pop grid h-14 w-24 place-items-center rounded-2xl border border-emerald-400/40 bg-[#123c28] text-xs font-black text-emerald-100" style={{ animationDelay: "150ms" }}>🌱<span>Right child</span></div></div>
+        </div>
+        <p className="absolute bottom-5 text-center text-xs font-semibold text-emerald-100">A parent can lead to one branch on the left and one on the right.</p>
+      </div>
+    );
+  }
+
+  if (story.kind === "city-map") {
+    return (
+      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#081324] p-6 story-scene-enter" data-scene-world={visualTheme}>
+        <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,.22) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+        <div className="absolute left-6 top-5 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-100">City map</div>
+        <div className="absolute left-[22%] top-[44%] h-1 w-[54%] rotate-[18deg] rounded-full bg-sky-300/35" /><div className="absolute left-[24%] top-[44%] h-1 w-[39%] -rotate-[27deg] rounded-full bg-sky-300/35" />
+        <div className="relative z-10 h-full"><div className="scene-object-pop absolute left-[17%] top-[40%] grid h-16 w-16 place-items-center rounded-full border border-sky-200 bg-sky-300 text-center text-[10px] font-black text-sky-950 shadow-[0_0_26px_rgba(96,165,250,0.48)]">☕<span>Cafe</span></div><div className="scene-object-pop absolute right-[18%] top-[25%] grid h-16 w-16 place-items-center rounded-full border border-sky-400/50 bg-[#11345d] text-center text-[10px] font-black text-sky-100" style={{ animationDelay: "85ms" }}>📚<span>Library</span></div><div className="scene-object-pop absolute right-[26%] bottom-[22%] grid h-16 w-16 place-items-center rounded-full border border-sky-400/50 bg-[#11345d] text-center text-[10px] font-black text-sky-100" style={{ animationDelay: "150ms" }}>🌳<span>Park</span></div></div>
+        <p className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-semibold text-sky-100">The computer follows roads between nearby places without visiting the same stop twice.</p>
+      </div>
+    );
+  }
+
   if (story.kind === "conveyor-loop") {
     return (
       <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#08130f] p-6 story-scene-enter" data-scene-world={visualTheme}>
@@ -337,11 +403,16 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [visualTheme, setVisualTheme] = useState<VisualTheme>("kitchen");
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => typeof window === "undefined" ? "kitchen" : getSavedVisualTheme(window.localStorage) ?? "kitchen");
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
   const activeTheme = getVisualTheme(visualTheme);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
+  }, [visualTheme]);
 
   const playActionSound = (story?: RealWorldStory) => {
     if (!soundEnabled || typeof window === "undefined" || !story) return;
@@ -464,11 +535,14 @@ export default function Home() {
             <div><p className="text-base font-black tracking-tight text-white">Code Story Studio</p><p className="text-[10px] font-medium tracking-wide text-[#a89787]">SEE CODE AS EVERYDAY LIFE</p></div>
           </button>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button>
             <Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button>
             {activeView === "studio" ? <Button variant="outline" onClick={() => setActiveView("landing")} className="rounded-xl border-[#3c2b20] bg-[#1a120e] text-xs text-white hover:bg-[#271a13]">Change code</Button> : <Button onClick={startVisualStory} className="rounded-xl bg-gradient-to-r from-[#ffbd7d] to-[#d86527] px-5 text-xs font-black text-[#160b06] shadow-[0_0_28px_rgba(229,155,99,0.35)] hover:from-[#ffd0a2] hover:to-[#ed7b3b]">Make my code visual <ArrowRight className="ml-1 h-4 w-4" /></Button>}
           </div>
         </div>
       </header>
+
+      {showShortcutHelp && <aside id="shortcut-help" role="dialog" aria-label="Keyboard shortcuts" className="fixed right-4 top-[4.8rem] z-[60] w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-amber-300/25 bg-[#17100d]/95 p-4 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Story controls</p><h2 className="mt-1 text-sm font-black text-white">Keyboard shortcuts</h2></div><Button variant="ghost" size="icon" onClick={() => setShowShortcutHelp(false)} className="h-8 w-8 rounded-xl text-[#c5ad98] hover:bg-white/10 hover:text-white" aria-label="Close shortcut help"><X className="h-4 w-4" /></Button></div><p className="mt-2 text-xs leading-relaxed text-[#aa9684]">Shortcuts work while viewing a story. They never interrupt typing in the editor.</p><div className="mt-4 space-y-2">{STORY_SHORTCUTS.map((shortcut) => <div key={shortcut.label} className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0c0806] px-3 py-2"><span className="text-xs text-[#d8c4b2]">{shortcut.label}</span><kbd className="rounded-md border border-[#5e4432] bg-[#241711] px-2 py-1 font-mono text-[10px] font-bold text-amber-100">{shortcut.keys}</kbd></div>)}</div></aside>}
 
       {activeView === "landing" && (
         <main className="mx-auto w-full max-w-6xl px-5 py-12 md:px-8 md:py-16">
