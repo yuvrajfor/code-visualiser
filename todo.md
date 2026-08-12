@@ -63,7 +63,7 @@
 - [x] Simplify the landing and learning journey so user code, visual output, and beginner explanation match the intended flow.
 - [x] Modernize the custom City Map comparison without losing its BFS, DFS, Dijkstra, or drag capabilities.
 - [x] Add or update automated coverage for any redesigned interaction behavior.
-- [ ] Verify the redesigned experience on desktop and mobile, then save a checkpoint.
+- [x] Verify the redesigned experience on desktop and mobile, then save a checkpoint.
 - [x] Reframe the product around a premium learning dashboard with an algorithm-lab workspace as the primary visual focus.
 - [x] Replace the crowded preset-heavy landing surface with a focused first-session path: choose a lesson or start exploring a graph.
 - [x] Create a polished graph-first lab layout with persistent algorithm comparison controls, live insight cards, and responsive learning progress cues.
