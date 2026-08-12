@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
+import { getStoryCodeLines } from "../client/src/lib/storyFocus";
 import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
 import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
-import { getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
-import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario } from "../client/src/lib/learningFlow";
+import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
+import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
 
 describe("premium learning workspace navigation", () => {
+  it("opens directly into Code Studio for a new learner", () => {
+    expect(getInitialLearningWorkspace()).toBe("code");
+  });
+
   it("keeps the landing home focused until a learner chooses code or algorithms", () => {
     expect(getLearningWorkspace("home")).toBe("overview");
     expect(getLearningWorkspace("open-code")).toBe("code");
@@ -45,6 +50,18 @@ describe("contextual onboarding and shared graph scenarios", () => {
     expect(skippedTour).toEqual({ status: { code: true, algorithms: false }, workspace: null, stepIndex: 0 });
   });
 
+  it("opens the Code Studio guide for a direct first-time entry without reopening an active or completed guide", () => {
+    expect(getPendingOnboardingWorkspace("code", defaultOnboardingStatus, null)).toBe("code");
+    expect(getPendingOnboardingWorkspace("code", { code: true, algorithms: false }, null)).toBeNull();
+    expect(getPendingOnboardingWorkspace("code", defaultOnboardingStatus, "algorithms")).toBeNull();
+  });
+
+  it("keeps first-time coaching on the setup screen instead of covering generated story playback", () => {
+    expect(shouldDisplayOnboardingCoach("landing", "code")).toBe(true);
+    expect(shouldDisplayOnboardingCoach("studio", "code")).toBe(false);
+    expect(shouldDisplayOnboardingCoach("comparison", "algorithms")).toBe(false);
+  });
+
   it("round-trips a versioned city-map scenario with its learner-arranged layout", () => {
     const scenario = { version: 1 as const, graphText: "Cafe: Park (2)\nPark: Restaurant (3)\nRestaurant:", startStop: "Cafe", targetStop: "Restaurant", nodePositions: { Cafe: { left: 18, top: 72 }, Park: { left: 48, top: 28 }, Restaurant: { left: 82, top: 54 } } };
 
@@ -69,6 +86,13 @@ describe("contextual onboarding and shared graph scenarios", () => {
 });
 
 describe("createRealWorldStory", () => {
+  it("marks exactly the story-driving source line as active", () => {
+    expect(getStoryCodeLines("let apples = 2;\nreturn apples;", 2)).toEqual([
+      { lineNumber: 1, text: "let apples = 2;", isActive: false },
+      { lineNumber: 2, text: "return apples;", isActive: true },
+    ]);
+  });
+
   it("turns assignments into a labelled storage-box story", () => {
     const story = createRealWorldStory("let score = 4;", 1);
 
@@ -89,6 +113,14 @@ describe("createRealWorldStory", () => {
 
     expect(story.kind).toBe("decision-gate");
     expect(story.plainEnglish).toContain("question");
+  });
+
+  it("gives a closing brace a simple completion meaning", () => {
+    const story = createRealWorldStory("}", 4);
+
+    expect(story.title).toBe("This part of the job is complete");
+    expect(story.plainEnglish).toContain("closes");
+    expect(story.analogy).toContain("recipe");
   });
 
   it("uses a distinct, gentle audio cue for each key visual action", () => {

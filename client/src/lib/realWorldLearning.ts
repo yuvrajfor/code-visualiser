@@ -64,6 +64,18 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   const lower = trimmed.toLowerCase();
   const name = friendlyName(trimmed);
 
+  if (/^(?:\}|\)|\]|end|endif|endfor|endwhile|endfunction|endclass)\s*;?$/.test(lower)) {
+    return {
+      kind: "workbench",
+      icon: "✅",
+      title: "This part of the job is complete",
+      plainEnglish: "This line closes the small part of the job that came before it. The computer is finished with that part and is ready to continue with the next instruction outside it.",
+      whatChanged: "The earlier group of instructions has been neatly finished.",
+      analogy: "It is like closing a recipe section after you have finished every step in it.",
+      objectLabel: "Finished step",
+    };
+  }
+
   if (/\b(tree|root|left|right|binary|parent|child)\b/.test(lower)) {
     return {
       kind: "family-tree",

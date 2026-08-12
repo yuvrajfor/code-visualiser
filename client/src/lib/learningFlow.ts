@@ -18,6 +18,21 @@ const MAX_STOP_NAME_LENGTH = 120;
 
 export const defaultOnboardingStatus: OnboardingStatus = { code: false, algorithms: false };
 
+/** Finds a first-time guide that should open without interrupting a tour already in progress. */
+export function getPendingOnboardingWorkspace(
+  workspace: OnboardingWorkspace | "overview",
+  status: OnboardingStatus,
+  activeWorkspace: OnboardingWorkspace | null,
+): OnboardingWorkspace | null {
+  if (activeWorkspace || workspace === "overview" || status[workspace]) return null;
+  return workspace;
+}
+
+/** Coaching belongs on the setup screen and must not cover the learner's generated story. */
+export function shouldDisplayOnboardingCoach(activeView: "landing" | "studio" | "comparison", workspace: OnboardingWorkspace | null): boolean {
+  return activeView === "landing" && workspace !== null;
+}
+
 export const onboardingSteps: Record<OnboardingWorkspace, Array<{ title: string; description: string }>> = {
   code: [
     { title: "Choose a starting point", description: "Pick an everyday example or paste a small piece of your own code." },

@@ -88,3 +88,13 @@
 - [x] Add automated export-data coverage and verify PNG/JSON downloads on desktop and mobile.
 - [x] Verify the PNG and JSON download actions in a desktop browser flow, including both files’ content and format.
 - [x] Save a checkpoint for the presentation-ready City Map export experience.
+- [x] Audit the current Code Studio screen for distracting controls and document the focused beginner journey.
+- [x] Rebuild the Code Studio workspace around one clear sequence: paste code, create the visual story, and read the simple-English explanation.
+- [x] Simplify the visible controls and remove or de-emphasize extra material that competes with the main code-learning task.
+- [x] Refine visual-story transitions, line highlighting, and explanation emphasis for smooth, easy-to-follow playback.
+- [x] Give structural lines such as closing braces a simple visual meaning instead of a generic technical step.
+- [x] Show the Code Studio first-visit guide when the focused code workspace opens by default, not only after a navigation click.
+- [x] Add or update automated coverage for the focused Code Studio experience and verify it on desktop and mobile.
+- [x] Make the active code line visibly synchronize with the visual story and explanation, then verify that playback emphasis stays aligned.
+- [x] Keep first-visit guidance from covering the visual story and explanation while a learner is playing through generated code.
+- [x] Save a checkpoint for the polished beginner-first Code Studio redesign.
