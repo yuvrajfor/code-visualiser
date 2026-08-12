@@ -40,7 +40,7 @@
 - [x] Verify the BFS and DFS walkthroughs on desktop and mobile, then save a checkpoint.
 - [x] Connect the City Map scene to shared, deterministic BFS and DFS route-state helpers.
 - [x] Run interactive mobile-size verification for BFS and DFS player controls, visuals, and synchronized explanations.
-- [ ] Save a checkpoint after the completed BFS and DFS walkthrough verification.
+- [x] Save a checkpoint after the completed BFS and DFS walkthrough verification.
 - [x] Verify mobile play/pause, previous, restart, speed, and step-jump controls for both BFS and DFS walkthroughs.
 - [x] Make the mobile route-label checks positively confirm BFS waiting-line and DFS road-stack states, then rerun the verification.
 - [x] Verify direct mobile step-jump behavior for the BFS walkthrough and confirm its queue scene and explanation synchronize.
