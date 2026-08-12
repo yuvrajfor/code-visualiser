@@ -81,6 +81,12 @@ const defaultCode = `function findApple(basket, wantedApple) {
   return answer;
 }`;
 
+const interpreterProgressMessages = [
+  "Reading the shape of your code…",
+  "Matching each line with familiar objects…",
+  "Writing simple-English explanations…",
+] as const;
+
 type LearningPreset = {
   name: string;
   icon: string;
@@ -284,6 +290,7 @@ function SceneHeader({ story, step }: { story: RealWorldStory; step: LearningSte
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#a89787]">Real-life scene</p>
           <h2 className="text-base font-extrabold text-white">{story.title}</h2>
+          {story.visualFocus && <p className="mt-1 max-w-xl text-xs leading-5 text-[#d9c5b4]">Visual focus: {story.visualFocus}</p>}
         </div>
       </div>
       <Badge
@@ -587,6 +594,7 @@ export default function Home() {
     onSuccess: () => toast.success("Your code session has been saved."),
     onError: () => toast.error("Your visual still works, but this session could not be saved."),
   });
+  const interpretStory = trpc.stories.interpret.useMutation();
   const [activeView, setActiveView] = useState<"landing" | "studio" | "comparison">("landing");
   const [landingWorkspace, setLandingWorkspace] = useState<LearningWorkspace>(getInitialLearningWorkspace);
   const [selectedLang, setSelectedLang] = useState<Language>("javascript");
@@ -610,6 +618,7 @@ export default function Home() {
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus>(() => typeof window === "undefined" ? { ...defaultOnboardingStatus } : readOnboardingStatus(window.localStorage));
   const [onboardingWorkspace, setOnboardingWorkspace] = useState<OnboardingWorkspace | null>(null);
   const [onboardingStepIndex, setOnboardingStepIndex] = useState(0);
+  const [interpreterProgressIndex, setInterpreterProgressIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
@@ -638,6 +647,18 @@ export default function Home() {
     setOnboardingWorkspace(pendingWorkspace);
     setOnboardingStepIndex(0);
   }, [activeView, landingWorkspace, onboardingStatus, onboardingWorkspace]);
+
+  useEffect(() => {
+    if (!interpretStory.isPending) {
+      setInterpreterProgressIndex(0);
+      return;
+    }
+
+    const progressTimer = window.setInterval(() => {
+      setInterpreterProgressIndex((current) => Math.min(current + 1, interpreterProgressMessages.length - 1));
+    }, 2800);
+    return () => window.clearInterval(progressTimer);
+  }, [interpretStory.isPending]);
 
   const openLearningWorkspace = (workspace: OnboardingWorkspace) => {
     setActiveView("landing");
@@ -705,19 +726,42 @@ export default function Home() {
     }));
   };
 
-  const startVisualStory = () => {
+  const startVisualStory = async () => {
     if (!userCode.trim()) {
       toast.error("Please paste or write some code first.");
       return;
     }
-    const generatedSteps = buildSteps(userCode, selectedWalkthrough);
+    let generatedSteps: LearningStep[];
+
+    if (selectedWalkthrough) {
+      generatedSteps = buildSteps(userCode, selectedWalkthrough);
+    } else {
+      try {
+        const apiStory = await interpretStory.mutateAsync({
+          code: userCode,
+          language: selectedLang,
+          problemTitle: userProblem.trim() || undefined,
+        });
+        const sourceLines = userCode.split("\n");
+        generatedSteps = apiStory.steps.map((story, index) => ({
+          step: index + 1,
+          line: story.lineNumber,
+          code: sourceLines[story.lineNumber - 1]?.trim() || `Line ${story.lineNumber}`,
+          story,
+        }));
+      } catch {
+        generatedSteps = buildSteps(userCode);
+        toast.warning("The code interpreter is busy, so we opened a simple visual guide. Try creating the story again for code-specific scenes.");
+      }
+    }
+
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setActiveView("studio");
     playActionSound(generatedSteps[0]?.story);
     saveSubmission.mutate({ problemTitle: userProblem || "Untitled code story", language: selectedLang, code: userCode });
-    toast.success("Your code is now ready as an everyday visual story.");
+    toast.success(selectedWalkthrough ? "Your route walkthrough is ready." : "Your code now has a visual story made from its own instructions.");
   };
 
   const startCityComparison = (sharedScenario?: SharedGraphScenario) => {
@@ -1115,7 +1159,7 @@ export default function Home() {
                 <div data-code-only><div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><span className="text-[10px] text-[#8f7c6d]">Every non-empty line becomes one clear visual step.</span></div><Textarea data-code-input value={userCode} onChange={(event) => { setUserCode(event.target.value); setSelectedWalkthrough(null); }} rows={16} className="resize-y rounded-xl border-[#503525] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] shadow-[inset_0_0_24px_rgba(0,0,0,0.24)] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
                 <details data-code-only className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><summary className="cursor-pointer text-xs font-bold text-[#dfc6ae] marker:text-amber-200">Need a quick example instead?</summary><div className="mt-3 grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); setSelectedWalkthrough(preset.walkthrough ?? null); toast.success(`${preset.name} example loaded.`); }} className="group rounded-xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-base">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div></details>
               </div>
-              <div data-code-only className="relative mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/[0.055] p-3 sm:flex sm:items-center sm:justify-between"><p className="text-xs leading-5 text-[#dec7b0]"><strong className="text-amber-100">Next:</strong> your code becomes an everyday visual and a simple-English explanation.</p><Button data-create-visual-story onClick={startVisualStory} className="mt-3 h-12 w-full rounded-xl bg-gradient-to-r from-[#ffbd7d] via-[#e07834] to-[#c34d20] px-6 text-sm font-black text-[#170b06] shadow-[0_0_32px_rgba(229,155,99,0.33)] hover:scale-[1.01] sm:mt-0 sm:w-auto">Create my visual story <ArrowRight className="ml-2 h-4 w-4" /></Button></div>
+                <div data-code-only className="relative mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/[0.055] p-3 sm:flex sm:items-center sm:justify-between"><div><p className="text-xs leading-5 text-[#dec7b0]"><strong className="text-amber-100">Next:</strong> the interpreter reads your own code, then creates a specific visual and simple-English meaning for each line.</p>{interpretStory.isPending && <p className="mt-2 flex items-center gap-2 text-[11px] font-bold text-amber-100" aria-live="polite" data-interpreter-progress><Sparkles className="h-3.5 w-3.5 animate-pulse" aria-hidden="true" />Preparing your story · {interpreterProgressMessages[interpreterProgressIndex]}</p>}</div><Button data-create-visual-story onClick={startVisualStory} disabled={interpretStory.isPending} className="mt-3 h-12 w-full rounded-xl bg-gradient-to-r from-[#ffbd7d] via-[#e07834] to-[#c34d20] px-6 text-sm font-black text-[#170b06] shadow-[0_0_32px_rgba(229,155,99,0.33)] hover:scale-[1.01] disabled:cursor-wait disabled:opacity-70 sm:mt-0 sm:w-auto">{interpretStory.isPending ? "Building your story…" : "Create my visual story"} <ArrowRight className="ml-2 h-4 w-4" /></Button></div>
             </div>
 
             <aside className="lab-surface h-fit rounded-[28px] p-5" data-code-story-guide>

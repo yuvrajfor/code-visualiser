@@ -98,3 +98,9 @@
 - [x] Make the active code line visibly synchronize with the visual story and explanation, then verify that playback emphasis stays aligned.
 - [x] Keep first-visit guidance from covering the visual story and explanation while a learner is playing through generated code.
 - [x] Save a checkpoint for the polished beginner-first Code Studio redesign.
+- [x] Define a validated API response contract for code-specific visual scenes and beginner-friendly explanations.
+- [x] Add a secure server-side API procedure that interprets user code into visual-story steps.
+- [x] Connect Code Studio to the API-generated story with a clear loading state, useful error message, and safe local fallback.
+- [x] Reduce API-story generation delay and provide honest staged progress feedback while a code-specific visual story is being created.
+- [x] Add API-contract tests and verify the code-to-visual-story flow on desktop and mobile.
+- [x] Save a checkpoint for the API-powered Code Story Studio.

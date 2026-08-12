@@ -19,6 +19,8 @@ export type RealWorldStory = {
   whatChanged: string;
   analogy: string;
   objectLabel: string;
+  /** A short code-specific instruction for the visual scene. Optional for local fallback stories. */
+  visualFocus?: string;
 };
 
 export type ActionSound = {

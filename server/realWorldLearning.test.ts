@@ -7,6 +7,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
+import { CodeStoryInterpreterError, getMeaningfulSourceLines, normalizeApiCodeStory } from "./codeStoryInterpreter";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -86,6 +87,37 @@ describe("contextual onboarding and shared graph scenarios", () => {
 });
 
 describe("createRealWorldStory", () => {
+  it("keeps API-generated visual steps tied to every meaningful line of the learner's source", () => {
+    const source = "function greet(name) {\n  const message = `Hello ${name}`;\n  return message;\n}";
+    const story = normalizeApiCodeStory(source, {
+      summary: "This code prepares a greeting and sends it back. It uses the supplied name inside the greeting.",
+      steps: [
+        { lineNumber: 1, kind: "workshop", icon: "🛠️", title: "Prepare the greeting job", plainEnglish: "This line gives a name to the job that will make a greeting.", whatChanged: "The greeting job is ready to use later.", analogy: "It is like placing a labelled recipe card on the counter.", objectLabel: "Greeting recipe", visualFocus: "A recipe card named greet is placed on a workbench." },
+        { lineNumber: 2, kind: "storage-shelf", icon: "🗃️", title: "Write a greeting message", plainEnglish: "This line puts Hello and the supplied name into a box called message.", whatChanged: "The message box now holds the greeting.", analogy: "It is like writing a greeting on a card and placing it in a labelled drawer.", objectLabel: "message", visualFocus: "A drawer labelled message receives a Hello card." },
+        { lineNumber: 3, kind: "delivery-desk", icon: "📦", title: "Send the greeting back", plainEnglish: "This line sends the finished greeting back to the place that asked for it.", whatChanged: "The greeting is ready for delivery.", analogy: "It is like placing a finished card on a delivery desk.", objectLabel: "Greeting card", visualFocus: "A greeting card is placed on a delivery desk." },
+        { lineNumber: 4, kind: "workbench", icon: "✅", title: "Finish the greeting job", plainEnglish: "This line closes the group of instructions that made the greeting.", whatChanged: "The greeting instructions are complete.", analogy: "It is like closing the recipe after the cooking steps are done.", objectLabel: "Finished recipe", visualFocus: "A completed recipe card is placed in a finished tray." },
+      ],
+    });
+
+    expect(getMeaningfulSourceLines(source).map((line) => line.lineNumber)).toEqual([1, 2, 3, 4]);
+    expect(story.steps.map((step) => step.lineNumber)).toEqual([1, 2, 3, 4]);
+    expect(story.steps[1]?.visualFocus).toContain("message");
+    expect(story.steps[1]?.objectLabel).toBe("message");
+    expect(story.steps[1]?.analogy).toContain("labelled");
+  });
+
+  it("rejects an API story that skips a meaningful source line", () => {
+    const source = "let apples = 2;\nreturn apples;";
+    const incomplete = {
+      summary: "The code stores apples and sends them back.",
+      steps: [
+        { lineNumber: 1, kind: "storage-shelf", icon: "🗃️", title: "Store apples", plainEnglish: "This line puts 2 into an apples box.", whatChanged: "The apples box is filled.", analogy: "It is like placing two apples in a labelled basket.", objectLabel: "apples", visualFocus: "Two apples enter a labelled basket." },
+      ],
+    };
+
+    expect(() => normalizeApiCodeStory(source, incomplete)).toThrow(CodeStoryInterpreterError);
+  });
+
   it("marks exactly the story-driving source line as active", () => {
     expect(getStoryCodeLines("let apples = 2;\nreturn apples;", 2)).toEqual([
       { lineNumber: 1, text: "let apples = 2;", isActive: false },

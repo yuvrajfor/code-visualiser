@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { interpretCodeAsVisualStory } from "./codeStoryInterpreter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -36,6 +37,17 @@ export const appRouter = router({
     list: publicProcedure.query(async ({ ctx }) => {
       return await db.getRecentSubmissions(ctx.user?.id);
     }),
+  }),
+  stories: router({
+    interpret: publicProcedure
+      .input(z.object({
+        code: z.string().trim().min(1, "Paste some code before creating a visual story.").max(12_000, "Please keep the code under 12,000 characters for one visual story."),
+        language: z.string().trim().min(1).max(40),
+        problemTitle: z.string().max(180).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return interpretCodeAsVisualStory(input);
+      }),
   }),
 });
 

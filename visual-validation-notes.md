@@ -15,3 +15,13 @@ The focused story view now contains a compact “The code says” card with an A
 With the complete code panel expanded, moving to step 2 changed the highlighted source line to `let answer = "not found";` while the scene changed to a labelled storage shelf and the explanation described putting a value into the `answer` box. This confirms code, visual, and everyday-language focus advance together.
 
 After generating the story from the fresh Code Studio setup screen, the first-visit coach was absent from the story workspace. The visual scene, current code line, and everyday explanation are fully visible without the coach covering them.
+
+## API-powered interpreter smoke test
+
+The new primary action changes to “Reading your code…” and disables duplicate submission while the server-side interpreter is running. The first live request remained pending during the initial browser observation, so server-side response diagnostics are required before treating this as a completed end-to-end verification.
+
+After the performance refinement, the primary action now says “Building your story…” and provides visible staged feedback. During the live request, the message progressed from reading the code shape to writing simple-English explanations while the submission button stayed disabled.
+
+The compact-response smoke test also reached the final “Writing simple-English explanations…” stage without a browser error while the server generated the requested story.
+
+The compact API response completed into the visual player for the submitted `findApple` function. The learner reached a ten-step story with real source-line labels, the active code line, visual scenes, and plain-English explanations. The completed run did not show the local-fallback warning.
