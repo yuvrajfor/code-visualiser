@@ -32,4 +32,4 @@
 - [x] Save and restore the learner’s selected visual world using local storage.
 - [x] Add automated tests for tree/graph mappings and visual-theme preference helpers.
 - [x] Verify presets, help-panel behavior, and visual-theme persistence in the browser, then save a checkpoint.
-- [ ] Save a new checkpoint after the tree/graph presets, shortcut-help panel, localStorage theme persistence, tests, and browser verification are complete.
+- [x] Save a new checkpoint after the tree/graph presets, shortcut-help panel, localStorage theme persistence, tests, and browser verification are complete.
