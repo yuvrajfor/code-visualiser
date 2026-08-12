@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRealWorldStory } from "../client/src/lib/realWorldLearning";
+import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 
 describe("createRealWorldStory", () => {
   it("turns assignments into a labelled storage-box story", () => {
@@ -23,5 +23,14 @@ describe("createRealWorldStory", () => {
     expect(story.kind).toBe("decision-gate");
     expect(story.plainEnglish).toContain("question");
   });
-});
 
+  it("uses a distinct, gentle audio cue for each key visual action", () => {
+    const variableSound = getActionSound("storage-shelf");
+    const decisionSound = getActionSound("decision-gate");
+    const resultSound = getActionSound("delivery-desk");
+
+    expect(variableSound.label).toBe("soft pop");
+    expect(decisionSound.endHz).toBeGreaterThan(decisionSound.startHz);
+    expect(resultSound.duration).toBeGreaterThan(variableSound.duration);
+  });
+});

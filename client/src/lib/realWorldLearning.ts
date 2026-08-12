@@ -17,6 +17,30 @@ export type RealWorldStory = {
   objectLabel: string;
 };
 
+export type ActionSound = {
+  label: string;
+  waveform: OscillatorType;
+  startHz: number;
+  endHz: number;
+  duration: number;
+  volume: number;
+};
+
+/** Returns a short, distinct audio profile matched to the visual action. */
+export function getActionSound(kind: SceneKind): ActionSound {
+  const profiles: Record<SceneKind, ActionSound> = {
+    "storage-shelf": { label: "soft pop", waveform: "sine", startHz: 360, endHz: 620, duration: 0.18, volume: 0.055 },
+    "sorting-tray": { label: "item click", waveform: "triangle", startHz: 520, endHz: 680, duration: 0.16, volume: 0.045 },
+    "conveyor-loop": { label: "gentle tick", waveform: "sine", startHz: 250, endHz: 330, duration: 0.12, volume: 0.038 },
+    "decision-gate": { label: "decision ping", waveform: "triangle", startHz: 480, endHz: 840, duration: 0.22, volume: 0.05 },
+    workshop: { label: "tool chime", waveform: "sine", startHz: 340, endHz: 560, duration: 0.2, volume: 0.045 },
+    "delivery-desk": { label: "delivery bell", waveform: "sine", startHz: 660, endHz: 990, duration: 0.25, volume: 0.055 },
+    workbench: { label: "focus tap", waveform: "sine", startHz: 300, endHz: 420, duration: 0.14, volume: 0.035 },
+  };
+
+  return profiles[kind];
+}
+
 function friendlyName(line: string) {
   const match = line.match(/(?:let|const|var|int|float|double|String|boolean|char|[A-Za-z_][\w<>\[\]]*)\s+([A-Za-z_]\w*)\s*(?:=|;|\()/);
   return match?.[1] ?? "this item";

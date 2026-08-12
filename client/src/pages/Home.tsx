@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import { createRealWorldStory, type RealWorldStory } from "@/lib/realWorldLearning";
+import { createRealWorldStory, getActionSound, type RealWorldStory } from "@/lib/realWorldLearning";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -43,6 +43,70 @@ const defaultCode = `function findApple(basket, wantedApple) {
   }
   return answer;
 }`;
+
+type LearningPreset = {
+  name: string;
+  icon: string;
+  description: string;
+  problem: string;
+  language: Language;
+  code: string;
+};
+
+const learningPresets: LearningPreset[] = [
+  {
+    name: "Shopping cart",
+    icon: "🛒",
+    description: "Arrays become a cart full of items.",
+    problem: "Add an item to a shopping cart and check what is inside",
+    language: "javascript",
+    code: `function checkCart() {
+  const cart = ["milk", "bread", "apples"];
+  cart.push("tea");
+  for (let item of cart) {
+    if (item === "apples") {
+      return "apples are in the cart";
+    }
+  }
+  return "apples are not in the cart";
+}`,
+  },
+  {
+    name: "Labelled money box",
+    icon: "🗃️",
+    description: "Variables become clearly labelled boxes.",
+    problem: "Keep track of pocket money in a labelled box",
+    language: "python",
+    code: `def save_money():
+    pocket_money = 20
+    pocket_money = pocket_money + 5
+    return pocket_money`,
+  },
+  {
+    name: "Traffic-light choice",
+    icon: "🚦",
+    description: "An if statement becomes a simple yes-or-no gate.",
+    problem: "Decide if a person can enter the ride",
+    language: "java",
+    code: `public String rideChoice(int height) {
+  if (height >= 120) {
+    return "You can ride";
+  }
+  return "You need to grow a little taller";
+}`,
+  },
+  {
+    name: "Parcel delivery",
+    icon: "📦",
+    description: "A function result is packed and handed back.",
+    problem: "Pack a greeting in a parcel and deliver it",
+    language: "c",
+    code: `char* makeGreeting() {
+  char* greeting = "Hello from the parcel";
+  return greeting;
+}`,
+  },
+];
 
 const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string; label: string }> = {
   "workbench": { accent: "#a78bfa", wash: "rgba(167,139,250,0.16)", label: "workbench" },
@@ -88,14 +152,14 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "storage-shelf") {
     return (
-      <div className="relative flex h-[270px] items-end justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#100b08] p-7">
+      <div className="relative flex h-[270px] items-end justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#100b08] p-7 story-scene-enter">
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#22130c] to-transparent" />
         <div className="absolute left-7 top-5 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-200">Kitchen storage shelf</div>
         <div className="relative z-10 w-full max-w-[520px] rounded-2xl border-4 border-[#7c4a2d] bg-[#3e2417] p-4 shadow-[0_0_35px_rgba(245,158,11,0.2)]">
           <div className="mb-4 h-2 rounded-full bg-[#bb7246]" />
           <div className="grid grid-cols-3 gap-3">
             {["Old note", story.objectLabel, "Next task"].map((labelText, index) => (
-              <div key={labelText} className={`rounded-xl border p-3 ${index === 1 ? "border-amber-300 bg-amber-300/15 shadow-[0_0_22px_rgba(245,158,11,0.3)]" : "border-[#6b442d] bg-[#24160f]"}`}>
+              <div key={labelText} className={`scene-object-pop rounded-xl border p-3 ${index === 1 ? "border-amber-300 bg-amber-300/15 shadow-[0_0_22px_rgba(245,158,11,0.3)]" : "border-[#6b442d] bg-[#24160f]"}`} style={{ animationDelay: `${index * 55}ms` }}>
                 <div className="mb-3 h-7 rounded-md bg-[#bb7246] opacity-80" />
                 <p className="truncate text-center text-xs font-bold text-[#f8ead7]">{labelText}</p>
               </div>
@@ -109,13 +173,13 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "sorting-tray") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1217] p-6">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1217] p-6 story-scene-enter">
         <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(56,189,248,.17) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
         <div className="relative w-full max-w-[540px] rounded-[28px] border-8 border-[#0e7490] bg-[#155e75]/50 p-6 shadow-[0_0_34px_rgba(56,189,248,0.2)]">
           <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-sky-200">Sorting tray</p>
           <div className="flex items-end justify-center gap-3">
             {["A", "B", "C", "D"].map((item, index) => (
-              <div key={item} className={`grid w-16 place-items-center rounded-xl border text-sm font-black ${index === 1 ? "h-24 border-sky-200 bg-sky-300 text-slate-950 shadow-[0_0_24px_rgba(56,189,248,0.5)]" : "h-16 border-sky-700 bg-sky-950 text-sky-100"}`}>
+              <div key={item} className={`scene-object-pop grid w-16 place-items-center rounded-xl border text-sm font-black ${index === 1 ? "h-24 border-sky-200 bg-sky-300 text-slate-950 shadow-[0_0_24px_rgba(56,189,248,0.5)]" : "h-16 border-sky-700 bg-sky-950 text-sky-100"}`} style={{ animationDelay: `${index * 65}ms` }}>
                 {item}
               </div>
             ))}
@@ -128,12 +192,12 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "conveyor-loop") {
     return (
-      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#08130f] p-6">
+      <div className="relative h-[270px] overflow-hidden rounded-2xl border border-white/10 bg-[#08130f] p-6 story-scene-enter">
         <div className="absolute left-6 top-5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200">One item at a time</div>
         <div className="absolute inset-x-8 bottom-12 h-14 rounded-full border-4 border-[#166534] bg-[#14532d] shadow-[inset_0_0_18px_rgba(0,0,0,0.5)]" />
         <div className="absolute inset-x-12 bottom-[4.8rem] flex justify-between">
           {["1", "2", "3", "4"].map((item, index) => (
-            <div key={item} className={`grid h-14 w-14 place-items-center rounded-xl border text-sm font-black ${index === 1 ? "-translate-y-4 border-emerald-200 bg-emerald-300 text-emerald-950 shadow-[0_0_24px_rgba(52,211,153,0.55)]" : "border-emerald-700 bg-[#0f2f22] text-emerald-100"}`}>
+            <div key={item} className={`scene-object-pop grid h-14 w-14 place-items-center rounded-xl border text-sm font-black ${index === 1 ? "-translate-y-4 border-emerald-200 bg-emerald-300 text-emerald-950 shadow-[0_0_24px_rgba(52,211,153,0.55)]" : "border-emerald-700 bg-[#0f2f22] text-emerald-100"}`} style={{ animationDelay: `${index * 55}ms` }}>
               {item}
             </div>
           ))}
@@ -145,10 +209,10 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "decision-gate") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#18080e] p-6">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#18080e] p-6 story-scene-enter">
         <div className="absolute left-8 top-6 rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-200">Question checkpoint</div>
         <div className="relative z-10 grid place-items-center">
-          <div className="grid h-24 w-24 place-items-center rounded-full border-4 border-rose-300 bg-rose-400/20 text-4xl shadow-[0_0_35px_rgba(251,113,133,0.45)]">?</div>
+          <div className="scene-decision-pulse grid h-24 w-24 place-items-center rounded-full border-4 border-rose-300 bg-rose-400/20 text-4xl shadow-[0_0_35px_rgba(251,113,133,0.45)]">?</div>
           <div className="mt-3 text-sm font-bold text-rose-100">Is the answer yes?</div>
         </div>
         <div className="absolute bottom-10 left-[18%] flex flex-col items-center gap-2 text-emerald-100"><span className="text-3xl">↙</span><span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold">YES: continue</span></div>
@@ -159,7 +223,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "workshop") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1b0d05] p-6">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1b0d05] p-6 story-scene-enter">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.18),transparent_60%)]" />
         <div className="relative z-10 w-full max-w-[450px] rounded-2xl border-2 border-orange-300/60 bg-[#29130a] p-5 shadow-[0_0_35px_rgba(249,115,22,0.35)]">
           <div className="flex items-center justify-between border-b border-orange-200/15 pb-3"><span className={label}>Recipe card</span><span className="text-lg">🛠️</span></div>
@@ -172,10 +236,10 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
 
   if (story.kind === "delivery-desk") {
     return (
-      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#171407] p-6">
+      <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#171407] p-6 story-scene-enter">
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-amber-700/15 to-transparent" />
         <div className="relative z-10 grid place-items-center">
-          <div className="relative grid h-36 w-44 place-items-center rounded-2xl border-4 border-amber-300 bg-amber-500/45 text-5xl shadow-[0_0_42px_rgba(234,179,8,0.42)]">📦<span className="absolute -right-4 -top-4 rounded-full bg-emerald-300 px-3 py-1 text-xs font-black text-emerald-950">READY</span></div>
+          <div className="scene-delivery-pop relative grid h-36 w-44 place-items-center rounded-2xl border-4 border-amber-300 bg-amber-500/45 text-5xl shadow-[0_0_42px_rgba(234,179,8,0.42)]">📦<span className="absolute -right-4 -top-4 rounded-full bg-emerald-300 px-3 py-1 text-xs font-black text-emerald-950">READY</span></div>
           <p className="mt-5 text-sm font-bold text-amber-100">The answer is safely packed and ready to share.</p>
         </div>
       </div>
@@ -183,7 +247,7 @@ function RealWorldScene({ story }: { story: RealWorldStory }) {
   }
 
   return (
-    <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#110d1b] p-6">
+    <div className="relative flex h-[270px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#110d1b] p-6 story-scene-enter">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.2),transparent_60%)]" />
       <div className={`relative z-10 w-full max-w-[440px] rounded-2xl p-5 ${common}`}>
         <p className={label}>Today’s task</p>
@@ -212,23 +276,24 @@ export default function Home() {
   const audioRef = useRef<AudioContext | null>(null);
   const currentStep = steps[currentStepIndex];
 
-  const playChime = () => {
-    if (!soundEnabled || typeof window === "undefined") return;
+  const playActionSound = (story?: RealWorldStory) => {
+    if (!soundEnabled || typeof window === "undefined" || !story) return;
     try {
       audioRef.current ??= new AudioContext();
       const audio = audioRef.current;
+      const profile = getActionSound(story.kind);
       void audio.resume();
       const oscillator = audio.createOscillator();
       const gain = audio.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(440, audio.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(660, audio.currentTime + 0.13);
-      gain.gain.setValueAtTime(0.06, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.26);
+      oscillator.type = profile.waveform;
+      oscillator.frequency.setValueAtTime(profile.startHz, audio.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(profile.endHz, audio.currentTime + profile.duration);
+      gain.gain.setValueAtTime(profile.volume, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + profile.duration);
       oscillator.connect(gain);
       gain.connect(audio.destination);
       oscillator.start();
-      oscillator.stop(audio.currentTime + 0.27);
+      oscillator.stop(audio.currentTime + profile.duration + 0.02);
     } catch {
       // Sound is an optional learning aid. Browsers can restrict it until interaction.
     }
@@ -262,14 +327,16 @@ export default function Home() {
     setCurrentStepIndex(0);
     setIsPlaying(false);
     setActiveView("studio");
+    playActionSound(generatedSteps[0]?.story);
     saveSubmission.mutate({ problemTitle: userProblem || "Untitled code story", language: selectedLang, code: userCode });
     toast.success("Your code is now ready as an everyday visual story.");
   };
 
   const goToStep = (index: number) => {
     setIsPlaying(false);
-    setCurrentStepIndex(Math.max(0, Math.min(index, steps.length - 1)));
-    playChime();
+    const nextIndex = Math.max(0, Math.min(index, steps.length - 1));
+    setCurrentStepIndex(nextIndex);
+    playActionSound(steps[nextIndex]?.story);
   };
 
   useEffect(() => {
@@ -280,14 +347,14 @@ export default function Home() {
           setIsPlaying(false);
           return index;
         }
-        playChime();
+        playActionSound(steps[index + 1]?.story);
         return index + 1;
       });
     }, speedMs);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying, speedMs, steps.length, soundEnabled]);
+  }, [isPlaying, speedMs, steps, soundEnabled]);
 
   const visualDictionary = [
     ["🗃️", "Labelled boxes", "A variable: a named place that remembers something."],
@@ -330,6 +397,10 @@ export default function Home() {
                 </div>
               </div>
               <div className="relative mt-6 space-y-5">
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3"><Label className="block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Try a ready-made everyday example</Label><span className="text-[10px] text-[#8f7c6d]">or write your own below</span></div>
+                  <div className="grid gap-2 sm:grid-cols-2">{learningPresets.map((preset) => <button key={preset.name} onClick={() => { setUserProblem(preset.problem); setSelectedLang(preset.language); setUserCode(preset.code); toast.success(`${preset.name} example loaded.`); }} className="group rounded-2xl border border-white/10 bg-[#0c0806] p-3 text-left transition hover:-translate-y-0.5 hover:border-amber-300/45 hover:bg-[#1b110b]"><span className="text-lg">{preset.icon}</span><span className="ml-2 text-xs font-bold text-white">{preset.name}</span><span className="mt-1 block text-[10px] leading-relaxed text-[#a89787]">{preset.description}</span></button>)}</div>
+                </div>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">What does this code try to do?</Label><Input value={userProblem} onChange={(event) => setUserProblem(event.target.value)} className="h-12 rounded-xl border-[#39291f] bg-[#0b0705] text-white focus-visible:ring-[#f59e0b]" placeholder="For example: Find an apple in a basket" /></div>
                 <div><Label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#bba797]">Your code</Label><Textarea value={userCode} onChange={(event) => setUserCode(event.target.value)} rows={14} className="resize-y rounded-xl border-[#39291f] bg-[#0b0705] p-4 font-mono text-xs leading-6 text-[#f7f0e8] focus-visible:ring-[#f59e0b]" placeholder="Paste your code here" /></div>
               </div>
@@ -361,14 +432,14 @@ export default function Home() {
           <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-6">
               <SceneHeader story={currentStep.story} step={currentStep} />
-              <div className="mt-5"><RealWorldScene story={currentStep.story} /></div>
+              <div key={`scene-${currentStep.step}-${currentStep.story.kind}`} className="mt-5"><RealWorldScene story={currentStep.story} /></div>
               <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0c0806] px-4 py-3 text-xs text-[#bdac9b]"><Box className="h-4 w-4 shrink-0 text-amber-200" /><span><strong className="text-white">What you are seeing:</strong> This picture represents a {sceneStyles[currentStep.story.kind].label}, not a hard-to-read memory diagram.</span></div>
             </div>
 
             <div className="rounded-[28px] border border-[#37271d] bg-[#15100d] p-5 shadow-[0_26px_60px_rgba(0,0,0,0.35)] md:p-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-200" /><h2 className="text-sm font-bold text-white">What the computer is doing</h2></div><Badge className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-[10px] font-bold text-amber-200">Line {currentStep.line}</Badge></div>
               <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">The code says</p><code className="mt-2 block whitespace-pre-wrap break-words font-mono text-xs leading-6 text-[#f9e9d5]">{currentStep.code}</code></div>
-              <div className="mt-4 rounded-2xl border border-[#3d2c21] bg-[#0c0806] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2bc89]">In everyday words</p><p className="mt-2 text-sm font-medium leading-7 text-white">{currentStep.story.plainEnglish}</p></div>
+              <div key={`explanation-${currentStep.step}`} aria-live="polite" className="explanation-enter mt-4 rounded-2xl border border-[#3d2c21] bg-[#0c0806] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2bc89]">In everyday words</p><p className="mt-2 text-sm font-medium leading-7 text-white">{currentStep.story.plainEnglish}</p></div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200">What changed</p><p className="mt-2 text-xs leading-5 text-[#d7efe2]">{currentStep.story.whatChanged}</p></div><div className="rounded-2xl border border-sky-300/15 bg-sky-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">Everyday example</p><p className="mt-2 text-xs leading-5 text-[#d9eff8]">{currentStep.story.analogy}</p></div></div>
               <div className="mt-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#a89787]">Jump to any part of the story</p><div className="mt-3 max-h-[265px] space-y-2 overflow-y-auto pr-1">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`${step.line}-${step.code}`} onClick={() => goToStep(index)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition ${isActive ? "border-amber-300/60 bg-amber-300/10 shadow-[0_0_20px_rgba(245,158,11,0.12)]" : "border-white/10 bg-[#0c0806] hover:border-[#694b35] hover:bg-[#17100d]"}`}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/5 text-lg">{step.story.icon}</span><span className="min-w-0 flex-1"><span className={`block text-xs font-bold ${isActive ? "text-white" : "text-[#d4c1b0]"}`}>Step {step.step}: {step.story.title}</span><span className="mt-0.5 block truncate font-mono text-[10px] text-[#8f7c6d]">Line {step.line}: {step.code}</span></span>{isActive && <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-200" />}</button>; })}</div></div>
             </div>
