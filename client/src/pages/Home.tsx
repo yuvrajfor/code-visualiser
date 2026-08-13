@@ -45,6 +45,7 @@ type LearningStep = {
   line: number;
   code: string;
   story: RealWorldStory;
+  executionState?: { subject: string; action: string; change: string };
   routeState?: CityRouteState;
 };
 
@@ -603,21 +604,23 @@ function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodeP
 
 function ExecutionStatePanel({ step }: { step: LearningStep }) {
   const { story } = step;
+  const executionState = step.executionState ?? { subject: story.objectLabel, action: story.title, change: story.whatChanged };
   return (
-    <section className="execution-state-panel mt-4" data-execution-state aria-label={`Execution state for line ${step.line}`}>
+    <section className="execution-state-panel mt-4" data-execution-state data-execution-state-origin={step.executionState ? "source" : "visual"} aria-label={`Execution state for line ${step.line}`}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3">
-        <div><p className="lab-kicker">Execution state</p><h2 className="mt-1 text-sm font-extrabold text-white">What changed on this line</h2></div>
+        <div><p className="lab-kicker">Execution state</p><h2 className="mt-1 text-sm font-extrabold text-white">What this source line sets up</h2></div>
         <span className="rounded-full border border-indigo-300/25 bg-indigo-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-indigo-100">Line {step.line}</span>
       </header>
+      <p className="execution-state-source mt-3" data-execution-state-source>From your code <code>{step.code.trim() || "Current source line"}</code></p>
       <div className="execution-state-grid mt-3">
         <div className="execution-state-card execution-state-object" data-execution-state-object>
-          <p>Object in focus</p><strong><span aria-hidden="true">{story.icon}</span>{story.objectLabel}</strong>
+          <p>In focus</p><strong><span aria-hidden="true">{story.icon}</span>{executionState.subject}</strong>
         </div>
         <div className="execution-state-card" data-execution-state-action>
-          <p>Action</p><strong>{story.title}</strong>
+          <p>Action</p><strong>{executionState.action}</strong>
         </div>
         <div className="execution-state-card execution-state-change sm:col-span-2" data-execution-state-change>
-          <p>State change</p><span>{story.whatChanged}</span>
+          <p>What this means</p><span>{executionState.change}</span>
         </div>
       </div>
     </section>
@@ -906,6 +909,7 @@ export default function Home() {
           line: story.lineNumber,
           code: sourceLines[story.lineNumber - 1] ?? "",
           story,
+          executionState: story.executionState,
         }));
         if (apiStory.source === "fallback") {
           toast.info("We opened a clear visual guide while the code-specific interpreter is unavailable. You can try again anytime.");

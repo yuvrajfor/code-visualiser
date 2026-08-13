@@ -8,7 +8,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
-import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
+import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, createSourceExecutionState, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 
 describe("premium learning workspace navigation", () => {
@@ -106,6 +106,13 @@ describe("createRealWorldStory", () => {
     expect(story.steps[1]?.visualFocus).toContain("message");
     expect(story.steps[1]?.objectLabel).toBe("message");
     expect(story.steps[1]?.analogy).toContain("labelled");
+    expect(story.steps[1]?.executionState).toEqual({ subject: "message", action: "Creates a named value", change: "The name message is connected to the expression shown on this line." });
+  });
+
+  it("derives bounded execution-state language from source text without running learner code", () => {
+    expect(createSourceExecutionState("items.push(apple);")).toEqual({ subject: "items", action: "Changes a collection", change: "This call asks items to add, remove, or rearrange an item." });
+    expect(createSourceExecutionState("if (basket.length === 0) {")).toEqual({ subject: "Choice", action: "Checks a condition", change: "The next path depends on whether this check is true or false." });
+    expect(createSourceExecutionState("return answer;")).toEqual({ subject: "Result", action: "Returns an answer", change: "The value on this line is prepared to leave the current instruction." });
   });
 
   it("rejects an API story that skips a meaningful source line", () => {
@@ -127,6 +134,8 @@ describe("createRealWorldStory", () => {
 
     expect(emptyStory.source).toBe("fallback");
     expect(emptyStory.steps.map((step) => step.lineNumber)).toEqual([1, 2]);
+    expect(emptyStory.steps[0]?.executionState.subject).toBe("apples");
+    expect(emptyStory.steps[1]?.executionState.action).toBe("Returns an answer");
     expect(partialStory.source).toBe("fallback");
     expect(partialStory.steps).toHaveLength(2);
     expect(getInterpreterTextContent([{ type: "text", text: '{"summary":"ready"}' }])).toBe('{"summary":"ready"}');
@@ -444,9 +453,9 @@ describe("state-first Code Studio workspace contract", () => {
     expect(executionStateIndex).toBeGreaterThan(-1);
     expect(cinematicDetailIndex).toBeGreaterThan(-1);
     expect(executionStateIndex).toBeLessThan(cinematicDetailIndex);
-    expect(homeSource).toContain("What changed on this line");
-    expect(homeSource).toContain("Object in focus");
-    expect(homeSource).toContain("State change");
+    expect(homeSource).toContain("What this source line sets up");
+    expect(homeSource).toContain("From your code");
+    expect(homeSource).toContain("What this means");
     expect(homeSource).toContain("Scene detail");
     expect(homeSource).toContain("Optional Python illustration");
   });

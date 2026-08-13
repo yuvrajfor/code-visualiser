@@ -30,7 +30,13 @@ const apiCodeStoryResponseSchema = z.object({
   steps: z.array(apiStoryResponseStepSchema).min(1).max(80),
 });
 
-export type ApiCodeStoryStep = RealWorldStory & { lineNumber: number };
+export type SourceExecutionState = {
+  subject: string;
+  action: string;
+  change: string;
+};
+
+export type ApiCodeStoryStep = RealWorldStory & { lineNumber: number; executionState: SourceExecutionState };
 export type ApiCodeStory = {
   summary: string;
   steps: ApiCodeStoryStep[];
@@ -119,6 +125,57 @@ function getValidatedSourceLines(code: string) {
   return sourceLines;
 }
 
+function shortSourceName(value: string | undefined, fallback: string) {
+  const normalized = value?.replace(/[;:{[(].*$/, "").trim().replace(/^['"`]|['"`]$/g, "");
+  return normalized ? normalized.slice(0, 48) : fallback;
+}
+
+/**
+ * Creates a compact, source-grounded state snapshot. This classifies the
+ * learner's text; it deliberately does not execute JavaScript, Python, C, or
+ * Java in the web request path.
+ */
+export function createSourceExecutionState(source: string): SourceExecutionState {
+  const line = source.trim();
+  const functionMatch = line.match(/(?:function|def)\s+([A-Za-z_$][\w$]*)|(?:public|private|protected)?\s*(?:static\s+)?[A-Za-z_$][\w$<>\[\]*]*\s+([A-Za-z_$][\w$]*)\s*\(/);
+  const classMatch = line.match(/class\s+([A-Za-z_$][\w$]*)/);
+  const declarationMatch = line.match(/(?:const|let|var|final|int|float|double|char|boolean|string|auto)\s+([A-Za-z_$][\w$]*)|([A-Za-z_$][\w$]*)\s*=/i);
+  const loopMatch = line.match(/(?:for|while)\s*\(?\s*([A-Za-z_$][\w$]*)?/i);
+  const callMatch = line.match(/([A-Za-z_$][\w$]*)\.(?:push|append|add|remove|pop|shift|sort)\s*\(/i);
+
+  if (/^[}\])]+\s*;?$/.test(line)) {
+    return { subject: "Instruction group", action: "Closes this group", change: "The earlier group of instructions ends here." };
+  }
+  if (classMatch) {
+    const subject = shortSourceName(classMatch[1], "New class");
+    return { subject, action: "Defines a blueprint", change: `A reusable blueprint called ${subject} is introduced.` };
+  }
+  if (functionMatch) {
+    const subject = shortSourceName(functionMatch[1] ?? functionMatch[2], "Instruction");
+    return { subject, action: "Defines an instruction", change: `A reusable instruction called ${subject} is introduced.` };
+  }
+  if (/^return\b/i.test(line)) {
+    return { subject: "Result", action: "Returns an answer", change: "The value on this line is prepared to leave the current instruction." };
+  }
+  if (/^(if|else\s+if|else)\b/i.test(line)) {
+    return { subject: "Choice", action: "Checks a condition", change: "The next path depends on whether this check is true or false." };
+  }
+  if (/^(for|while)\b/i.test(line)) {
+    const subject = shortSourceName(loopMatch?.[1], "Repeated work");
+    return { subject, action: "Repeats a step", change: `The code sets up or continues repeated work with ${subject}.` };
+  }
+  if (callMatch) {
+    const subject = shortSourceName(callMatch[1], "Collection");
+    return { subject, action: "Changes a collection", change: `This call asks ${subject} to add, remove, or rearrange an item.` };
+  }
+  if (declarationMatch) {
+    const subject = shortSourceName(declarationMatch[1] ?? declarationMatch[2], "Named value");
+    const action = /(?:const|let|var|final|int|float|double|char|boolean|string|auto)\s+/i.test(line) ? "Creates a named value" : "Updates a named value";
+    return { subject, action, change: `The name ${subject} is connected to the expression shown on this line.` };
+  }
+  return { subject: "Current instruction", action: "Follows this instruction", change: "This source line is the current part of the code story." };
+}
+
 /**
  * Validates that the generated story follows the user's real source lines in
  * order. The model supplies the learning language; the source remains the
@@ -143,7 +200,7 @@ export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCode
       .map((step) => {
         const source = sourceLines.find((sourceLine) => sourceLine.lineNumber === step.lineNumber);
         const localVisual = createRealWorldStory(source?.code ?? "", step.lineNumber);
-        return { ...localVisual, ...step };
+        return { ...localVisual, ...step, executionState: createSourceExecutionState(source?.code ?? "") };
       }),
   };
 }
@@ -160,6 +217,7 @@ export function createFallbackApiCodeStory(code: string): ApiCodeStory {
     steps: sourceLines.map((source) => ({
       ...createRealWorldStory(source.code, source.lineNumber),
       lineNumber: source.lineNumber,
+      executionState: createSourceExecutionState(source.code),
     })),
   };
 }

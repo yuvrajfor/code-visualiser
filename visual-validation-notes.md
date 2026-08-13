@@ -51,3 +51,9 @@ The current desktop capture confirms that the source-line command bar, browser-n
 On a 375-pixel phone viewport, the cinematic panel is no longer placed before the real-life scene. The story header, command controls, and visual scene fit the viewport width. The current `Back to workspace` header label is truncated at this width and requires compact responsive wording before final delivery.
 
 After the responsive navigation refinement, the phone header now shows the compact `Back` label while retaining the full accessible `Back to workspace` label. The verified 375-pixel workflow has no horizontal overflow, keeps the execution-state surface visible before optional scene detail, and still exercises the cinematic disclosure, focus controls, touch-camera reset, playback, graph sharing, exports, Dijkstra comparison, and node dragging. The final suite reports 45 passing automated tests, a passing TypeScript check, and a passing production build.
+
+## Full-stack execution-state upgrade review
+
+The current desktop workflow capture retains a legible paired-learning composition: the real-world scene and synchronized explanation sit beneath a compact playback header. The source-grounded execution-state inspector is asserted through the browser workflow and remains in the primary story path, while cinematic detail stays optional.
+
+The current 375-pixel workflow capture keeps the header, step controls, visual-setting disclosure, and primary real-world scene inside the narrow viewport without horizontal overflow. The environment’s session-saved toast and preview publishing notice are temporary host overlays rather than product UI, so they are not treated as layout defects in this review.

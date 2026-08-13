@@ -1,0 +1,200 @@
+# code execution visualizer
+[1;37m[[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Code execution visualizer for ruby"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"redgetan/kefka"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 3[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2014-11-04T23:37:19Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/redgetan/kefka"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"An interpreter and code execution visualizer written in Rust"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"Jadens-arc/Ironmind"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"Rust"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 5[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-05-11T15:39:35Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/Jadens-arc/Ironmind"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Simple code execution visualizer for JavaScript"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"mAlaliSy/codilizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 3[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2022-03-15T06:54:08Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/mAlaliSy/codilizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Interactive code execution visualizer that animates programs step by step, making debugging and learning easier."[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"Mr-Documents/Code-Execution-Visualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"TypeScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 3[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-08-08T00:39:31Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/Mr-Documents/Code-Execution-Visualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"rishikaakhandelwal/code_execution_visualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 2[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-03-19T16:43:56Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/rishikaakhandelwal/code_execution_visualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Code execution visualizer"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"jyoko/watchitrun"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2016-02-25T06:42:52Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/jyoko/watchitrun"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"JS Code Execution Visualizer"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"disco195/js-execution-visualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2020-10-03T03:12:05Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/disco195/js-execution-visualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Interactive code execution visualizer"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"Pratyakshya10/CodeViz"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-03-28T14:42:41Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/Pratyakshya10/CodeViz"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"AI Code Execution Visualizer"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"Alema-em/Codecanvas"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"Python"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-03-10T18:39:03Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/Alema-em/Codecanvas"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"oreoluwa-xyz/CodeExecutionVisualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2018-03-17T19:35:04Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/oreoluwa-xyz/CodeExecutionVisualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Code execution visualizer for SymmetricJS"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"symmetricjs/symmetric-visualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2018-09-11T01:46:17Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/symmetricjs/symmetric-visualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m" Python Code Execution Visualizer - Line-by-line tracing, memory analysis, algorithm animation"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"HUAYUE1024/huaycode"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"CSS"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 2[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-04-22T07:45:05Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/HUAYUE1024/huaycode"[m
+  [1;37m}[m
+[1;37m][m
+# algorithm visualizer react
+[1;37m[[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"A react.js app for visualization of sorting algorithms."[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"anandman03/algorithm-visualizer-react-app"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 16[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-12-09T16:25:55Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/anandman03/algorithm-visualizer-react-app"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Algorithm Visualizer v1.0 using reactjs"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"sandeepmishra1990/AlgorithmVisualizerReact"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2020-06-13T15:29:54Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/sandeepmishra1990/AlgorithmVisualizerReact"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"JaivalBhup/AlgorithmVisualizer-React"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 3[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2024-06-23T23:25:53Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/JaivalBhup/AlgorithmVisualizer-React"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Algorithm Visualizer react app, using Canvas"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"Mark-777-0/AlgoMap"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 2[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-10-08T03:06:47Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/Mark-777-0/AlgoMap"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"jerrycode06/algorithm-visualizer-react"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 3[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-02-22T09:19:29Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/jerrycode06/algorithm-visualizer-react"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Algorithm Visualizer (React)"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"muluken638/Maths-Calculation-Simpliy-With-Steps"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-02-20T20:18:10Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/muluken638/Maths-Calculation-Simpliy-With-Steps"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Algorithm visualizer react app"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"ethanduenas/algorithm-visualizer"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-06-18T02:44:28Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/ethanduenas/algorithm-visualizer"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"A sorting algorithm visualization | React"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"KalebTringale/sort.github.io"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m""[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 1[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2020-07-09T00:12:18Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/KalebTringale/sort.github.io"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Interactive Algorithm Visualizer - React + TypeScript"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"DevEnjoysMath/AlgoPlayground"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"TypeScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-09-24T14:11:02Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/DevEnjoysMath/AlgoPlayground"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Sorting Algorithms Visualizer - React App"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"nasserelm/sorting-algos"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-11-01T19:16:24Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/nasserelm/sorting-algos"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Sorting Algorithms Visualization (React, TypeScript)"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"lofi-J/Algorithm-Visualization"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"TypeScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 1[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2025-09-01T05:30:46Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/lofi-J/Algorithm-Visualization"[m
+  [1;37m}[m[1;37m,[m
+  [1;37m{[m
+    [1;34m"description"[m[1;37m:[m [32m"Interactive Sorting Algorithms Visualizer — React + Vite"[m[1;37m,[m
+    [1;34m"fullName"[m[1;37m:[m [32m"cedarit/computer-sorting"[m[1;37m,[m
+    [1;34m"language"[m[1;37m:[m [32m"JavaScript"[m[1;37m,[m
+    [1;34m"stargazersCount"[m[1;37m:[m 0[1;37m,[m
+    [1;34m"updatedAt"[m[1;37m:[m [32m"2026-04-27T15:17:05Z"[m[1;37m,[m
+    [1;34m"url"[m[1;37m:[m [32m"https://github.com/cedarit/computer-sorting"[m
+  [1;37m}[m
+[1;37m][m
+# javascript ast parser typescript
+[1;37m[[m[1;37m][m

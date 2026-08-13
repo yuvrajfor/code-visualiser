@@ -139,3 +139,8 @@
 - [x] Add regression tests and verify the redesigned workflow on mobile and desktop.
 - [x] Save a checkpoint for the research-informed Code Story Studio redesign.
 - [x] Make the Code Studio workspace navigation label compact and fully visible on narrow phones.
+- [x] Research current browser-based code visualizer products, GitHub implementations, and suitable libraries or APIs for Code Story Studio.
+- [x] Define a research-informed modern product direction covering visual design, learner workflow, API contracts, and backend resilience.
+- [x] Implement the selected frontend and backend improvements for a contemporary, learner-centered Code Story Studio experience.
+- [x] Add regression tests and verify the upgraded full-stack workflow on desktop and mobile.
+- [ ] Save a checkpoint for the full-stack product upgrade.

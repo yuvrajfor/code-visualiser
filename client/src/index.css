@@ -237,6 +237,8 @@
 .execution-state-object { border-color: rgba(129, 140, 248, 0.22); background: rgba(99, 102, 241, 0.075); }
 .execution-state-change { background: rgba(45, 212, 191, 0.045); }
 .execution-state-change span { display: block; margin-top: 0.35rem; color: #d3e8e7; font-size: 0.72rem; line-height: 1.15rem; }
+.execution-state-source { display: flex; align-items: baseline; gap: 0.5rem; overflow: hidden; color: #91a4b9; font-size: 0.60rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.execution-state-source code { min-width: 0; overflow: hidden; color: #d8e9f8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
 .cinematic-details { border: 1px solid rgba(103, 232, 249, 0.14); border-radius: 1rem; background: rgba(7, 21, 35, 0.42); }
 .cinematic-details > summary { display: flex; cursor: pointer; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.8rem 0.9rem; color: #d9edf5; font-size: 0.7rem; list-style: none; }
 .cinematic-details > summary::-webkit-details-marker { display: none; }
