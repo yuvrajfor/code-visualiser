@@ -125,3 +125,8 @@
 - [x] Test the hybrid experience for rendering reliability, performance, and responsive desktop/mobile behavior.
 - [x] Save a checkpoint for the hybrid Python visual upgrade.
 - [x] Prefetch the active, previous, and next cinematic scenes so step navigation stays immediate even while richer SVG art is loading.
+- [x] Redesign the cinematic SVG composition with stronger 3D-style depth, perspective, layered objects, lighting, and motion while retaining simple real-world learning metaphors.
+- [x] Make the cinematic stage responsive across phone, tablet, and desktop layouts with a learner-friendly full-screen focus option.
+- [x] Add an accessible learner-visible motion preference that pauses cinematic movement while preserving story playback and the existing system reduced-motion behavior.
+- [x] Add automated coverage and responsive browser verification for the 3D-style cinematic layer.
+- [x] Save a checkpoint for the responsive 3D cinematic visual enhancement.

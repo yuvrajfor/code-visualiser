@@ -417,6 +417,9 @@ describe("Python cinematic scene renderer", () => {
       expect(scene).toEqual(expect.objectContaining({ renderer: "python-svg", caption: expect.any(String) }));
       expect(scene.svg).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
       expect(scene.svg).toContain("CINEMATIC SCENE");
+      expect(scene.svg).toContain('preserveAspectRatio="xMidYMid meet"');
+      expect(scene.svg).toContain('filter id="depthShadow"');
+      expect(scene.svg).toContain('M190 454L640 346 1090 454');
     }
   });
 

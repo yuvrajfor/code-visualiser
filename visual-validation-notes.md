@@ -35,3 +35,11 @@ Desktop review confirms that the generated-story workspace presents the original
 Phone-size review confirms that the Code Studio shell and story controls remain within the viewport at 375 pixels. The visual workflow continues vertically without horizontal overflow. The scripted browser flow separately confirmed that the actual cinematic SVG, caption, original interactive scene, simple-English explanation, and active source-line state all render together on this viewport.
 
 The captured browser notifications are transient save/success toasts rather than page chrome. A deliberate client-side rejection of the cinematic request also preserved the interactive scene, everyday-language explanation, responsive layout, and displayed an honest optional-cinematic fallback message.
+
+## Responsive 3D cinematic refinement
+
+The desktop capture shows the upgraded Python scene inside a layered glass panel with a visually distinct isometric floor, depth shadows, light pools, and compact controls for depth and focus. The browser workflow verified that the depth toggle announces its state, the focus view becomes a keyboard-dismissible dialog, and the illustration remains present while focused.
+
+The 375-pixel review found that the cinematic card was correctly responsive but sat below the first browser-native scene in the vertical flow. The mobile ordering has therefore been refined so the cinematic visual appears first under the real-life scene heading, while the original interactive visual, scene focus, and explanation remain immediately below it. This improves the visual-first learning path without hiding the faster browser-native interaction.
+
+The refined phone header now gives the depth and focus controls their own full-width two-button row. The renderer readiness label moves to a compact second row on this breakpoint, preventing a long control group from clipping or competing with the scene title.

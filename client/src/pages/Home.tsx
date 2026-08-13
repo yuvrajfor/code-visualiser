@@ -601,15 +601,29 @@ function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodeP
   );
 }
 
-function CinematicScenePanel({ scene, status }: { scene?: CinematicScene; status?: CinematicSceneStatus }) {
+function CinematicScenePanel({ scene, status, depthEnabled, motionEnabled, isFocused, onToggleDepth, onToggleMotion, onToggleFocus }: { scene?: CinematicScene; status?: CinematicSceneStatus; depthEnabled: boolean; motionEnabled: boolean; isFocused: boolean; onToggleDepth: () => void; onToggleMotion: () => void; onToggleFocus: () => void }) {
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (!depthEnabled || !motionEnabled || !scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const rotateX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -4;
+    const rotateY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 5;
+    event.currentTarget.style.setProperty("--cinematic-rotate-x", `${rotateX.toFixed(2)}deg`);
+    event.currentTarget.style.setProperty("--cinematic-rotate-y", `${rotateY.toFixed(2)}deg`);
+  };
+
+  const resetPointerDepth = (event: React.PointerEvent<HTMLElement>) => {
+    event.currentTarget.style.setProperty("--cinematic-rotate-x", "0deg");
+    event.currentTarget.style.setProperty("--cinematic-rotate-y", "0deg");
+  };
+
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#071523] p-3 shadow-[0_16px_35px_rgba(0,0,0,0.23)]" data-cinematic-scene>
-      <div className="mb-2 flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-100"><Sparkles className="h-3.5 w-3.5" /></span><div><p className="text-[9px] font-black uppercase tracking-[0.15em] text-cyan-100">Cinematic layer</p><p className="text-[10px] text-[#9bb4ca]">Python-rendered scene</p></div></div>
-        <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${scene ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100" : status === "failed" ? "border-white/10 bg-white/5 text-[#b9c4d4]" : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"}`}>{scene ? "Ready" : status === "failed" ? "Optional" : "Rendering"}</span>
+    <section className={`cinematic-panel relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#071523] p-3 shadow-[0_16px_35px_rgba(0,0,0,0.23)] ${depthEnabled ? "cinematic-panel-depth" : "cinematic-panel-flat"} ${motionEnabled ? "cinematic-panel-motion" : "cinematic-panel-still"} ${isFocused ? "cinematic-panel-focus" : ""}`} data-cinematic-scene data-cinematic-depth={depthEnabled ? "on" : "off"} data-cinematic-motion={motionEnabled ? "on" : "off"} onPointerMove={handlePointerMove} onPointerLeave={resetPointerDepth} role={isFocused ? "dialog" : undefined} aria-modal={isFocused || undefined} aria-label={isFocused ? "Focused cinematic scene" : undefined}>
+      <div className="cinematic-panel-header mb-2 flex items-center justify-between gap-3 px-1">
+        <div className="cinematic-panel-title flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-100"><Sparkles className="h-3.5 w-3.5" /></span><div><p className="text-[9px] font-black uppercase tracking-[0.15em] text-cyan-100">Cinematic layer</p><p className="text-[10px] text-[#9bb4ca]">Python-rendered scene</p></div></div>
+        <div className="cinematic-panel-actions flex items-center gap-1.5"><button type="button" className="cinematic-panel-control" onClick={onToggleDepth} aria-pressed={depthEnabled} data-cinematic-depth-toggle><span className="cinematic-control-long">{depthEnabled ? "Depth on" : "Depth off"}</span><span className="cinematic-control-short" aria-hidden="true">{depthEnabled ? "3D on" : "3D off"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleMotion} aria-pressed={motionEnabled} data-cinematic-motion-toggle><span className="cinematic-control-long">{motionEnabled ? "Motion on" : "Motion off"}</span><span className="cinematic-control-short" aria-hidden="true">{motionEnabled ? "Move on" : "Still"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleFocus} aria-pressed={isFocused} data-cinematic-focus-toggle><span className="cinematic-control-long">{isFocused ? "Close focus" : "Focus view"}</span><span className="cinematic-control-short" aria-hidden="true">{isFocused ? "Close" : "Focus"}</span></button><span className={`cinematic-panel-status rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${scene ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100" : status === "failed" ? "border-white/10 bg-white/5 text-[#b9c4d4]" : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"}`}>{scene ? "Ready" : status === "failed" ? "Optional" : "Rendering"}</span></div>
       </div>
       {scene ? (
-        <figure className="overflow-hidden rounded-xl border border-white/10 bg-[#06111e]" aria-label={scene.caption}>
+        <figure className="cinematic-art-frame overflow-hidden rounded-xl border border-white/10 bg-[#06111e]" aria-label={scene.caption}>
           <div data-cinematic-art className="aspect-video w-full [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: scene.svg }} />
           <figcaption className="border-t border-white/10 bg-[#091a2c] px-3 py-2 text-[10px] leading-4 text-[#b9cedf]">{scene.caption}</figcaption>
         </figure>
@@ -655,6 +669,9 @@ export default function Home() {
   const [interpreterProgressIndex, setInterpreterProgressIndex] = useState(0);
   const [cinematicScenes, setCinematicScenes] = useState<Record<string, CinematicScene>>({});
   const [cinematicSceneStatus, setCinematicSceneStatus] = useState<Record<string, CinematicSceneStatus>>({});
+  const [cinematicDepthEnabled, setCinematicDepthEnabled] = useState(true);
+  const [cinematicMotionEnabled, setCinematicMotionEnabled] = useState(() => typeof window === "undefined" ? true : window.localStorage.getItem("code-story-studio:cinematic-motion") !== "off");
+  const [cinematicFocused, setCinematicFocused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const cinematicRequestKeysRef = useRef(new Set<string>());
@@ -673,6 +690,10 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
   }, [visualTheme]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("code-story-studio:cinematic-motion", cinematicMotionEnabled ? "on" : "off");
+  }, [cinematicMotionEnabled]);
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem("code-story-studio:onboarding-v1", JSON.stringify(onboardingStatus));
@@ -723,6 +744,15 @@ export default function Home() {
       });
     }
   }, [activeView, cinematicScene, currentStep, currentStepIndex, steps]);
+
+  useEffect(() => {
+    if (!cinematicFocused) return;
+    const closeFocusOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setCinematicFocused(false);
+    };
+    window.addEventListener("keydown", closeFocusOnEscape);
+    return () => window.removeEventListener("keydown", closeFocusOnEscape);
+  }, [cinematicFocused]);
 
   const openLearningWorkspace = (workspace: OnboardingWorkspace) => {
     setActiveView("landing");
@@ -828,6 +858,7 @@ export default function Home() {
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
+    setCinematicFocused(false);
     setActiveView("studio");
     playActionSound(generatedSteps[0]?.story);
     saveSubmission.mutate({ problemTitle: userProblem || "Untitled code story", language: selectedLang, code: userCode });
@@ -1270,7 +1301,7 @@ export default function Home() {
                     <div className="story-scene-object"><span>Highlighted object</span><strong>{currentStep.story.objectLabel}</strong></div>
                   </div>
                 </div>
-                <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} />
+                <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} />
               </div>
             </div>
 
