@@ -57,3 +57,9 @@ After the responsive navigation refinement, the phone header now shows the compa
 The current desktop workflow capture retains a legible paired-learning composition: the real-world scene and synchronized explanation sit beneath a compact playback header. The source-grounded execution-state inspector is asserted through the browser workflow and remains in the primary story path, while cinematic detail stays optional.
 
 The current 375-pixel workflow capture keeps the header, step controls, visual-setting disclosure, and primary real-world scene inside the narrow viewport without horizontal overflow. The environment’s session-saved toast and preview publishing notice are temporary host overlays rather than product UI, so they are not treated as layout defects in this review.
+
+## Clean icon and cinematic hierarchy review
+
+The refreshed 1280 × 720 desktop capture uses a consistent line-icon language for navigation, scene context, and execution cues. Browser-style emoji are absent from the visible Code Studio path. The workbench now has one controlled amber depth treatment, and Python-rendered scene detail remains an intentional optional layer rather than competing with the source-grounded story.
+
+The refreshed 375 × 812 phone capture preserves the same compact line-icon language in the header and real-life scene lead-in. The active-story card, visual-setting disclosure, and scene surface retain a clear vertical reading order without horizontal overflow. The lower preview notice and session-saved toast visible in the capture are environment-only overlays rather than product UI.

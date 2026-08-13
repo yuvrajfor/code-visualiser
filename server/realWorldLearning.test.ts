@@ -445,6 +445,7 @@ describe("Python cinematic scene renderer", () => {
 
 describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
+  const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
 
   it("makes active execution state the primary learning surface and keeps the cinematic detail optional", () => {
     const executionStateIndex = homeSource.indexOf("data-execution-state");
@@ -458,5 +459,16 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("What this means");
     expect(homeSource).toContain("Scene detail");
     expect(homeSource).toContain("Optional Python illustration");
+  });
+
+  it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
+    expect(homeSource).toContain("<SceneKindIcon kind={preset.kind}");
+    expect(homeSource).toContain("<ThemeKindIcon theme={theme.id}");
+    expect(homeSource).toContain("<SceneKindIcon kind={step.story.kind}");
+    expect(homeSource).not.toContain("{preset.icon}");
+    expect(homeSource).not.toContain("{theme.icon}");
+    expect(homeSource).not.toMatch(/[🛠📦🧠]/u);
+    expect(styleSource).toContain(".cinematic-art-frame");
+    expect(styleSource).toContain("transform-style: preserve-3d");
   });
 });
