@@ -8,6 +8,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
+import { getStoryLearningScore } from "../client/src/lib/learningScore";
 import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, createSourceExecutionState, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 
@@ -26,6 +27,29 @@ describe("premium learning workspace navigation", () => {
     expect(getLearningWorkspaceLabel("overview")).toBe("Learning home");
     expect(getLearningWorkspaceLabel("code")).toBe("Code Studio");
     expect(getLearningWorkspaceLabel("algorithms")).toBe("Algorithm Lab");
+  });
+});
+
+describe("transparent story learning score", () => {
+  it("scores only distinct valid story steps that a learner has opened", () => {
+    expect(getStoryLearningScore(4, [0, 1, 1, -1, 7])).toEqual({
+      exploredSteps: 2,
+      totalSteps: 4,
+      score: 50,
+      isComplete: false,
+      status: "2 of 4 story steps explored",
+    });
+  });
+
+  it("marks a story complete only when every step has been explored", () => {
+    expect(getStoryLearningScore(3, [2, 0, 1])).toMatchObject({
+      exploredSteps: 3,
+      totalSteps: 3,
+      score: 100,
+      isComplete: true,
+      status: "Every story step explored",
+    });
+    expect(getStoryLearningScore(0, [0])).toMatchObject({ score: 0, isComplete: false, status: "Create a story to begin" });
   });
 });
 

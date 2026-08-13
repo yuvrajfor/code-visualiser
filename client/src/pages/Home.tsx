@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Archive,
+  Award,
   ArrowDownUp,
   ArrowRight,
   BookOpen,
@@ -62,6 +63,7 @@ import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes, typ
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel, type LearningWorkspace } from "@/lib/workspaceNavigation";
 import { defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, onboardingSteps, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach, type OnboardingWorkspace, type OnboardingStatus, type SharedGraphScenario } from "@/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "@/lib/cityMapExports";
+import { getStoryLearningScore } from "@/lib/learningScore";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -777,6 +779,7 @@ export default function Home() {
   const [selectedWalkthrough, setSelectedWalkthrough] = useState<CityRouteAlgorithm | null>(null);
   const [steps, setSteps] = useState<LearningStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [exploredStepIndexes, setExploredStepIndexes] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -804,6 +807,7 @@ export default function Home() {
   const currentStep = steps[currentStepIndex];
   const currentCinematicKey = currentStep ? getCinematicSceneKey(currentStep) : "";
   const activeTheme = getVisualTheme(visualTheme);
+  const learningScore = getStoryLearningScore(steps.length, exploredStepIndexes);
   const customGraphStops = (() => {
     try { return parseCityGraph(customGraphText).stops; } catch { return []; }
   })();
@@ -816,6 +820,11 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
   }, [visualTheme]);
+
+  useEffect(() => {
+    if (activeView !== "studio" || !steps.length) return;
+    setExploredStepIndexes((existing) => existing.includes(currentStepIndex) ? existing : [...existing, currentStepIndex]);
+  }, [activeView, currentStepIndex, steps.length]);
 
   useEffect(() => {
     if (typeof window !== "undefined") window.localStorage.setItem("code-story-studio:cinematic-motion", cinematicMotionEnabled ? "on" : "off");
@@ -984,6 +993,7 @@ export default function Home() {
     setCinematicSceneStatus({});
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
+    setExploredStepIndexes([]);
     setIsPlaying(false);
     setCinematicFocused(false);
     setActiveView("studio");
@@ -1392,12 +1402,16 @@ export default function Home() {
       )}
 
       {activeView === "studio" && currentStep && (
-        <main className="lab-grid mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
-          <div className="lab-surface story-command-bar mb-5 flex flex-col justify-between gap-4 rounded-3xl p-5 md:flex-row md:items-center" data-code-story-workspace>
+        <main className="lab-grid studio-learning-frame mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
+          <div className="lab-surface story-command-bar story-command-deck mb-5 flex flex-col justify-between gap-4 rounded-3xl p-5 md:flex-row md:items-center" data-code-story-workspace>
             <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-[11px] font-bold text-[#cbb59f] transition hover:text-white"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><p className="mt-3 lab-kicker">Your visual story · Step {currentStepIndex + 1} of {steps.length}</p><h1 className="mt-1 text-xl font-extrabold tracking-tight text-white">{userProblem || "Your code story"}</h1><p className="mt-1 text-xs text-[#a89787]">Watch the picture change, then read the same idea in simple English.</p></div>
             <div className="flex flex-wrap items-center gap-2">
+              <section className="learning-score-card" data-learning-score data-score-status={learningScore.isComplete ? "complete" : "in-progress"} aria-label={`Learning score: ${learningScore.score} out of 100. ${learningScore.status}`}>
+                <span className="learning-score-icon"><Award className="h-4 w-4" aria-hidden="true" /></span>
+                <span className="min-w-0"><span className="learning-score-label">Learning score</span><strong>{learningScore.score}<small>/100</small></strong><span className="learning-score-status" aria-live="polite">{learningScore.status}</span></span>
+              </section>
               <div className="story-progress mr-1 hidden min-w-32 sm:block" aria-label={`Story progress: step ${currentStepIndex + 1} of ${steps.length}`}>
-                <div className="mb-1 flex justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#aebad0]"><span>Progress</span><span>{Math.round(((currentStepIndex + 1) / steps.length) * 100)}%</span></div>
+                <div className="mb-1 flex justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#aebad0]"><span>Story position</span><span>Step {currentStepIndex + 1}/{steps.length}</span></div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-indigo-300 to-cyan-300 transition-[width] duration-300" style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }} /></div>
               </div>
               <Button variant="outline" size="icon" onClick={() => goToStep(0)} aria-label="Restart story" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]" title="Start again"><RotateCcw className="h-4 w-4" /></Button>
