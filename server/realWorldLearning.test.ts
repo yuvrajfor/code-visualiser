@@ -7,7 +7,7 @@ import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWa
 import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
-import { CodeStoryInterpreterError, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
+import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -128,6 +128,43 @@ describe("createRealWorldStory", () => {
     expect(partialStory.source).toBe("fallback");
     expect(partialStory.steps).toHaveLength(2);
     expect(getInterpreterTextContent([{ type: "text", text: '{"summary":"ready"}' }])).toBe('{"summary":"ready"}');
+  });
+
+  it("shares matching interpreter requests and caches only successful API stories", async () => {
+    let time = 1_000;
+    let calls = 0;
+    const store = createInterpreterRequestStore({ ttlMs: 500, now: () => time });
+    const input = { code: "let apple = 1;", language: "JavaScript" };
+    const apiStory = normalizeApiCodeStory(input.code, {
+      summary: "A box is prepared. It stores one apple.",
+      steps: [{ lineNumber: 1, kind: "storage-shelf", title: "Store one apple", plainEnglish: "A labeled box is given the number one.", visualFocus: "A box labelled apple holds one." }],
+    });
+    const apiLoader = async () => {
+      calls += 1;
+      return apiStory;
+    };
+
+    const [first, second] = await Promise.all([store.resolve(input, apiLoader), store.resolve(input, apiLoader)]);
+    expect(first.source).toBe("api");
+    expect(second.source).toBe("api");
+    expect(calls).toBe(1);
+
+    await store.resolve(input, apiLoader);
+    expect(calls).toBe(1);
+
+    time += 501;
+    await store.resolve(input, apiLoader);
+    expect(calls).toBe(2);
+
+    let fallbackCalls = 0;
+    const fallbackInput = { ...input, problemTitle: "Fallback check" };
+    const fallbackLoader = async () => {
+      fallbackCalls += 1;
+      return createFallbackApiCodeStory(input.code);
+    };
+    await store.resolve(fallbackInput, fallbackLoader);
+    await store.resolve(fallbackInput, fallbackLoader);
+    expect(fallbackCalls).toBe(2);
   });
 
   it("marks exactly the story-driving source line as active", () => {

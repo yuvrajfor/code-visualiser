@@ -107,3 +107,10 @@
 - [x] Fix the API interpreter mutation so valid code submissions never fail with an empty visual-story response.
 - [x] Add a regression test for empty or partial interpreter API output and verify the corrected flow on desktop and mobile.
 - [x] Save a checkpoint for the interpreter empty-story error fix.
+- [x] Audit the existing Code Studio visuals, page hierarchy, and user journey for gaps against a professional real-world learning product.
+- [x] Establish a cohesive professional visual system with clearer hierarchy, spacing, controls, and responsive polish.
+- [x] Redesign the generated visual-story player so code, scene, and simple-English explanation feel more deliberate and visually engaging.
+- [x] Improve reliability for higher usage with clear request states, safe failure handling, and repeat-submission protection.
+- [x] Add short-lived API-story caching and in-flight request deduplication so identical submissions do not generate duplicate model work.
+- [x] Add or update tests for the professional user journey and resilience paths, then verify desktop and mobile presentation quality.
+- [x] Save a checkpoint for the professional Code Story Studio upgrade.

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { createRealWorldStory, type RealWorldStory } from "../client/src/lib/realWorldLearning";
@@ -35,6 +36,63 @@ export type ApiCodeStory = {
   steps: ApiCodeStoryStep[];
   source: "api" | "fallback";
 };
+
+type InterpreterInput = { code: string; language: string; problemTitle?: string };
+type StoryLoader = () => Promise<ApiCodeStory>;
+
+export function getInterpreterCacheKey(input: InterpreterInput) {
+  return createHash("sha256")
+    .update(JSON.stringify({ code: input.code, language: input.language, problemTitle: input.problemTitle?.trim() || "" }))
+    .digest("hex");
+}
+
+/**
+ * A bounded best-effort cache to reduce repeated model work. It stores only
+ * successful API stories; a temporary fallback is intentionally retried later.
+ */
+export function createInterpreterRequestStore(options?: { ttlMs?: number; maxEntries?: number; now?: () => number }) {
+  const ttlMs = options?.ttlMs ?? 2 * 60_000;
+  const maxEntries = options?.maxEntries ?? 80;
+  const now = options?.now ?? (() => Date.now());
+  const cache = new Map<string, { story: ApiCodeStory; expiresAt: number }>();
+  const inFlight = new Map<string, Promise<ApiCodeStory>>();
+
+  const trimCache = () => {
+    while (cache.size > maxEntries) {
+      const oldestKey = cache.keys().next().value;
+      if (!oldestKey) return;
+      cache.delete(oldestKey);
+    }
+  };
+
+  return {
+    async resolve(input: InterpreterInput, loader: StoryLoader): Promise<ApiCodeStory> {
+      const key = getInterpreterCacheKey(input);
+      const cached = cache.get(key);
+      if (cached && cached.expiresAt > now()) return cached.story;
+      if (cached) cache.delete(key);
+
+      const pending = inFlight.get(key);
+      if (pending) return pending;
+
+      const request = loader()
+        .then((story) => {
+          if (story.source === "api") {
+            cache.set(key, { story, expiresAt: now() + ttlMs });
+            trimCache();
+          }
+          return story;
+        })
+        .finally(() => inFlight.delete(key));
+      inFlight.set(key, request);
+      return request;
+    },
+    cache,
+    inFlight,
+  };
+}
+
+const interpreterRequestStore = createInterpreterRequestStore();
 
 export class CodeStoryInterpreterError extends Error {
   constructor(message: string) {
@@ -179,25 +237,27 @@ ${input.code}`;
 }
 
 /** Calls the built-in server-side model. Credentials never reach the browser. */
-export async function interpretCodeAsVisualStory(input: { code: string; language: string; problemTitle?: string }) {
+export async function interpretCodeAsVisualStory(input: InterpreterInput) {
   getValidatedSourceLines(input.code);
-  try {
-    const response = await invokeLLM({
-      model: "gpt-5-mini",
-      maxTokens: 1800,
-      reasoning: { effort: "minimal" },
-      messages: [
-        {
-          role: "system",
-          content: "You are a careful code-learning interpreter. Produce only the validated JSON schema requested by the user message.",
-        },
-        { role: "user", content: buildInterpreterPrompt(input) },
-      ],
-      response_format: codeStoryResponseSchema,
-    });
-    return resolveInterpreterStory(input.code, response.choices[0]?.message.content);
-  } catch (error) {
-    if (error instanceof CodeStoryInterpreterError) throw error;
-    return createFallbackApiCodeStory(input.code);
-  }
+  return interpreterRequestStore.resolve(input, async () => {
+    try {
+      const response = await invokeLLM({
+        model: "gpt-5-mini",
+        maxTokens: 1800,
+        reasoning: { effort: "minimal" },
+        messages: [
+          {
+            role: "system",
+            content: "You are a careful code-learning interpreter. Produce only the validated JSON schema requested by the user message.",
+          },
+          { role: "user", content: buildInterpreterPrompt(input) },
+        ],
+        response_format: codeStoryResponseSchema,
+      });
+      return resolveInterpreterStory(input.code, response.choices[0]?.message.content);
+    } catch (error) {
+      if (error instanceof CodeStoryInterpreterError) throw error;
+      return createFallbackApiCodeStory(input.code);
+    }
+  });
 }
