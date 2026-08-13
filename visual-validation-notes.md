@@ -43,3 +43,11 @@ The desktop capture shows the upgraded Python scene inside a layered glass panel
 The 375-pixel review found that the cinematic card was correctly responsive but sat below the first browser-native scene in the vertical flow. The mobile ordering has therefore been refined so the cinematic visual appears first under the real-life scene heading, while the original interactive visual, scene focus, and explanation remain immediately below it. This improves the visual-first learning path without hiding the faster browser-native interaction.
 
 The refined phone header now gives the depth and focus controls their own full-width two-button row. The renderer readiness label moves to a compact second row on this breakpoint, preventing a long control group from clipping or competing with the scene title.
+
+## State-first Code Studio redesign — live browser review
+
+The current desktop capture confirms that the source-line command bar, browser-native real-life scene, and simple-English explanation now establish the visible learning hierarchy. The cinematic illustration is no longer shown by default; the browser workflow confirms that it is intentionally available through the optional scene-detail disclosure. The saved-session toast visible in the lower-right capture is transient feedback rather than persistent page chrome.
+
+On a 375-pixel phone viewport, the cinematic panel is no longer placed before the real-life scene. The story header, command controls, and visual scene fit the viewport width. The current `Back to workspace` header label is truncated at this width and requires compact responsive wording before final delivery.
+
+After the responsive navigation refinement, the phone header now shows the compact `Back` label while retaining the full accessible `Back to workspace` label. The verified 375-pixel workflow has no horizontal overflow, keeps the execution-state surface visible before optional scene detail, and still exercises the cinematic disclosure, focus controls, touch-camera reset, playback, graph sharing, exports, Dijkstra comparison, and node dragging. The final suite reports 45 passing automated tests, a passing TypeScript check, and a passing production build.

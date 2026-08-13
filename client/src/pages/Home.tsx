@@ -601,26 +601,90 @@ function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodeP
   );
 }
 
+function ExecutionStatePanel({ step }: { step: LearningStep }) {
+  const { story } = step;
+  return (
+    <section className="execution-state-panel mt-4" data-execution-state aria-label={`Execution state for line ${step.line}`}>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-3">
+        <div><p className="lab-kicker">Execution state</p><h2 className="mt-1 text-sm font-extrabold text-white">What changed on this line</h2></div>
+        <span className="rounded-full border border-indigo-300/25 bg-indigo-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-indigo-100">Line {step.line}</span>
+      </header>
+      <div className="execution-state-grid mt-3">
+        <div className="execution-state-card execution-state-object" data-execution-state-object>
+          <p>Object in focus</p><strong><span aria-hidden="true">{story.icon}</span>{story.objectLabel}</strong>
+        </div>
+        <div className="execution-state-card" data-execution-state-action>
+          <p>Action</p><strong>{story.title}</strong>
+        </div>
+        <div className="execution-state-card execution-state-change sm:col-span-2" data-execution-state-change>
+          <p>State change</p><span>{story.whatChanged}</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CinematicScenePanel({ scene, status, depthEnabled, motionEnabled, isFocused, onToggleDepth, onToggleMotion, onToggleFocus }: { scene?: CinematicScene; status?: CinematicSceneStatus; depthEnabled: boolean; motionEnabled: boolean; isFocused: boolean; onToggleDepth: () => void; onToggleMotion: () => void; onToggleFocus: () => void }) {
+  const touchCameraRef = useRef<{ pointerId: number; startX: number; startY: number; startRotateX: number; startRotateY: number } | null>(null);
+  const setCameraRotation = (element: HTMLElement, rotateX: number, rotateY: number) => {
+    element.style.setProperty("--cinematic-rotate-x", `${Math.max(-12, Math.min(12, rotateX)).toFixed(2)}deg`);
+    element.style.setProperty("--cinematic-rotate-y", `${Math.max(-15, Math.min(15, rotateY)).toFixed(2)}deg`);
+  };
+
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (!depthEnabled || !motionEnabled || !scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (event.pointerType === "touch") {
+      const touchCamera = touchCameraRef.current;
+      if (!isFocused || !touchCamera || touchCamera.pointerId !== event.pointerId) return;
+      const dragX = event.clientX - touchCamera.startX;
+      const dragY = event.clientY - touchCamera.startY;
+      setCameraRotation(event.currentTarget, touchCamera.startRotateX - dragY * 0.12, touchCamera.startRotateY + dragX * 0.14);
+      return;
+    }
     const bounds = event.currentTarget.getBoundingClientRect();
     const rotateX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -4;
     const rotateY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 5;
-    event.currentTarget.style.setProperty("--cinematic-rotate-x", `${rotateX.toFixed(2)}deg`);
-    event.currentTarget.style.setProperty("--cinematic-rotate-y", `${rotateY.toFixed(2)}deg`);
+    setCameraRotation(event.currentTarget, rotateX, rotateY);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch" || !isFocused || !depthEnabled || !motionEnabled || !scene || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!(event.target instanceof Element) || !event.target.closest("[data-cinematic-art]")) return;
+    const styles = window.getComputedStyle(event.currentTarget);
+    touchCameraRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startRotateX: Number.parseFloat(styles.getPropertyValue("--cinematic-rotate-x")) || 0,
+      startRotateY: Number.parseFloat(styles.getPropertyValue("--cinematic-rotate-y")) || 0,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Some assistive and synthetic pointer events do not have a capturable pointer.
+    }
+  };
+
+  const completeTouchCamera = (event: React.PointerEvent<HTMLElement>) => {
+    if (touchCameraRef.current?.pointerId !== event.pointerId) return;
+    touchCameraRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   const resetPointerDepth = (event: React.PointerEvent<HTMLElement>) => {
-    event.currentTarget.style.setProperty("--cinematic-rotate-x", "0deg");
-    event.currentTarget.style.setProperty("--cinematic-rotate-y", "0deg");
+    if (event.pointerType !== "touch") setCameraRotation(event.currentTarget, 0, 0);
+  };
+
+  const resetTouchCamera = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const panel = event.currentTarget.closest<HTMLElement>("[data-cinematic-scene]");
+    if (panel) setCameraRotation(panel, 0, 0);
   };
 
   return (
-    <section className={`cinematic-panel relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#071523] p-3 shadow-[0_16px_35px_rgba(0,0,0,0.23)] ${depthEnabled ? "cinematic-panel-depth" : "cinematic-panel-flat"} ${motionEnabled ? "cinematic-panel-motion" : "cinematic-panel-still"} ${isFocused ? "cinematic-panel-focus" : ""}`} data-cinematic-scene data-cinematic-depth={depthEnabled ? "on" : "off"} data-cinematic-motion={motionEnabled ? "on" : "off"} onPointerMove={handlePointerMove} onPointerLeave={resetPointerDepth} role={isFocused ? "dialog" : undefined} aria-modal={isFocused || undefined} aria-label={isFocused ? "Focused cinematic scene" : undefined}>
+    <section className={`cinematic-panel relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#071523] p-3 shadow-[0_16px_35px_rgba(0,0,0,0.23)] ${depthEnabled ? "cinematic-panel-depth" : "cinematic-panel-flat"} ${motionEnabled ? "cinematic-panel-motion" : "cinematic-panel-still"} ${isFocused ? "cinematic-panel-focus" : ""}`} data-cinematic-scene data-cinematic-depth={depthEnabled ? "on" : "off"} data-cinematic-motion={motionEnabled ? "on" : "off"} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={completeTouchCamera} onPointerCancel={completeTouchCamera} onPointerLeave={resetPointerDepth} role={isFocused ? "dialog" : undefined} aria-modal={isFocused || undefined} aria-label={isFocused ? "Focused cinematic scene" : undefined}>
       <div className="cinematic-panel-header mb-2 flex items-center justify-between gap-3 px-1">
         <div className="cinematic-panel-title flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-100"><Sparkles className="h-3.5 w-3.5" /></span><div><p className="text-[9px] font-black uppercase tracking-[0.15em] text-cyan-100">Cinematic layer</p><p className="text-[10px] text-[#9bb4ca]">Python-rendered scene</p></div></div>
-        <div className="cinematic-panel-actions flex items-center gap-1.5"><button type="button" className="cinematic-panel-control" onClick={onToggleDepth} aria-pressed={depthEnabled} data-cinematic-depth-toggle><span className="cinematic-control-long">{depthEnabled ? "Depth on" : "Depth off"}</span><span className="cinematic-control-short" aria-hidden="true">{depthEnabled ? "3D on" : "3D off"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleMotion} aria-pressed={motionEnabled} data-cinematic-motion-toggle><span className="cinematic-control-long">{motionEnabled ? "Motion on" : "Motion off"}</span><span className="cinematic-control-short" aria-hidden="true">{motionEnabled ? "Move on" : "Still"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleFocus} aria-pressed={isFocused} data-cinematic-focus-toggle><span className="cinematic-control-long">{isFocused ? "Close focus" : "Focus view"}</span><span className="cinematic-control-short" aria-hidden="true">{isFocused ? "Close" : "Focus"}</span></button><span className={`cinematic-panel-status rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${scene ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100" : status === "failed" ? "border-white/10 bg-white/5 text-[#b9c4d4]" : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"}`}>{scene ? "Ready" : status === "failed" ? "Optional" : "Rendering"}</span></div>
+        <div className="cinematic-panel-actions flex items-center gap-1.5"><button type="button" className="cinematic-panel-control" onClick={onToggleDepth} aria-pressed={depthEnabled} data-cinematic-depth-toggle><span className="cinematic-control-long">{depthEnabled ? "Depth on" : "Depth off"}</span><span className="cinematic-control-short" aria-hidden="true">{depthEnabled ? "3D on" : "3D off"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleMotion} aria-pressed={motionEnabled} data-cinematic-motion-toggle><span className="cinematic-control-long">{motionEnabled ? "Motion on" : "Motion off"}</span><span className="cinematic-control-short" aria-hidden="true">{motionEnabled ? "Move on" : "Still"}</span></button><button type="button" className="cinematic-panel-control" onClick={onToggleFocus} aria-pressed={isFocused} data-cinematic-focus-toggle><span className="cinematic-control-long">{isFocused ? "Close focus" : "Focus view"}</span><span className="cinematic-control-short" aria-hidden="true">{isFocused ? "Close" : "Focus"}</span></button>{isFocused ? <button type="button" className="cinematic-panel-control" onClick={resetTouchCamera} disabled={!depthEnabled || !motionEnabled} data-cinematic-camera-reset>Reset camera</button> : null}<span className={`cinematic-panel-status rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${scene ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100" : status === "failed" ? "border-white/10 bg-white/5 text-[#b9c4d4]" : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"}`}>{scene ? "Ready" : status === "failed" ? "Optional" : "Rendering"}</span></div>
       </div>
       {scene ? (
         <figure className="cinematic-art-frame overflow-hidden rounded-xl border border-white/10 bg-[#06111e]" aria-label={scene.caption}>
@@ -1196,7 +1260,7 @@ export default function Home() {
           </nav>
           <div className="flex items-center gap-2">
             {activeView === "studio" && <><Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button></>}
-            {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace("code"); }} className="rounded-xl border-white/10 bg-white/5 text-xs text-white hover:bg-white/10">Back to workspace</Button> : landingWorkspace === "overview" ? <Button onClick={() => openLearningWorkspace("code")} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button> : null}
+            {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace("code"); }} aria-label="Back to workspace" title="Back to workspace" className="shrink-0 rounded-xl border-white/10 bg-white/5 px-3 text-xs text-white hover:bg-white/10 sm:px-4"><span className="sm:hidden">Back</span><span className="hidden sm:inline">Back to workspace</span></Button> : landingWorkspace === "overview" ? <Button onClick={() => openLearningWorkspace("code")} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button> : null}
           </div>
         </div>
       </header>
@@ -1291,17 +1355,21 @@ export default function Home() {
 
           <div className="mb-6 rounded-2xl border border-white/10 bg-[#0c0806]/75 px-4 py-3 text-xs text-[#c3b2a1]"><div className="flex flex-wrap items-center justify-between gap-3"><span><strong className="text-white">Today’s visual setting:</strong> {activeTheme.name} — {activeTheme.sceneHint}</span><details className="text-[11px]"><summary className="cursor-pointer font-bold text-[#dfc6ae]">More controls</summary><div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-[#8f7c6d]">Setting</span>{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`rounded-lg border px-2 py-1 text-[10px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/60 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}>{theme.icon} {theme.shortLabel}</button>)}<span className="ml-2 text-[10px] text-[#9e8a79]">Keys: {STORY_SHORTCUTS.map((shortcut) => shortcut.keys).join(" · ")}</span></div></details></div></div>
 
-          <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
+          <section className="execution-workspace-grid grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <div className="lab-surface story-stage rounded-[28px] p-5 md:p-6">
               <SceneHeader story={currentStep.story} step={currentStep} />
-              <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,.86fr)_minmax(0,1.14fr)]">
+              <div className="mt-5">
                 <div><div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step}><RealWorldScene story={currentStep.story} visualTheme={visualTheme} routeState={currentStep.routeState} /></div>
                   <div className="story-scene-brief mt-4" data-story-visual-focus>
                     <div className="flex min-w-0 items-start gap-3"><div className="story-scene-brief-icon"><Box className="h-4 w-4" /></div><div className="min-w-0"><p className="story-scene-brief-label">Scene focus</p><p className="mt-1 text-xs leading-5 text-[#d5def2]">{currentStep.story.visualFocus ?? `Follow the ${currentStep.story.objectLabel} as this ${sceneStyles[currentStep.story.kind].label} changes.`}</p></div></div>
                     <div className="story-scene-object"><span>Highlighted object</span><strong>{currentStep.story.objectLabel}</strong></div>
                   </div>
+                  <ExecutionStatePanel step={currentStep} />
                 </div>
-                <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} />
+                <details className="cinematic-details mt-4" data-cinematic-details>
+                  <summary><span><span className="font-black">Scene detail</span><span className="ml-2 text-[#8fa4b8]">Optional Python illustration</span></span><span className="cinematic-details-hint">Open only when you want more visual detail</span></summary>
+                  <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} />
+                </details>
               </div>
             </div>
 

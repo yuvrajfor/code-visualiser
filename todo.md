@@ -130,3 +130,12 @@
 - [x] Add an accessible learner-visible motion preference that pauses cinematic movement while preserving story playback and the existing system reduced-motion behavior.
 - [x] Add automated coverage and responsive browser verification for the 3D-style cinematic layer.
 - [x] Save a checkpoint for the responsive 3D cinematic visual enhancement.
+- [x] Add touch-drag camera rotation to focused cinematic scenes with a clear reset action and no interference with normal story controls.
+- [x] Verify touch rotation, reset behavior, reduced-motion compatibility, and responsive desktop/mobile playback.
+- [x] Save a checkpoint for the touch-camera cinematic enhancement.
+- [x] Research modern open-source code visualizers on GitHub and document the specific interaction patterns that fit Code Story Studio.
+- [x] Audit the current Code Story Studio experience against the intended paste-code-to-visual-story workflow and remove or redesign features that feel decorative rather than useful.
+- [x] Implement a research-informed modern visualizer experience with working, learner-centered code-state interactions rather than ornamental 3D effects.
+- [x] Add regression tests and verify the redesigned workflow on mobile and desktop.
+- [ ] Save a checkpoint for the research-informed Code Story Studio redesign.
+- [x] Make the Code Studio workspace navigation label compact and fully visible on narrow phones.

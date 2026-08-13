@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
 import { getStoryShortcutAction } from "../client/src/lib/storyControls";
 import { getStoryCodeLines } from "../client/src/lib/storyFocus";
@@ -430,5 +431,23 @@ describe("Python cinematic scene renderer", () => {
 
     expect(second).toBe(first);
     expect(cached).toBe(first);
+  });
+});
+
+describe("state-first Code Studio workspace contract", () => {
+  const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
+
+  it("makes active execution state the primary learning surface and keeps the cinematic detail optional", () => {
+    const executionStateIndex = homeSource.indexOf("data-execution-state");
+    const cinematicDetailIndex = homeSource.indexOf("data-cinematic-details");
+
+    expect(executionStateIndex).toBeGreaterThan(-1);
+    expect(cinematicDetailIndex).toBeGreaterThan(-1);
+    expect(executionStateIndex).toBeLessThan(cinematicDetailIndex);
+    expect(homeSource).toContain("What changed on this line");
+    expect(homeSource).toContain("Object in focus");
+    expect(homeSource).toContain("State change");
+    expect(homeSource).toContain("Scene detail");
+    expect(homeSource).toContain("Optional Python illustration");
   });
 });
