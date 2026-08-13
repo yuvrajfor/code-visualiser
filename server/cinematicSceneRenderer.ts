@@ -4,13 +4,17 @@ import path from "node:path";
 import { z } from "zod";
 import { API_SCENE_KINDS } from "./codeStoryInterpreter";
 
+// Code Story accepts source inputs up to 12,000 characters. A one-character
+// line is valid source, so the cinematic metadata must allow that same maximum.
+const MAX_CINEMATIC_LINE_NUMBER = 12_000;
+
 export const cinematicSceneInputSchema = z.object({
   kind: z.enum(API_SCENE_KINDS),
   title: z.string().trim().min(1).max(90),
   plainEnglish: z.string().trim().min(1).max(260),
   visualFocus: z.string().trim().min(1).max(180),
   codeLine: z.string().trim().min(1).max(220),
-  lineNumber: z.number().int().positive().max(80),
+  lineNumber: z.number().int().positive().max(MAX_CINEMATIC_LINE_NUMBER),
 });
 
 export type CinematicSceneInput = z.infer<typeof cinematicSceneInputSchema>;

@@ -158,3 +158,7 @@
 - [x] Refine the Code Studio shell into a cohesive 3D workspace with depth, layers, and purposeful interaction hierarchy.
 - [x] Add regression coverage and verify score behavior, accessibility, and 3D layout on desktop and mobile.
 - [x] Save a checkpoint for the 3D learning-score workspace redesign.
+- [x] Trace and fix the cinematic scene mutation rejecting valid line numbers above 80.
+- [x] Add regression coverage for cinematic rendering from long code stories.
+- [x] Validate the repair across TypeScript, production build, and browser playback.
+- [x] Save a checkpoint for the long-code cinematic validation repair.

@@ -438,8 +438,17 @@ describe("Python cinematic scene renderer", () => {
 
   it("enforces the compact safe request contract before a renderer process is started", () => {
     expect(cinematicSceneInputSchema.parse(sceneInput)).toEqual(sceneInput);
+    expect(cinematicSceneInputSchema.parse({ ...sceneInput, lineNumber: 81 })).toEqual({ ...sceneInput, lineNumber: 81 });
     expect(() => cinematicSceneInputSchema.parse({ ...sceneInput, kind: "unknown-scene" })).toThrow();
     expect(() => cinematicSceneInputSchema.parse({ ...sceneInput, lineNumber: 0 })).toThrow();
+    expect(() => cinematicSceneInputSchema.parse({ ...sceneInput, lineNumber: 12_001 })).toThrow();
+  });
+
+  it("renders a cinematic scene for a long-code source line beyond the former 80-line limit", async () => {
+    const scene = await renderCinematicScene({ ...sceneInput, lineNumber: 321 });
+
+    expect(scene).toEqual(expect.objectContaining({ renderer: "python-svg", caption: expect.any(String) }));
+    expect(scene.svg).toContain("CINEMATIC SCENE");
   });
 
   it("returns valid rich SVG artwork for representative real-world scenes", async () => {
