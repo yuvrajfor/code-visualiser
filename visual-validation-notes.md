@@ -27,3 +27,11 @@ The compact-response smoke test also reached the final “Writing simple-English
 The compact API response completed into the visual player for the submitted `findApple` function. The learner reached a ten-step story with real source-line labels, the active code line, visual scenes, and plain-English explanations. The completed run did not show the local-fallback warning.
 
 During the empty-response recovery smoke test, Code Studio immediately showed staged preparation feedback and did not surface the former mutation error while the server-side request remained pending. The recovery contract is also covered by automated tests for both empty and partial model content.
+
+## Hybrid Python cinematic layer
+
+Desktop review confirms that the generated-story workspace presents the original real-life interactive scene and the Python-rendered cinematic SVG as a deliberate paired visual composition. The cinematic card is visibly labelled as an optional “Python-rendered scene,” exposes a compact ready state, and includes an explanatory caption. The source-line and everyday-language explanation remain visible in the adjacent reading panel.
+
+Phone-size review confirms that the Code Studio shell and story controls remain within the viewport at 375 pixels. The visual workflow continues vertically without horizontal overflow. The scripted browser flow separately confirmed that the actual cinematic SVG, caption, original interactive scene, simple-English explanation, and active source-line state all render together on this viewport.
+
+The captured browser notifications are transient save/success toasts rather than page chrome. A deliberate client-side rejection of the cinematic request also preserved the interactive scene, everyday-language explanation, responsive layout, and displayed an honest optional-cinematic fallback message.

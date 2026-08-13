@@ -114,3 +114,14 @@
 - [x] Add short-lived API-story caching and in-flight request deduplication so identical submissions do not generate duplicate model work.
 - [x] Add or update tests for the professional user journey and resilience paths, then verify desktop and mobile presentation quality.
 - [x] Save a checkpoint for the professional Code Story Studio upgrade.
+- [x] Document the Python rendering approach decision, including why deterministic standard-library SVG was selected over external Python visual libraries for a fast request-time visual layer.
+- [x] Define the Python-backed visual-generation boundary, deployment needs, and fallback behavior for the current web application.
+- [x] Implement a polished Python-powered visual output for generated code stories if it is the appropriate architecture.
+- [x] Verify the Python-enhanced story experience and preserve a responsive interactive fallback on desktop and mobile.
+- [x] Save a checkpoint for the Python-powered visual upgrade.
+- [x] Define and implement a hybrid design where clickable browser visuals remain fast while Python renders enhanced cinematic scene assets.
+- [x] Add deterministic Python scene rendering with a safe interactive fallback for generated code stories.
+- [x] Integrate the enhanced scene asset into the Code Story player without blocking playback or repeat submissions.
+- [x] Test the hybrid experience for rendering reliability, performance, and responsive desktop/mobile behavior.
+- [x] Save a checkpoint for the hybrid Python visual upgrade.
+- [x] Prefetch the active, previous, and next cinematic scenes so step navigation stays immediate even while richer SVG art is loading.

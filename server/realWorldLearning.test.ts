@@ -8,6 +8,7 @@ import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspace
 import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
 import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
+import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -387,5 +388,44 @@ describe("createRealWorldStory", () => {
 
     saveVisualTheme("office", storage);
     expect(getSavedVisualTheme(storage)).toBe("office");
+  });
+});
+
+describe("Python cinematic scene renderer", () => {
+  const sceneInput = {
+    kind: "storage-shelf" as const,
+    title: "Store the answer",
+    plainEnglish: "Put the first answer in a labelled box so it is easy to find again.",
+    visualFocus: "A labelled answer box waits on a tidy shelf.",
+    codeLine: 'let answer = "not found";',
+    lineNumber: 2,
+  };
+
+  it("enforces the compact safe request contract before a renderer process is started", () => {
+    expect(cinematicSceneInputSchema.parse(sceneInput)).toEqual(sceneInput);
+    expect(() => cinematicSceneInputSchema.parse({ ...sceneInput, kind: "unknown-scene" })).toThrow();
+    expect(() => cinematicSceneInputSchema.parse({ ...sceneInput, lineNumber: 0 })).toThrow();
+  });
+
+  it("returns valid rich SVG artwork for representative real-world scenes", async () => {
+    const scenes = await Promise.all(
+      (["storage-shelf", "decision-gate", "recursion-stairs", "city-map"] as const).map((kind) => renderCinematicScene({ ...sceneInput, kind })),
+    );
+
+    expect(scenes).toHaveLength(4);
+    for (const scene of scenes) {
+      expect(scene).toEqual(expect.objectContaining({ renderer: "python-svg", caption: expect.any(String) }));
+      expect(scene.svg).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
+      expect(scene.svg).toContain("CINEMATIC SCENE");
+    }
+  });
+
+  it("shares duplicate concurrent work and retains the successful scene for the next request", async () => {
+    const input = { ...sceneInput, kind: "delivery-desk" as const, title: "Deliver the answer" };
+    const [first, second] = await Promise.all([renderCinematicScene(input), renderCinematicScene(input)]);
+    const cached = await renderCinematicScene(input);
+
+    expect(second).toBe(first);
+    expect(cached).toBe(first);
   });
 });

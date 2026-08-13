@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { interpretCodeAsVisualStory } from "./codeStoryInterpreter";
+import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 
 export const appRouter = router({
   system: systemRouter,
@@ -47,6 +48,11 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         return interpretCodeAsVisualStory(input);
+      }),
+    cinematicScene: publicProcedure
+      .input(cinematicSceneInputSchema)
+      .mutation(async ({ input }) => {
+        return renderCinematicScene(input);
       }),
   }),
 });

@@ -48,6 +48,18 @@ type LearningStep = {
   routeState?: CityRouteState;
 };
 
+type CinematicScene = {
+  svg: string;
+  caption: string;
+  renderer: "python-svg";
+};
+
+type CinematicSceneStatus = "loading" | "ready" | "failed";
+
+function getCinematicSceneKey(step: LearningStep) {
+  return `${step.step}:${step.line}:${step.story.kind}:${step.code}:${step.story.title}`;
+}
+
 type CityComparisonRun = {
   graph: CityGraph;
   weightedGraph: CityWeightedGraph;
@@ -589,12 +601,34 @@ function RealWorldScene({ story, visualTheme, routeState, nodePositions, onNodeP
   );
 }
 
+function CinematicScenePanel({ scene, status }: { scene?: CinematicScene; status?: CinematicSceneStatus }) {
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#071523] p-3 shadow-[0_16px_35px_rgba(0,0,0,0.23)]" data-cinematic-scene>
+      <div className="mb-2 flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-100"><Sparkles className="h-3.5 w-3.5" /></span><div><p className="text-[9px] font-black uppercase tracking-[0.15em] text-cyan-100">Cinematic layer</p><p className="text-[10px] text-[#9bb4ca]">Python-rendered scene</p></div></div>
+        <span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.1em] ${scene ? "border-emerald-300/20 bg-emerald-300/10 text-emerald-100" : status === "failed" ? "border-white/10 bg-white/5 text-[#b9c4d4]" : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"}`}>{scene ? "Ready" : status === "failed" ? "Optional" : "Rendering"}</span>
+      </div>
+      {scene ? (
+        <figure className="overflow-hidden rounded-xl border border-white/10 bg-[#06111e]" aria-label={scene.caption}>
+          <div data-cinematic-art className="aspect-video w-full [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: scene.svg }} />
+          <figcaption className="border-t border-white/10 bg-[#091a2c] px-3 py-2 text-[10px] leading-4 text-[#b9cedf]">{scene.caption}</figcaption>
+        </figure>
+      ) : status === "failed" ? (
+        <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-6 text-center"><div><p className="text-xs font-bold text-[#d7e5f3]">Your interactive scene is still ready.</p><p className="mt-1 text-[10px] leading-4 text-[#93a9bd]">The optional cinematic illustration could not load for this step, so playback continues normally.</p></div></div>
+      ) : (
+        <div className="grid aspect-video place-items-center rounded-xl border border-cyan-300/10 bg-[radial-gradient(circle_at_center,rgba(103,232,249,0.12),transparent_55%)] px-6 text-center" aria-live="polite"><div><Sparkles className="mx-auto h-5 w-5 animate-pulse text-cyan-200" /><p className="mt-3 text-xs font-bold text-[#ddf6ff]">Drawing a richer real-world scene…</p><p className="mt-1 text-[10px] leading-4 text-[#9bb4ca]">You can keep reading and moving through the story.</p></div></div>
+      )}
+    </section>
+  );
+}
+
 export default function Home() {
   const saveSubmission = trpc.submissions.save.useMutation({
     onSuccess: () => toast.success("Your code session has been saved."),
     onError: () => toast.error("Your visual still works, but this session could not be saved."),
   });
   const interpretStory = trpc.stories.interpret.useMutation();
+  const cinematicScene = trpc.stories.cinematicScene.useMutation();
   const [activeView, setActiveView] = useState<"landing" | "studio" | "comparison">("landing");
   const [landingWorkspace, setLandingWorkspace] = useState<LearningWorkspace>(getInitialLearningWorkspace);
   const [selectedLang, setSelectedLang] = useState<Language>("javascript");
@@ -619,9 +653,13 @@ export default function Home() {
   const [onboardingWorkspace, setOnboardingWorkspace] = useState<OnboardingWorkspace | null>(null);
   const [onboardingStepIndex, setOnboardingStepIndex] = useState(0);
   const [interpreterProgressIndex, setInterpreterProgressIndex] = useState(0);
+  const [cinematicScenes, setCinematicScenes] = useState<Record<string, CinematicScene>>({});
+  const [cinematicSceneStatus, setCinematicSceneStatus] = useState<Record<string, CinematicSceneStatus>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const cinematicRequestKeysRef = useRef(new Set<string>());
   const currentStep = steps[currentStepIndex];
+  const currentCinematicKey = currentStep ? getCinematicSceneKey(currentStep) : "";
   const activeTheme = getVisualTheme(visualTheme);
   const customGraphStops = (() => {
     try { return parseCityGraph(customGraphText).stops; } catch { return []; }
@@ -659,6 +697,32 @@ export default function Home() {
     }, 2800);
     return () => window.clearInterval(progressTimer);
   }, [interpretStory.isPending]);
+
+  useEffect(() => {
+    if (activeView !== "studio" || !currentStep) return;
+    const candidateIndexes = [currentStepIndex - 1, currentStepIndex, currentStepIndex + 1];
+    for (const index of candidateIndexes) {
+      const candidate = steps[index];
+      if (!candidate) continue;
+      const key = getCinematicSceneKey(candidate);
+      if (cinematicRequestKeysRef.current.has(key)) continue;
+      cinematicRequestKeysRef.current.add(key);
+      setCinematicSceneStatus((existing) => ({ ...existing, [key]: "loading" }));
+      void cinematicScene.mutateAsync({
+        kind: candidate.story.kind,
+        title: candidate.story.title,
+        plainEnglish: candidate.story.plainEnglish,
+        visualFocus: candidate.story.visualFocus ?? candidate.story.analogy,
+        codeLine: candidate.code || "Code step",
+        lineNumber: candidate.line,
+      }).then((scene) => {
+        setCinematicScenes((existing) => ({ ...existing, [key]: scene }));
+        setCinematicSceneStatus((existing) => ({ ...existing, [key]: "ready" }));
+      }).catch(() => {
+        setCinematicSceneStatus((existing) => ({ ...existing, [key]: "failed" }));
+      });
+    }
+  }, [activeView, cinematicScene, currentStep, currentStepIndex, steps]);
 
   const openLearningWorkspace = (workspace: OnboardingWorkspace) => {
     setActiveView("landing");
@@ -758,6 +822,9 @@ export default function Home() {
       }
     }
 
+    cinematicRequestKeysRef.current.clear();
+    setCinematicScenes({});
+    setCinematicSceneStatus({});
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
     setIsPlaying(false);
@@ -1196,10 +1263,14 @@ export default function Home() {
           <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
             <div className="lab-surface story-stage rounded-[28px] p-5 md:p-6">
               <SceneHeader story={currentStep.story} step={currentStep} />
-              <div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step} className="mt-5"><RealWorldScene story={currentStep.story} visualTheme={visualTheme} routeState={currentStep.routeState} /></div>
-              <div className="story-scene-brief mt-4" data-story-visual-focus>
-                <div className="flex min-w-0 items-start gap-3"><div className="story-scene-brief-icon"><Box className="h-4 w-4" /></div><div className="min-w-0"><p className="story-scene-brief-label">Scene focus</p><p className="mt-1 text-xs leading-5 text-[#d5def2]">{currentStep.story.visualFocus ?? `Follow the ${currentStep.story.objectLabel} as this ${sceneStyles[currentStep.story.kind].label} changes.`}</p></div></div>
-                <div className="story-scene-object"><span>Highlighted object</span><strong>{currentStep.story.objectLabel}</strong></div>
+              <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,.86fr)_minmax(0,1.14fr)]">
+                <div><div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step}><RealWorldScene story={currentStep.story} visualTheme={visualTheme} routeState={currentStep.routeState} /></div>
+                  <div className="story-scene-brief mt-4" data-story-visual-focus>
+                    <div className="flex min-w-0 items-start gap-3"><div className="story-scene-brief-icon"><Box className="h-4 w-4" /></div><div className="min-w-0"><p className="story-scene-brief-label">Scene focus</p><p className="mt-1 text-xs leading-5 text-[#d5def2]">{currentStep.story.visualFocus ?? `Follow the ${currentStep.story.objectLabel} as this ${sceneStyles[currentStep.story.kind].label} changes.`}</p></div></div>
+                    <div className="story-scene-object"><span>Highlighted object</span><strong>{currentStep.story.objectLabel}</strong></div>
+                  </div>
+                </div>
+                <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} />
               </div>
             </div>
 
