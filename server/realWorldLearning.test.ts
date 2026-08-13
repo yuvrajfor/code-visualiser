@@ -247,9 +247,10 @@ describe("createRealWorldStory", () => {
     expect(ignoredAction).toBeNull();
   });
 
-  it("offers Kitchen, Office, and Game World themes", () => {
-    expect(visualThemes.map((theme) => theme.id)).toEqual(["kitchen", "office", "game"]);
+  it("offers Kitchen, Office, Game World, and High Contrast themes", () => {
+    expect(visualThemes.map((theme) => theme.id)).toEqual(["kitchen", "office", "game", "high-contrast"]);
     expect(getVisualTheme("game").name).toBe("Game World");
+    expect(getVisualTheme("high-contrast").name).toBe("High Contrast");
   });
 
   it("turns a binary-tree line into a familiar family-tree scene", () => {
@@ -396,8 +397,8 @@ describe("createRealWorldStory", () => {
       setItem: (key: string, value: string) => entries.set(key, value),
     };
 
-    saveVisualTheme("office", storage);
-    expect(getSavedVisualTheme(storage)).toBe("office");
+    saveVisualTheme("high-contrast", storage);
+    expect(getSavedVisualTheme(storage)).toBe("high-contrast");
   });
 });
 
@@ -470,5 +471,15 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).not.toMatch(/[🛠📦🧠]/u);
     expect(styleSource).toContain(".cinematic-art-frame");
     expect(styleSource).toContain("transform-style: preserve-3d");
+    expect(styleSource).not.toMatch(/[💼🎮]/u);
+  });
+
+  it("supports a persisted high-contrast visual setting and motion-safe execution transitions", () => {
+    expect(homeSource).toContain('data-visual-theme={visualTheme}');
+    expect(homeSource).toContain('"high-contrast": Eye');
+    expect(homeSource).toContain("execution-state-enter");
+    expect(styleSource).toContain(".visual-theme-high-contrast");
+    expect(styleSource).toContain(".execution-state-enter");
+    expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
 });

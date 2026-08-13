@@ -148,3 +148,8 @@
 - [x] Simplify the story workspace and strengthen the clean 3D cinematic visual treatment without obscuring code or explanations.
 - [x] Add regression coverage and verify the clean cinematic interface on desktop and mobile.
 - [x] Save a checkpoint for the clean 3D cinematic interface refinement.
+- [x] Test and document the connected Cloudflare Worker Bindings capabilities using safe read-only account data.
+- [x] Add a persisted High Contrast visual theme that provides clear, accessible Code Studio surfaces.
+- [x] Add smooth, reduced-motion-safe transitions for visual theme changes and execution-state changes.
+- [x] Add regression coverage and validate the updated experience on desktop and mobile.
+- [x] Save a checkpoint for the Cloudflare review and accessibility motion enhancement.

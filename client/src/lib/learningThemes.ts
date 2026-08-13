@@ -1,4 +1,4 @@
-export type VisualTheme = "kitchen" | "office" | "game";
+export type VisualTheme = "kitchen" | "office" | "game" | "high-contrast";
 
 export const VISUAL_THEME_STORAGE_KEY = "code-story-studio:visual-theme";
 
@@ -12,7 +12,7 @@ export const visualThemes: Array<{
 }> = [
   {
     id: "kitchen",
-    icon: "🍳",
+    icon: "utensils",
     name: "Kitchen World",
     shortLabel: "Kitchen",
     description: "Code is shown as recipes, pantry labels, trays, and parcel-sized results.",
@@ -20,7 +20,7 @@ export const visualThemes: Array<{
   },
   {
     id: "office",
-    icon: "💼",
+    icon: "archive",
     name: "Office World",
     shortLabel: "Office",
     description: "Code becomes labelled folders, document routes, checklists, and desk deliveries.",
@@ -28,11 +28,19 @@ export const visualThemes: Array<{
   },
   {
     id: "game",
-    icon: "🎮",
+    icon: "palette",
     name: "Game World",
     shortLabel: "Game",
     description: "Code becomes quest items, checkpoints, paths, and a final reward screen.",
     sceneHint: "Think of each instruction as a move in a game level.",
+  },
+  {
+    id: "high-contrast",
+    icon: "eye",
+    name: "High Contrast",
+    shortLabel: "Contrast",
+    description: "Clear black, white, and yellow surfaces reduce visual noise and make every important label easier to read.",
+    sceneHint: "Use the clearest view when you want strong separation between code, state, and explanation.",
   },
 ];
 
