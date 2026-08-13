@@ -137,5 +137,5 @@
 - [x] Audit the current Code Story Studio experience against the intended paste-code-to-visual-story workflow and remove or redesign features that feel decorative rather than useful.
 - [x] Implement a research-informed modern visualizer experience with working, learner-centered code-state interactions rather than ornamental 3D effects.
 - [x] Add regression tests and verify the redesigned workflow on mobile and desktop.
-- [ ] Save a checkpoint for the research-informed Code Story Studio redesign.
+- [x] Save a checkpoint for the research-informed Code Story Studio redesign.
 - [x] Make the Code Studio workspace navigation label compact and fully visible on narrow phones.
