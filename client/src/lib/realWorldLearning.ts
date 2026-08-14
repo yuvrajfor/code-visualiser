@@ -69,7 +69,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/^(?:\}|\)|\]|end|endif|endfor|endwhile|endfunction|endclass)\s*;?$/.test(lower)) {
     return {
       kind: "workbench",
-      icon: "✅",
+      icon: "check-circle",
       title: "This part of the job is complete",
       plainEnglish: "This line closes the small part of the job that came before it. The computer is finished with that part and is ready to continue with the next instruction outside it.",
       whatChanged: "The earlier group of instructions has been neatly finished.",
@@ -81,7 +81,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(tree|root|left|right|binary|parent|child)\b/.test(lower)) {
     return {
       kind: "family-tree",
-      icon: "🌳",
+      icon: "git-branch",
       title: "A family-tree branch is being placed",
       plainEnglish: "The computer is organizing people or items into a family shape. One main person sits at the top, and each branch can lead to smaller family members below.",
       whatChanged: "A new place in the family tree is ready to connect to its parent or child branch.",
@@ -93,7 +93,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(bfs|breadth[_\s-]?first|queue|popleft|deque)\b/.test(lower)) {
     return {
       kind: "city-map",
-      icon: "🚏",
+      icon: "route",
       title: "The city waiting line checks nearby stops first",
       plainEnglish: "The computer visits all nearby places first before going farther away, like checking every shop on your street before moving to the next street.",
       whatChanged: "A city stop was placed into, or taken from, the waiting line for nearby stops.",
@@ -105,7 +105,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(dfs|depth[_\s-]?first|stack|path\.pop|path\.append)\b/.test(lower)) {
     return {
       kind: "city-map",
-      icon: "🧭",
+      icon: "compass",
       title: "The city explorer follows one road deeply",
       plainEnglish: "The computer follows one road as far as it can go, then comes back and tries another road, like exploring a maze.",
       whatChanged: "One road was placed on, or removed from, the explorer's route stack.",
@@ -117,7 +117,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/(?:\bcity_map\b|\bcitymap\b|\bgraph\b|\bvertex\b|\bedge\b|\bneighbor\b|\bneighbour\b|\badjacency\b|\bvisited\b|\bbfs\b|\bdfs\b|\broute\b)/.test(lower)) {
     return {
       kind: "city-map",
-      icon: "🗺️",
+      icon: "map",
       title: "A route is being marked on a city map",
       plainEnglish: "The computer is looking at places and the roads between them. It can choose a nearby place, remember where it has been, and keep exploring until it reaches the goal.",
       whatChanged: "A city stop or road was added to the route the computer can explore.",
@@ -129,7 +129,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(node|head|tail|next)\b/.test(lower) && /\b(next|node|head|tail|new)\b/.test(lower)) {
     return {
       kind: "linked-chain",
-      icon: "🔗",
+      icon: "link",
       title: "A chain of labelled stops is being connected",
       plainEnglish: "The computer is joining one stop to the next. Each stop remembers who comes after it, so the chain can be followed in order.",
       whatChanged: "One paper-tag stop now points to the next stop in the chain.",
@@ -141,7 +141,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(return)\b.*\b([a-z_]\w*)\s*\(/.test(lower) || /\b(recurs|factorial|fibonacci|countdown|stack_plates)\b/.test(lower)) {
     return {
       kind: "recursion-stairs",
-      icon: "🪜",
+      icon: "stairs",
       title: "The computer climbs one small step at a time",
       plainEnglish: "The computer gives the same job a smaller version of itself. It keeps taking one step down until it reaches the easy stopping point, then carries the answers back up.",
       whatChanged: "A new smaller job was placed on the step above the earlier job.",
@@ -153,7 +153,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/^(?:function|def\s+|class\s+|public\s+.*\(|private\s+.*\(|static\s+.*\()/.test(lower)) {
     return {
       kind: "workshop",
-      icon: "🛠️",
+      icon: "wrench",
       title: "A new work station is prepared",
       plainEnglish: "The computer is setting up a named job. Nothing is being solved yet; it is simply preparing a place where the job can happen later.",
       whatChanged: "A reusable work station was named and made ready.",
@@ -165,7 +165,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(new\s+|class\s+|constructor|__init__|object\b)/.test(lower)) {
     return {
       kind: "workshop",
-      icon: "🧩",
+      icon: "blocks",
       title: "A new item is being built",
       plainEnglish: "The computer is making a fresh item from a blueprint and giving it its own place to live.",
       whatChanged: "A new made-to-order item was added to the work area.",
@@ -177,7 +177,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(for|while|foreach)\b/.test(lower)) {
     return {
       kind: "conveyor-loop",
-      icon: "🔁",
+      icon: "repeat",
       title: "The worker starts a repeating route",
       plainEnglish: "The computer will repeat the next job for each item, one at a time. It keeps going until there is nothing left to check.",
       whatChanged: "A repeating route was started, with a worker ready to visit each item.",
@@ -189,7 +189,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(if|else if|elif|else|switch|case)\b/.test(lower)) {
     return {
       kind: "decision-gate",
-      icon: "🚦",
+      icon: "signpost",
       title: "The computer reaches a yes-or-no gate",
       plainEnglish: "The computer checks a question. A yes answer sends it one way; a no answer sends it another way.",
       whatChanged: "A decision gate is open and waiting for the answer to a question.",
@@ -201,7 +201,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\b(return|print|console\.log|cout|system\.out\.println)\b/.test(lower)) {
     return {
       kind: "delivery-desk",
-      icon: "📦",
+      icon: "package",
       title: "The answer is packed for delivery",
       plainEnglish: "The computer has a result to show or send back. It places the result in a package and finishes this part of the job.",
       whatChanged: "The result was placed on the delivery desk.",
@@ -213,7 +213,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/\[.*\]|array|list|vector|map|set|push|append|sort|swap/.test(lower)) {
     return {
       kind: "sorting-tray",
-      icon: "🧺",
+      icon: "list",
       title: "Items are arranged on a sorting tray",
       plainEnglish: "The computer is looking after a group of items. It can pick one, compare it, move it, or place it in the right spot.",
       whatChanged: "A group of items is visible on the sorting tray for the next action.",
@@ -225,7 +225,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
   if (/=|\+\+|--|\+=|-=/.test(lower)) {
     return {
       kind: "storage-shelf",
-      icon: "🗃️",
+      icon: "archive",
       title: `A labelled box called “${name}” is updated`,
       plainEnglish: `The computer is putting a value into a labelled box named “${name}”, so it can use that information later.`,
       whatChanged: `The box labelled “${name}” now holds the newest information.`,
@@ -236,7 +236,7 @@ export function createRealWorldStory(line: string, lineNumber: number): RealWorl
 
   return {
     kind: "workbench",
-    icon: "🧠",
+    icon: "brain",
     title: `The computer works through line ${lineNumber}`,
     plainEnglish: "The computer reads this instruction and carries out the small job it describes, one careful step at a time.",
     whatChanged: "The current instruction was prepared on the workbench.",

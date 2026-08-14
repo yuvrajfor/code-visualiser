@@ -176,15 +176,16 @@ def render(payload):
       <rect x="42" y="42" width="1196" height="636" rx="34" fill="url(#glass)" stroke="#294663" stroke-width="2"/>
       <path d="M77 132H1203" stroke="#8BC9E8" stroke-opacity=".12"/><path d="M77 560H1203" stroke="#8BC9E8" stroke-opacity=".09"/>
       <rect x="78" y="78" width="178" height="38" rx="19" fill="{accent}" fill-opacity=".14" stroke="{accent}" stroke-opacity=".6"/>
-      <text x="99" y="103" fill="{accent}" font-family="Inter, ui-sans-serif, system-ui" font-size="15" font-weight="700" letter-spacing="1.8">CINEMATIC SCENE</text>
+      <text x="99" y="103" fill="{accent}" font-family="Inter, ui-sans-serif, system-ui" font-size="15" font-weight="700" letter-spacing="1.8">CODE SCENE</text>
       <text x="1135" y="103" fill="#89A4C4" font-family="ui-monospace, SFMono-Regular, monospace" font-size="16">LINE {line_number:02d}</text>
       {svg_text(title, 80, 165, 42, "#F3F8FF", "700", 39)}
-      {svg_text(focus, 82, 255, 21, "#AFC5DD", "500", 72)}
+      <rect x="80" y="214" width="1120" height="68" rx="16" fill="#0A1D31" stroke="{accent}" stroke-opacity=".45"/>
+      {svg_text(focus, 104, 255, 21, "#E5F1FD", "600", 66)}
       <g filter="url(#depthShadow)">{icon}</g>
       <rect x="80" y="572" width="1120" height="1" fill="#294663"/>
       <rect x="80" y="604" width="1120" height="44" rx="12" fill="#0E2339" stroke="#294663"/>
-      <text x="105" y="632" fill="{accent}" font-family="ui-monospace, SFMono-Regular, monospace" font-size="16">{escape(code_line or "Code step")}</text>
-      {svg_text(plain_english, 80, 555, 18, "#D9E8F7", "400", 105)}
+      <text x="105" y="632" fill="#F7FBFF" font-family="ui-monospace, SFMono-Regular, monospace" font-size="16">{escape(code_line or "Code step")}</text>
+      {svg_text(plain_english, 80, 555, 18, "#E4F0FC", "500", 105)}
     </svg>'''
     return {"svg": svg, "caption": f"{scene_name}: {focus}", "renderer": "python-svg"}
 

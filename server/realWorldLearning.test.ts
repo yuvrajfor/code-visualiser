@@ -133,6 +133,21 @@ describe("createRealWorldStory", () => {
     expect(story.steps[1]?.executionState).toEqual({ subject: "message", action: "Creates a named value", change: "The name message is connected to the expression shown on this line." });
   });
 
+  it("keeps source-specific explanation details supplied by the stronger interpreter contract", () => {
+    const story = normalizeApiCodeStory("let score = total + bonus;", {
+      summary: "The code adds two numbers. It keeps the result under a clear name.",
+      steps: [{ lineNumber: 1, kind: "storage-shelf", title: "Add the points", plainEnglish: "This line adds total and bonus. It keeps the combined number ready to use as score.", whatChanged: "The score box now holds the combined points.", analogy: "It is like adding two receipts and writing the total on one card.", objectLabel: "score total", visualFocus: "Two number cards combine and slide into the score box." }],
+    });
+
+    expect(story.steps[0]).toMatchObject({
+      whatChanged: "The score box now holds the combined points.",
+      analogy: "It is like adding two receipts and writing the total on one card.",
+      objectLabel: "score total",
+      visualFocus: "Two number cards combine and slide into the score box.",
+    });
+    expect(createRealWorldStory("const score = 7;", 1).icon).toBe("archive");
+  });
+
   it("derives bounded execution-state language from source text without running learner code", () => {
     expect(createSourceExecutionState("items.push(apple);")).toEqual({ subject: "items", action: "Changes a collection", change: "This call asks items to add, remove, or rearrange an item." });
     expect(createSourceExecutionState("if (basket.length === 0) {")).toEqual({ subject: "Choice", action: "Checks a condition", change: "The next path depends on whether this check is true or false." });
@@ -448,7 +463,7 @@ describe("Python cinematic scene renderer", () => {
     const scene = await renderCinematicScene({ ...sceneInput, lineNumber: 321 });
 
     expect(scene).toEqual(expect.objectContaining({ renderer: "python-svg", caption: expect.any(String) }));
-    expect(scene.svg).toContain("CINEMATIC SCENE");
+    expect(scene.svg).toContain("CODE SCENE");
   });
 
   it("returns valid rich SVG artwork for representative real-world scenes", async () => {
@@ -460,7 +475,7 @@ describe("Python cinematic scene renderer", () => {
     for (const scene of scenes) {
       expect(scene).toEqual(expect.objectContaining({ renderer: "python-svg", caption: expect.any(String) }));
       expect(scene.svg).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
-      expect(scene.svg).toContain("CINEMATIC SCENE");
+      expect(scene.svg).toContain("CODE SCENE");
       expect(scene.svg).toContain('preserveAspectRatio="xMidYMid meet"');
       expect(scene.svg).toContain('filter id="depthShadow"');
       expect(scene.svg).toContain('M190 454L640 346 1090 454');

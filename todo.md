@@ -167,3 +167,8 @@
 - [x] Preserve high contrast, motion preferences, 3D learning surfaces, and core Code Studio interactions through the redesign.
 - [x] Add regression coverage and validate the reference-informed interface on desktop and mobile.
 - [x] Save a checkpoint for the reference-informed UI redesign.
+- [x] Inspect the connected AI capabilities and document the safe model path for stronger code explanations and visual assets.
+- [x] Strengthen the code-story explanation contract for source-grounded, beginner-friendly, step-specific guidance.
+- [x] Upgrade the visual scene briefs, professional icon cues, and colour grading for readable learning surfaces.
+- [x] Add regression coverage and validate explanation quality, colour contrast, and responsive playback.
+- [x] Save a checkpoint for the AI explanation and visual-clarity enhancement.
