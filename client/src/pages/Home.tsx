@@ -1313,13 +1313,13 @@ export default function Home() {
 
   return (
     <div className={`lab-shell visual-theme-${visualTheme} min-h-screen overflow-x-hidden text-[#f7f0e8]`} data-visual-theme={visualTheme}>
-      <header className="product-header sticky top-0 z-50 border-b px-5 py-3 backdrop-blur-xl md:px-8">
+      <header className="product-header reference-product-header sticky top-0 z-50 border-b px-5 py-3 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <button onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("home")); }} className="flex items-center gap-3 text-left" aria-label="Go to learning home">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-300 text-[#07101d] shadow-[0_0_26px_rgba(99,102,241,0.32)]"><Sparkles className="h-5 w-5 fill-current" /></div>
-            <div><p className="text-base font-extrabold tracking-tight text-white">Code Story Studio</p><p className="text-[10px] font-semibold tracking-[0.12em] text-indigo-200">VISUAL LEARNING LAB</p></div>
+            <div className="reference-brand-mark grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-300 text-[#07101d] shadow-[0_0_26px_rgba(99,102,241,0.32)]"><Sparkles className="h-5 w-5 fill-current" /></div>
+            <div className="reference-brand-lockup"><p className="text-base font-extrabold tracking-tight text-white">Code Story Studio</p><p className="text-[10px] font-semibold tracking-[0.12em] text-indigo-200">VISUAL LEARNING LAB</p></div>
           </button>
-          <nav className="hidden items-center gap-1 rounded-xl border border-white/8 bg-white/[0.025] p-1 md:flex" aria-label="Workspace navigation">
+          <nav className="reference-nav hidden items-center gap-1 rounded-xl border border-white/8 bg-white/[0.025] p-1 md:flex" aria-label="Workspace navigation">
             <button type="button" data-active={landingWorkspace === "code" || activeView === "studio"} onClick={() => openLearningWorkspace("code")} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Code studio</button>
             <button type="button" data-active={landingWorkspace === "algorithms" || activeView === "comparison"} onClick={() => openLearningWorkspace("algorithms")} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Algorithm lab</button>
           </nav>
@@ -1346,14 +1346,14 @@ export default function Home() {
 
       {activeView === "landing" && (
         <main className={`lab-grid landing-mode-${landingWorkspace} mx-auto w-full max-w-7xl px-5 py-10 md:px-8 md:py-14`} data-learning-workspace={landingWorkspace}>
-          <section data-learning-hero className="mx-auto grid max-w-6xl items-end gap-8 lg:grid-cols-[1.18fr_.82fr]">
+          <section data-learning-hero className="reference-hero mx-auto grid max-w-6xl items-end gap-8 lg:grid-cols-[1.18fr_.82fr]">
             <div>
               <Badge className="rounded-full border border-indigo-300/25 bg-indigo-300/10 px-4 py-1.5 text-[11px] font-bold text-indigo-100">VISUAL PROGRAMMING FOR BEGINNERS</Badge>
-              <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-[-0.045em] text-white md:text-6xl">Learn code by watching the <span className="bg-gradient-to-r from-indigo-200 via-sky-200 to-cyan-200 bg-clip-text text-transparent">idea move.</span></h1>
+              <h1 className="reference-hero-heading mt-5 max-w-3xl text-4xl font-extrabold leading-[1.06] tracking-[-0.045em] text-white md:text-6xl">Learn code by watching the <span className="bg-gradient-to-r from-indigo-200 via-sky-200 to-cyan-200 bg-clip-text text-transparent">idea move.</span></h1>
               <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#aebad0] md:text-lg">One focused workspace for two kinds of learning: turn everyday code into a visual story, or build a map and watch algorithms make different decisions.</p>
               <div className="mt-7 flex flex-wrap gap-3"><Button onClick={() => openLearningWorkspace("code")} className="h-11 rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e]">Start with my code <ArrowRight className="ml-2 h-4 w-4" /></Button><Button variant="outline" onClick={() => openLearningWorkspace("algorithms")} className="h-11 rounded-xl border-white/12 bg-white/[0.035] px-5 text-xs font-bold text-white hover:bg-white/10">Explore algorithms</Button></div>
             </div>
-            <aside className="lab-surface rounded-[28px] p-5 md:p-6">
+            <aside className="reference-path-note lab-surface rounded-[28px] p-5 md:p-6">
               <p className="lab-kicker">Your learning path</p><h2 className="mt-2 text-xl font-extrabold tracking-tight text-white">Pick a lens, not a complicated setup.</h2>
               <div className="mt-5 space-y-3"><div className="rounded-2xl border border-indigo-300/20 bg-indigo-300/7 p-4"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-300/15 text-lg">⌘</span><div><p className="text-xs font-extrabold text-white">Code story</p><p className="mt-0.5 text-[11px] text-[#aebad0]">Trace one line at a time with everyday analogies.</p></div></div></div><div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/6 p-4"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-300/15 text-lg">◈</span><div><p className="text-xs font-extrabold text-white">Algorithm lab</p><p className="mt-0.5 text-[11px] text-[#aebad0]">Compare routes, travel time, and choices on your own city map.</p></div></div></div></div>
               <div className="mt-5 flex items-center gap-3 border-t border-white/8 pt-4 text-[11px] text-[#91a0ba]"><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.9)]" /> Interactive, step-by-step, and built for exploration.</div>
@@ -1366,7 +1366,7 @@ export default function Home() {
           </section>}
 
           <section data-detailed-workspaces className="professional-workspace mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
-            <div className="lab-surface code-input-card relative overflow-hidden rounded-[28px] p-5 md:p-8" data-code-story-input>
+            <div className="reference-learning-deck lab-surface code-input-card relative overflow-hidden rounded-[28px] p-5 md:p-8" data-code-story-input>
               <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
               <div data-code-only className="relative flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
                 <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl border border-indigo-300/20 bg-indigo-300/10 text-indigo-100"><Code2 className="h-5 w-5" /></div><div><p className="lab-kicker">Step 1 · Your code</p><h2 className="mt-1 text-lg font-extrabold tracking-tight text-white">Paste code. We make the story clear.</h2><p className="mt-1 text-xs text-[#a89787]">Use JavaScript, Python, C, or Java. A problem title is optional.</p></div></div>
@@ -1403,7 +1403,7 @@ export default function Home() {
 
       {activeView === "studio" && currentStep && (
         <main className="lab-grid studio-learning-frame mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
-          <div className="lab-surface story-command-bar story-command-deck mb-5 flex flex-col justify-between gap-4 rounded-3xl p-5 md:flex-row md:items-center" data-code-story-workspace>
+          <div className="reference-story-command lab-surface story-command-bar story-command-deck mb-5 flex flex-col justify-between gap-4 rounded-3xl p-5 md:flex-row md:items-center" data-code-story-workspace>
             <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-[11px] font-bold text-[#cbb59f] transition hover:text-white"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><p className="mt-3 lab-kicker">Your visual story · Step {currentStepIndex + 1} of {steps.length}</p><h1 className="mt-1 text-xl font-extrabold tracking-tight text-white">{userProblem || "Your code story"}</h1><p className="mt-1 text-xs text-[#a89787]">Watch the picture change, then read the same idea in simple English.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <section className="learning-score-card" data-learning-score data-score-status={learningScore.isComplete ? "complete" : "in-progress"} aria-label={`Learning score: ${learningScore.score} out of 100. ${learningScore.status}`}>
