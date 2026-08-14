@@ -313,6 +313,40 @@
 @keyframes cinematic-art-float { from { transform: translateY(0) scale(1); } to { transform: translateY(-5px) scale(1.012); } }
 @keyframes score-achievement-pulse { from { transform: translateY(0) rotate(-2deg); box-shadow: 0 7px 14px rgba(8, 13, 34, 0.34); } to { transform: translateY(-2px) rotate(2deg); box-shadow: 0 11px 20px rgba(110,231,183,0.25); } }
 
+/* Visual-first Code Story Studio: the illustration is the learner's primary anchor. */
+.visual-first-workspace { align-items: start; }
+.primary-visual-stage { position: relative; overflow: visible; border-color: rgba(34, 211, 238, 0.42) !important; background: radial-gradient(circle at 74% 4%, rgba(45, 212, 191, 0.17), transparent 28%), radial-gradient(circle at 10% 3%, rgba(129, 140, 248, 0.22), transparent 28%), linear-gradient(150deg, #0b1d31 0%, #06101f 58%, #090b1b 100%) !important; box-shadow: 0 30px 74px rgba(3, 11, 25, 0.46), inset 0 1px 0 rgba(255,255,255,0.12) !important; }
+.primary-visual-stage::before { content: "VISUAL STORY"; position: absolute; right: 1.4rem; top: 1rem; color: rgba(186, 230, 253, 0.42); font-size: 0.58rem; font-weight: 900; letter-spacing: 0.2em; }
+.visual-first-intro { display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid rgba(165, 243, 252, 0.22); border-radius: 1rem; background: rgba(5, 20, 35, 0.58); padding: 0.78rem 0.9rem; }
+.visual-first-icon { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border: 1px solid rgba(103, 232, 249, 0.42); border-radius: 0.72rem; background: rgba(34, 211, 238, 0.12); color: #a5f3fc; }
+.visual-first-intro p { color: #67e8f9; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; }
+.visual-first-intro strong { display: block; margin-top: 0.24rem; color: #edfaff; font-size: 0.78rem; line-height: 1.25rem; }
+.primary-cinematic-scene { overflow: hidden; border: 1px solid rgba(103, 232, 249, 0.35); border-radius: 1.25rem; background: #020916; box-shadow: 0 24px 56px rgba(0, 0, 0, 0.34), 0 0 0 6px rgba(34, 211, 238, 0.035); }
+.primary-cinematic-scene .cinematic-panel { min-height: 25rem; border: 0 !important; border-radius: 0 !important; background: radial-gradient(circle at 54% 0%, rgba(34, 211, 238, 0.18), transparent 38%), linear-gradient(150deg, #09223a, #040a15 70%) !important; }
+.primary-cinematic-scene .cinematic-art-frame { min-height: 18rem; border-radius: 0.9rem; }
+.interactive-state-map { border: 1px solid rgba(165, 180, 252, 0.26); border-radius: 1rem; background: rgba(5, 15, 30, 0.58); }
+.interactive-state-map > summary { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; cursor: pointer; padding: 0.85rem 0.95rem; color: #e0e7ff; font-size: 0.72rem; list-style: none; }
+.interactive-state-map > summary::-webkit-details-marker { display: none; }
+.interactive-state-map > summary span:last-child { color: #a5b4d4; font-size: 0.62rem; text-align: right; }
+.interactive-state-map[open] { padding: 0 0.9rem 0.9rem; }
+.interactive-state-map[open] > summary { padding-left: 0; padding-right: 0; border-bottom: 1px solid rgba(165, 180, 252, 0.16); }
+.direct-explanation-panel { border-color: rgba(251, 191, 36, 0.32) !important; background: radial-gradient(circle at 95% 2%, rgba(251, 191, 36, 0.12), transparent 34%), linear-gradient(155deg, #21150d, #110c0a 68%) !important; box-shadow: 0 28px 64px rgba(35, 20, 6, 0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
+.direct-explanation-card { border-color: rgba(251, 191, 36, 0.34) !important; background: linear-gradient(140deg, rgba(120, 53, 15, 0.42), rgba(28, 16, 8, 0.96)) !important; }
+.direct-explanation-card p:last-child { color: #fff8e7 !important; font-size: 1.06rem; line-height: 1.9rem; }
+.visual-theme-high-contrast .primary-visual-stage,
+.visual-theme-high-contrast .direct-explanation-panel,
+.visual-theme-high-contrast .primary-cinematic-scene,
+.visual-theme-high-contrast .interactive-state-map,
+.visual-theme-high-contrast .visual-first-intro { border-color: #fff !important; background: #000 !important; box-shadow: none !important; }
+.visual-theme-high-contrast .primary-visual-stage::before { color: #ffe600; }
+.visual-theme-high-contrast .visual-first-icon { border-color: #ffe600; background: #000; color: #ffe600; }
+.visual-theme-high-contrast .visual-first-intro p, .visual-theme-high-contrast .story-scene-brief-label { color: #ffe600; }
+.visual-theme-high-contrast .visual-first-intro strong, .visual-theme-high-contrast .interactive-state-map > summary { color: #fff; }
+@media (prefers-reduced-motion: no-preference) {
+  .primary-cinematic-scene { transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 220ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .primary-cinematic-scene:hover { transform: translateY(-2px); box-shadow: 0 31px 68px rgba(0,0,0,0.42), 0 0 0 6px rgba(34,211,238,0.06); }
+}
+
 .cinematic-panel-focus { position: fixed !important; inset: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left)); z-index: 90; display: flex; flex-direction: column; border-color: rgba(103, 232, 249, 0.38); background: radial-gradient(circle at 50% 0%, rgba(34,211,238,.15), transparent 32%), #050d18 !important; box-shadow: 0 28px 100px rgba(0,0,0,.72); padding: clamp(0.75rem, 2vw, 1.25rem); }
 .cinematic-panel-focus .cinematic-art-frame { display: flex; flex: 1; min-height: 0; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
 .cinematic-panel-focus .cinematic-art-frame:active { cursor: grabbing; }
@@ -505,6 +539,34 @@
   .lab-surface { animation: lab-surface-in 460ms cubic-bezier(0.23, 1, 0.32, 1) both; }
 }
 @keyframes lab-surface-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Keep the generated-scene and explanation pair intentionally dark inside the paper workspace. */
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage {
+  border-color: rgba(34, 211, 238, 0.42) !important;
+  background: radial-gradient(circle at 74% 4%, rgba(45, 212, 191, 0.17), transparent 28%), radial-gradient(circle at 10% 3%, rgba(129, 140, 248, 0.22), transparent 28%), linear-gradient(150deg, #0b1d31 0%, #06101f 58%, #090b1b 100%) !important;
+  box-shadow: 0 30px 74px rgba(3, 11, 25, 0.46), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+}
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage h1,
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage h2,
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage h3,
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage strong { color: #f4fbff !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage > p { color: #c8deed !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .primary-cinematic-scene,
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .primary-cinematic-scene .cinematic-panel { border-color: rgba(103, 232, 249, 0.35) !important; background: #020916 !important; box-shadow: none !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .visual-first-intro,
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .interactive-state-map { border-color: rgba(165, 180, 252, 0.30) !important; background: rgba(5, 15, 30, 0.68) !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .visual-first-intro p { color: #67e8f9 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .interactive-state-map > summary { color: #e0e7ff !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel {
+  border-color: rgba(251, 191, 36, 0.34) !important;
+  background: radial-gradient(circle at 95% 2%, rgba(251, 191, 36, 0.12), transparent 34%), linear-gradient(155deg, #21150d, #110c0a 68%) !important;
+  box-shadow: 0 28px 64px rgba(35, 20, 6, 0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h1,
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h2,
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h3 { color: #fffdf5 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card { border-color: rgba(251, 191, 36, 0.34) !important; background: linear-gradient(140deg, rgba(120, 53, 15, 0.42), rgba(28, 16, 8, 0.96)) !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card p:last-child { color: #fff8e7 !important; }
 
 @layer components {
   /**

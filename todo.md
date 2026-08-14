@@ -172,3 +172,9 @@
 - [x] Upgrade the visual scene briefs, professional icon cues, and colour grading for readable learning surfaces.
 - [x] Add regression coverage and validate explanation quality, colour contrast, and responsive playback.
 - [x] Save a checkpoint for the AI explanation and visual-clarity enhancement.
+- [x] Inspect the connected Higgsfield operations and define a safe, non-blocking AI scene-asset workflow.
+- [x] Document the connected Higgsfield generation-tier restriction and retain an asset-ready integration seam.
+- [x] Upgrade the deterministic interactive 3D code-story scene into an unmistakably visual-first explainer.
+- [x] Replace the existing story presentation with a high-contrast scene-and-explanation composition.
+- [x] Validate visual distinction, explanation readability, accessibility, and responsive playback.
+- [x] Save a checkpoint for the visual-first explainer redesign.

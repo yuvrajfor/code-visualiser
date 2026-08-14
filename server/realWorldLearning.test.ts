@@ -496,18 +496,20 @@ describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
   const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
 
-  it("makes active execution state the primary learning surface and keeps the cinematic detail optional", () => {
-    const executionStateIndex = homeSource.indexOf("data-execution-state");
-    const cinematicDetailIndex = homeSource.indexOf("data-cinematic-details");
+  it("makes the cinematic visual primary and puts the direct explanation beside it", () => {
+    const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
+    const cinematicSceneIndex = homeSource.indexOf("data-primary-cinematic-scene");
+    const directExplanationIndex = homeSource.indexOf("data-direct-explanation-panel");
 
-    expect(executionStateIndex).toBeGreaterThan(-1);
-    expect(cinematicDetailIndex).toBeGreaterThan(-1);
-    expect(executionStateIndex).toBeLessThan(cinematicDetailIndex);
+    expect(primaryVisualIndex).toBeGreaterThan(-1);
+    expect(cinematicSceneIndex).toBeGreaterThan(primaryVisualIndex);
+    expect(directExplanationIndex).toBeGreaterThan(cinematicSceneIndex);
     expect(homeSource).toContain("What this source line sets up");
     expect(homeSource).toContain("From your code");
     expect(homeSource).toContain("What this means");
-    expect(homeSource).toContain("Scene detail");
-    expect(homeSource).toContain("Optional Python illustration");
+    expect(homeSource).toContain("Watch the visual first");
+    expect(homeSource).toContain("AI explanation · read second");
+    expect(homeSource).toContain("Interactive state map");
   });
 
   it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
