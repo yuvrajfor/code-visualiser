@@ -84,8 +84,20 @@ type CinematicScene = {
 
 type CinematicSceneStatus = "loading" | "ready" | "failed";
 
+type AIVisual = {
+  url: string;
+  prompt: string;
+  provider: "built-in-image";
+};
+
+type AIVisualStatus = "idle" | "loading" | "ready" | "failed";
+
 function getCinematicSceneKey(step: LearningStep) {
   return `${step.step}:${step.line}:${step.story.kind}:${step.code}:${step.story.title}`;
+}
+
+function getAIVisualKey(step: LearningStep, theme: VisualTheme) {
+  return `${getCinematicSceneKey(step)}:${theme}`;
 }
 
 type CityComparisonRun = {
@@ -771,6 +783,7 @@ export default function Home() {
   });
   const interpretStory = trpc.stories.interpret.useMutation();
   const cinematicScene = trpc.stories.cinematicScene.useMutation();
+  const aiVisual = trpc.stories.aiVisual.useMutation();
   const [activeView, setActiveView] = useState<"landing" | "studio" | "comparison">("landing");
   const [landingWorkspace, setLandingWorkspace] = useState<LearningWorkspace>(getInitialLearningWorkspace);
   const [selectedLang, setSelectedLang] = useState<Language>("javascript");
@@ -798,6 +811,8 @@ export default function Home() {
   const [interpreterProgressIndex, setInterpreterProgressIndex] = useState(0);
   const [cinematicScenes, setCinematicScenes] = useState<Record<string, CinematicScene>>({});
   const [cinematicSceneStatus, setCinematicSceneStatus] = useState<Record<string, CinematicSceneStatus>>({});
+  const [aiVisuals, setAIVisuals] = useState<Record<string, AIVisual>>({});
+  const [aiVisualStatus, setAIVisualStatus] = useState<Record<string, AIVisualStatus>>({});
   const [cinematicDepthEnabled, setCinematicDepthEnabled] = useState(true);
   const [cinematicMotionEnabled, setCinematicMotionEnabled] = useState(() => typeof window === "undefined" ? true : window.localStorage.getItem("code-story-studio:cinematic-motion") !== "off");
   const [cinematicFocused, setCinematicFocused] = useState(false);
@@ -806,6 +821,7 @@ export default function Home() {
   const cinematicRequestKeysRef = useRef(new Set<string>());
   const currentStep = steps[currentStepIndex];
   const currentCinematicKey = currentStep ? getCinematicSceneKey(currentStep) : "";
+  const currentAIVisualKey = currentStep ? getAIVisualKey(currentStep, visualTheme) : "";
   const activeTheme = getVisualTheme(visualTheme);
   const learningScore = getStoryLearningScore(steps.length, exploredStepIndexes);
   const customGraphStops = (() => {
@@ -1000,6 +1016,29 @@ export default function Home() {
     playActionSound(generatedSteps[0]?.story);
     saveSubmission.mutate({ problemTitle: userProblem || "Untitled code story", language: selectedLang, code: userCode });
     toast.success(selectedWalkthrough ? "Your route walkthrough is ready." : "Your code now has a visual story made from its own instructions.");
+  };
+
+  const createAIVisualForCurrentStep = async () => {
+    if (!currentStep || !currentAIVisualKey) return;
+    if (aiVisuals[currentAIVisualKey]) return;
+    setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "loading" }));
+    try {
+      const result = await aiVisual.mutateAsync({
+        kind: currentStep.story.kind,
+        title: currentStep.story.title,
+        plainEnglish: currentStep.story.plainEnglish,
+        visualFocus: currentStep.story.visualFocus ?? currentStep.story.plainEnglish,
+        codeLine: currentStep.code,
+        lineNumber: currentStep.line,
+        theme: visualTheme,
+      });
+      setAIVisuals((existing) => ({ ...existing, [currentAIVisualKey]: result }));
+      setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "ready" }));
+      toast.success("Your AI visual is ready for this story step.");
+    } catch {
+      setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "failed" }));
+      toast.error("The AI visual could not load, so your interactive scene remains available.");
+    }
   };
 
   const startCityComparison = (sharedScenario?: SharedGraphScenario) => {
@@ -1429,6 +1468,19 @@ export default function Home() {
               <SceneHeader story={currentStep.story} step={currentStep} />
               <div className="visual-first-intro mt-5"><span className="visual-first-icon"><SceneKindIcon kind={currentStep.story.kind} className="h-4 w-4" /></span><div><p>Watch the visual first</p><strong>{currentStep.story.visualFocus ?? `Follow ${currentStep.story.objectLabel} while this step changes.`}</strong></div></div>
               <div className="primary-cinematic-scene mt-4" data-primary-cinematic-scene>
+                {aiVisuals[currentAIVisualKey] ? (
+                  <figure className="ai-visual-frame mb-4" data-ai-visual-ready>
+                    <img src={aiVisuals[currentAIVisualKey].url} alt={`AI visual for ${currentStep.story.title}`} className="aspect-video w-full object-cover" />
+                    <figcaption>AI visual · generated from this step’s code meaning</figcaption>
+                  </figure>
+                ) : (
+                  <div className="ai-visual-callout mb-4" data-ai-visual-control data-ai-visual-status={aiVisualStatus[currentAIVisualKey] ?? "idle"}>
+                    <div><p className="ai-visual-eyebrow">AI visual layer</p><p className="mt-1 text-xs leading-5 text-[#c6d4e9]">Create a new original picture for this one step. Your interactive 3D scene stays available underneath.</p></div>
+                    <Button type="button" onClick={() => void createAIVisualForCurrentStep()} disabled={aiVisualStatus[currentAIVisualKey] === "loading"} className="ai-visual-generate-button shrink-0">
+                      <Sparkles className="mr-1.5 h-4 w-4" />{aiVisualStatus[currentAIVisualKey] === "loading" ? "Creating visual…" : aiVisualStatus[currentAIVisualKey] === "failed" ? "Try AI visual again" : "Create AI visual"}
+                    </Button>
+                  </div>
+                )}
                 <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} />
               </div>
               <details className="interactive-state-map mt-4" data-interactive-state-map>

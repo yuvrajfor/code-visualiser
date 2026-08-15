@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { interpretCodeAsVisualStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
+import { aiVisualInputSchema, generateAIVisual } from "./aiVisualGenerator";
 
 export const appRouter = router({
   system: systemRouter,
@@ -53,6 +54,11 @@ export const appRouter = router({
       .input(cinematicSceneInputSchema)
       .mutation(async ({ input }) => {
         return renderCinematicScene(input);
+      }),
+    aiVisual: publicProcedure
+      .input(aiVisualInputSchema)
+      .mutation(async ({ input }) => {
+        return generateAIVisual(input);
       }),
   }),
 });

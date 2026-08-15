@@ -178,3 +178,8 @@
 - [x] Replace the existing story presentation with a high-contrast scene-and-explanation composition.
 - [x] Validate visual distinction, explanation readability, accessibility, and responsive playback.
 - [x] Save a checkpoint for the visual-first explainer redesign.
+- [x] Audit and simplify the visual-first colour overrides for a clean, consistent, readable scene-and-explanation palette.
+- [x] Add a genuine server-side AI visual generation path for each code-story step with a fast deterministic fallback.
+- [x] Add explicit learner controls and status feedback for generated AI visuals.
+- [x] Add regression coverage and validate colour contrast, generated-visual loading, and responsive playback.
+- [x] Save a checkpoint for the clean-colour and AI-visual enhancement.
