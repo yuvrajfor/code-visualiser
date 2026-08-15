@@ -85,12 +85,14 @@ type CinematicScene = {
 type CinematicSceneStatus = "loading" | "ready" | "failed";
 
 type AIVisual = {
-  url: string;
+  imageUrl: string | null;
   prompt: string;
   provider: "built-in-image";
+  fallbackReason?: "quota_exhausted" | "temporarily_unavailable";
+  message?: string;
 };
 
-type AIVisualStatus = "idle" | "loading" | "ready" | "failed";
+type AIVisualStatus = "idle" | "loading" | "ready" | "fallback" | "failed";
 
 function getCinematicSceneKey(step: LearningStep) {
   return `${step.step}:${step.line}:${step.story.kind}:${step.code}:${step.story.title}`;
@@ -1020,7 +1022,7 @@ export default function Home() {
 
   const createAIVisualForCurrentStep = async () => {
     if (!currentStep || !currentAIVisualKey) return;
-    if (aiVisuals[currentAIVisualKey]) return;
+    if (aiVisuals[currentAIVisualKey]?.imageUrl) return;
     setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "loading" }));
     try {
       const result = await aiVisual.mutateAsync({
@@ -1033,11 +1035,26 @@ export default function Home() {
         theme: visualTheme,
       });
       setAIVisuals((existing) => ({ ...existing, [currentAIVisualKey]: result }));
-      setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "ready" }));
-      toast.success("Your AI visual is ready for this story step.");
+      if (result.imageUrl) {
+        setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "ready" }));
+        toast.success("Your AI visual is ready for this story step.");
+      } else {
+        setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "fallback" }));
+        toast.info(result.message ?? "AI visuals are temporarily unavailable — using the interactive 3D scene instead.");
+      }
     } catch {
-      setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "failed" }));
-      toast.error("The AI visual could not load, so your interactive scene remains available.");
+      setAIVisuals((existing) => ({
+        ...existing,
+        [currentAIVisualKey]: {
+          imageUrl: null,
+          prompt: "",
+          provider: "built-in-image",
+          fallbackReason: "temporarily_unavailable",
+          message: "AI visuals are temporarily unavailable — using the interactive 3D scene instead.",
+        },
+      }));
+      setAIVisualStatus((existing) => ({ ...existing, [currentAIVisualKey]: "fallback" }));
+      toast.info("AI visuals are temporarily unavailable — using the interactive 3D scene instead.");
     }
   };
 
@@ -1468,16 +1485,16 @@ export default function Home() {
               <SceneHeader story={currentStep.story} step={currentStep} />
               <div className="visual-first-intro mt-5"><span className="visual-first-icon"><SceneKindIcon kind={currentStep.story.kind} className="h-4 w-4" /></span><div><p>Watch the visual first</p><strong>{currentStep.story.visualFocus ?? `Follow ${currentStep.story.objectLabel} while this step changes.`}</strong></div></div>
               <div className="primary-cinematic-scene mt-4" data-primary-cinematic-scene>
-                {aiVisuals[currentAIVisualKey] ? (
+                {aiVisuals[currentAIVisualKey]?.imageUrl ? (
                   <figure className="ai-visual-frame mb-4" data-ai-visual-ready>
-                    <img src={aiVisuals[currentAIVisualKey].url} alt={`AI visual for ${currentStep.story.title}`} className="aspect-video w-full object-cover" />
+                    <img src={aiVisuals[currentAIVisualKey].imageUrl} alt={`AI visual for ${currentStep.story.title}`} className="aspect-video w-full object-cover" />
                     <figcaption>AI visual · generated from this step’s code meaning</figcaption>
                   </figure>
                 ) : (
                   <div className="ai-visual-callout mb-4" data-ai-visual-control data-ai-visual-status={aiVisualStatus[currentAIVisualKey] ?? "idle"}>
-                    <div><p className="ai-visual-eyebrow">AI visual layer</p><p className="mt-1 text-xs leading-5 text-[#c6d4e9]">Create a new original picture for this one step. Your interactive 3D scene stays available underneath.</p></div>
+                    <div><p className="ai-visual-eyebrow">AI visual layer</p><p className="mt-1 text-xs leading-5 text-[#c6d4e9]">Create a new original picture for this one step. Your interactive 3D scene stays available underneath.</p>{aiVisuals[currentAIVisualKey]?.fallbackReason ? <p className="mt-2 text-xs font-semibold leading-5 text-amber-100" data-ai-visual-fallback aria-live="polite">{aiVisuals[currentAIVisualKey]?.message ?? "AI visuals are temporarily unavailable — using the interactive 3D scene instead."}</p> : null}</div>
                     <Button type="button" onClick={() => void createAIVisualForCurrentStep()} disabled={aiVisualStatus[currentAIVisualKey] === "loading"} className="ai-visual-generate-button shrink-0">
-                      <Sparkles className="mr-1.5 h-4 w-4" />{aiVisualStatus[currentAIVisualKey] === "loading" ? "Creating visual…" : aiVisualStatus[currentAIVisualKey] === "failed" ? "Try AI visual again" : "Create AI visual"}
+                      <Sparkles className="mr-1.5 h-4 w-4" />{aiVisualStatus[currentAIVisualKey] === "loading" ? "Creating visual…" : aiVisualStatus[currentAIVisualKey] === "fallback" || aiVisualStatus[currentAIVisualKey] === "failed" ? "Try AI visual again" : "Create AI visual"}
                     </Button>
                   </div>
                 )}

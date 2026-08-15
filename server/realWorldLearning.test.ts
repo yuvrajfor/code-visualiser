@@ -11,6 +11,7 @@ import { createCityMapExportData, getCityMapExportFileBase } from "../client/src
 import { getStoryLearningScore } from "../client/src/lib/learningScore";
 import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, createSourceExecutionState, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
+import { generateAIVisual } from "./aiVisualGenerator";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -492,6 +493,31 @@ describe("Python cinematic scene renderer", () => {
   });
 });
 
+describe("AI visual capacity fallback", () => {
+  const visualInput = {
+    kind: "storage-shelf",
+    title: "Store one value for a quota fallback test",
+    plainEnglish: "This line places one value in a labelled box.",
+    visualFocus: "One labelled box waits on a tidy shelf.",
+    codeLine: "const total = 0;",
+    lineNumber: 1,
+    theme: "kitchen" as const,
+  };
+
+  it("turns an exhausted image-generation quota into a learner-safe fallback response", async () => {
+    const result = await generateAIVisual(visualInput, async () => {
+      throw new Error('Image generation request failed (400 Bad Request): {"code":"failed_precondition","message":"your account has hit a usage exhausted"}');
+    });
+
+    expect(result).toEqual(expect.objectContaining({
+      imageUrl: null,
+      provider: "built-in-image",
+      fallbackReason: "quota_exhausted",
+      message: expect.stringContaining("interactive 3D scene"),
+    }));
+  });
+});
+
 describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
   const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
@@ -510,6 +536,8 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("Watch the visual first");
     expect(homeSource).toContain("AI explanation · read second");
     expect(homeSource).toContain("Interactive state map");
+    expect(homeSource).toContain("data-ai-visual-fallback");
+    expect(homeSource).toContain("AI visuals are temporarily unavailable");
   });
 
   it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {

@@ -16,10 +16,19 @@ export const aiVisualInputSchema = z.object({
 
 export type AIVisualInput = z.infer<typeof aiVisualInputSchema>;
 
-type CachedAIVisual = { value: { url: string; prompt: string; provider: "built-in-image" }; expiresAt: number };
+export type AIVisualResult = {
+  imageUrl: string | null;
+  prompt: string;
+  provider: "built-in-image";
+  fallbackReason?: "quota_exhausted" | "temporarily_unavailable";
+  message?: string;
+};
+
+type CachedAIVisual = { value: AIVisualResult; expiresAt: number };
+type ImageGenerator = typeof generateImage;
 
 const cache = new Map<string, CachedAIVisual>();
-const inFlight = new Map<string, Promise<{ url: string; prompt: string; provider: "built-in-image" }>>();
+const inFlight = new Map<string, Promise<AIVisualResult>>();
 
 const themeDirections: Record<AIVisualInput["theme"], string> = {
   kitchen: "a warm teaching kitchen with labelled storage boxes and tidy ingredients",
@@ -60,7 +69,25 @@ function trimCache() {
   if (oldestKey) cache.delete(oldestKey);
 }
 
-export async function generateAIVisual(input: AIVisualInput) {
+export function isAIVisualQuotaExhausted(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /failed_precondition|usage[_\s-]?exhausted|quota[_\s-]?exhausted/i.test(message);
+}
+
+function createAIVisualFallback(prompt: string, error: unknown): AIVisualResult {
+  const quotaExhausted = isAIVisualQuotaExhausted(error);
+  return {
+    imageUrl: null,
+    prompt,
+    provider: "built-in-image",
+    fallbackReason: quotaExhausted ? "quota_exhausted" : "temporarily_unavailable",
+    message: quotaExhausted
+      ? "AI visuals are temporarily unavailable — using the interactive 3D scene instead."
+      : "AI visuals are temporarily unavailable — your interactive 3D scene is still ready to use.",
+  };
+}
+
+export async function generateAIVisual(input: AIVisualInput, imageGenerator: ImageGenerator = generateImage) {
   const key = getCacheKey(input);
   const cached = cache.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
@@ -70,14 +97,15 @@ export async function generateAIVisual(input: AIVisualInput) {
   if (pending) return pending;
 
   const prompt = buildAIVisualPrompt(input);
-  const request = generateImage({ prompt, quality: "medium" })
+  const request = imageGenerator({ prompt, quality: "medium" })
     .then((result) => {
       if (!result.url) throw new Error("The image service did not return an image URL.");
-      const value = { url: result.url, prompt, provider: "built-in-image" as const };
+      const value: AIVisualResult = { imageUrl: result.url, prompt, provider: "built-in-image" };
       cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
       trimCache();
       return value;
     })
+    .catch((error) => createAIVisualFallback(prompt, error))
     .finally(() => inFlight.delete(key));
 
   inFlight.set(key, request);
