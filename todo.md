@@ -191,3 +191,7 @@
 - [x] Replace the current warm, mixed palette with a cohesive modern colour system across navigation, workspace, controls, and learning surfaces.
 - [x] Preserve high-contrast accessibility and verify readable text, focus states, and responsive colour treatment.
 - [x] Add regression coverage, run visual validation, and save a checkpoint for the colour-system redesign.
+- [x] Review the visual-editor changes for invalid duplicate JSX attributes and conflicting colour declarations.
+- [x] Consolidate the requested Code Studio colour edits into valid, readable component styling.
+- [x] Run regression, type, build, and browser checks for the cleaned visual edits.
+- [x] Save a checkpoint for the validated visual-editor colour cleanup.
