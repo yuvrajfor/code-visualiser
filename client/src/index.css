@@ -330,9 +330,9 @@
 .interactive-state-map > summary span:last-child { color: #a5b4d4; font-size: 0.62rem; text-align: right; }
 .interactive-state-map[open] { padding: 0 0.9rem 0.9rem; }
 .interactive-state-map[open] > summary { padding-left: 0; padding-right: 0; border-bottom: 1px solid rgba(165, 180, 252, 0.16); }
-.direct-explanation-panel { border-color: rgba(251, 191, 36, 0.32) !important; background: radial-gradient(circle at 95% 2%, rgba(251, 191, 36, 0.12), transparent 34%), linear-gradient(155deg, #21150d, #110c0a 68%) !important; box-shadow: 0 28px 64px rgba(35, 20, 6, 0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
-.direct-explanation-card { border-color: rgba(251, 191, 36, 0.34) !important; background: linear-gradient(140deg, rgba(120, 53, 15, 0.42), rgba(28, 16, 8, 0.96)) !important; }
-.direct-explanation-card p:last-child { color: #fff8e7 !important; font-size: 1.06rem; line-height: 1.9rem; }
+.direct-explanation-panel { border-color: #bfdbfe !important; background: radial-gradient(circle at 95% 2%, rgba(191, 219, 254, 0.42), transparent 34%), linear-gradient(155deg, #ffffff, #f4f9ff 68%) !important; box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.88) !important; }
+.direct-explanation-card { border-color: #bfdbfe !important; background: #eff6ff !important; }
+.direct-explanation-card p:last-child { color: #172033 !important; font-size: 1.06rem; line-height: 1.9rem; }
 .visual-theme-high-contrast .primary-visual-stage,
 .visual-theme-high-contrast .direct-explanation-panel,
 .visual-theme-high-contrast .primary-cinematic-scene,
@@ -400,132 +400,72 @@
 .lab-tab[data-active="true"] { border-color: rgba(129, 140, 248, 0.44); background: rgba(99, 102, 241, 0.14); color: #dfe4ff; }
 .lab-focus-ring:focus-visible { outline: 2px solid #7c8cff; outline-offset: 3px; }
 
-/* Reference-informed editorial developer-product layer. The design borrows the
-   warm paper, decisive outline, and energetic accent approach—not any source
-   copy or component geometry—and keeps cinematic scenes as a deliberate dark
-   contrast inside the learning flow. */
+/* Modern blue-slate product palette. It deliberately removes the competing
+   cream, neon, purple, and hard-outline treatments while preserving the dark
+   cinematic scene as the single intentional contrast surface. */
 .lab-shell:not(.visual-theme-high-contrast) {
-  --lab-ink: #1d1723;
-  --lab-panel: #fffcf5;
-  --lab-line: #1d1723;
-  --lab-muted: #665c70;
-  background-color: #f7f0df;
-  background-image: linear-gradient(rgba(29, 23, 35, 0.075) 1px, transparent 1px), linear-gradient(90deg, rgba(29, 23, 35, 0.075) 1px, transparent 1px);
-  background-size: 28px 28px;
-  color: #1d1723;
+  --lab-ink: #172033;
+  --lab-panel: #ffffff;
+  --lab-line: #d7e0ee;
+  --lab-muted: #62748a;
+  background-color: #f4f7fb;
+  background-image: radial-gradient(circle at 8% 0%, rgba(219, 234, 254, 0.72), transparent 30%), radial-gradient(circle at 94% 9%, rgba(224, 242, 254, 0.76), transparent 26%);
+  color: #172033;
 }
 
-.lab-shell:not(.visual-theme-high-contrast) header {
-  background: rgba(255, 252, 245, 0.94) !important;
-  border-color: #1d1723 !important;
-  box-shadow: 0 4px 0 #1d1723 !important;
-}
-
+.lab-shell:not(.visual-theme-high-contrast) header { background: rgba(255, 255, 255, 0.88) !important; border-color: #d7e0ee !important; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.04) !important; }
 .reference-product-header { isolation: isolate; }
-.reference-brand-mark {
-  border: 2px solid #1d1723;
-  background: #beff4d !important;
-  box-shadow: 3px 3px 0 #1d1723 !important;
-}
-.reference-brand-lockup > p:first-child { color: #1d1723 !important; font-family: "Space Grotesk", "Manrope", sans-serif; letter-spacing: -0.04em; }
-.reference-brand-lockup > p:last-child { color: #5b31d6 !important; font-weight: 800; }
-.reference-nav { border: 2px solid #1d1723 !important; background: #fffdf7 !important; box-shadow: 3px 3px 0 #1d1723; }
-.lab-shell:not(.visual-theme-high-contrast) .lab-tab { color: #51475c; }
-.lab-shell:not(.visual-theme-high-contrast) .lab-tab:hover { color: #1d1723; background: #f4ebff; }
-.lab-shell:not(.visual-theme-high-contrast) .lab-tab[data-active="true"] { border-color: #1d1723; background: #5b31d6; color: #fff; }
+.reference-brand-mark { border: 1px solid #1d4ed8; background: #2563eb !important; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.20) !important; }
+.reference-brand-lockup > p:first-child { color: #172033 !important; font-family: "Space Grotesk", "Manrope", sans-serif; letter-spacing: -0.04em; }
+.reference-brand-lockup > p:last-child { color: #2563eb !important; font-weight: 800; }
+.reference-nav { border: 1px solid #d7e0ee !important; background: rgba(255, 255, 255, 0.92) !important; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05); }
+.lab-shell:not(.visual-theme-high-contrast) .lab-tab { color: #62748a; }
+.lab-shell:not(.visual-theme-high-contrast) .lab-tab:hover { color: #172033; background: #eff6ff; }
+.lab-shell:not(.visual-theme-high-contrast) .lab-tab[data-active="true"] { border-color: #bfdbfe; background: #eaf2ff; color: #1d4ed8; }
 
 .reference-hero { position: relative; padding: 1rem 0 2rem; }
-.reference-hero::after {
-  content: "";
-  position: absolute;
-  right: 4%;
-  top: 1.7rem;
-  z-index: -1;
-  width: 6.75rem;
-  height: 6.75rem;
-  border: 2px solid #1d1723;
-  background: #ff9cc8;
-  box-shadow: 8px 8px 0 #1d1723;
-  transform: rotate(7deg);
-}
-.reference-hero-heading { color: #1d1723 !important; font-family: "Space Grotesk", "Manrope", sans-serif; }
-.reference-hero-heading span { background-image: linear-gradient(100deg, #5b31d6, #9b2cff) !important; }
-.reference-hero p { color: #51475c !important; }
-.reference-hero [data-slot="badge"] { border: 2px solid #1d1723 !important; background: #beff4d !important; color: #1d1723 !important; box-shadow: 3px 3px 0 #1d1723; }
-.reference-path-note { border: 2px solid #1d1723 !important; background: #d4ff78 !important; box-shadow: 8px 8px 0 #1d1723 !important; }
-.reference-path-note * { color: #1d1723 !important; }
-.reference-path-note [class*="border-"] { border-color: rgba(29, 23, 35, 0.32) !important; }
+.reference-hero::after { content: ""; position: absolute; right: 4%; top: 1.7rem; z-index: -1; width: 7rem; height: 7rem; border: 1px solid #bfdbfe; border-radius: 999px; background: radial-gradient(circle at 32% 28%, #e0f2fe, #dbeafe); box-shadow: 0 20px 40px rgba(37, 99, 235, 0.10); }
+.reference-hero-heading { color: #172033 !important; font-family: "Space Grotesk", "Manrope", sans-serif; }
+.reference-hero-heading span { background-image: linear-gradient(100deg, #1d4ed8, #0284c7) !important; }
+.reference-hero p { color: #62748a !important; }
+.reference-hero [data-slot="badge"] { border: 1px solid #bfdbfe !important; background: #eff6ff !important; color: #1d4ed8 !important; box-shadow: none; }
+.reference-path-note { border: 1px solid #bfdbfe !important; background: #f8fbff !important; box-shadow: 0 12px 28px rgba(37, 99, 235, 0.08) !important; }
+.reference-path-note * { color: #172033 !important; }
+.reference-path-note [class*="border-"] { border-color: #d7e0ee !important; }
 
-.lab-shell:not(.visual-theme-high-contrast) .lab-surface {
-  border: 2px solid #1d1723;
-  background: #fffcf5;
-  box-shadow: 6px 6px 0 #1d1723;
-}
-.lab-shell:not(.visual-theme-high-contrast) .lab-kicker { color: #5b31d6; }
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card,
-.lab-shell:not(.visual-theme-high-contrast) .reference-learning-deck { background: #fffdf7; }
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card textarea,
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card input,
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card select {
-  border: 2px solid #1d1723 !important;
-  background: #211a29 !important;
-  color: #fff !important;
-  box-shadow: inset 0 0 0 2px rgba(190, 255, 77, 0.16);
-}
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card textarea:focus,
-.lab-shell:not(.visual-theme-high-contrast) .code-input-card input:focus { box-shadow: 0 0 0 3px #beff4d, inset 0 0 0 2px rgba(190, 255, 77, 0.16) !important; }
-.lab-shell:not(.visual-theme-high-contrast) .code-path-card { border: 2px solid #1d1723; background: #f4ebff; box-shadow: 6px 6px 0 #1d1723; }
-.lab-shell:not(.visual-theme-high-contrast) .story-launch-pad { border: 2px solid #1d1723 !important; background: #ffe077 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .create-story-button,
-.lab-shell:not(.visual-theme-high-contrast) .reference-product-header [class*="from-indigo-400"] { background: #5b31d6 !important; color: #fff !important; border: 2px solid #1d1723 !important; box-shadow: 4px 4px 0 #1d1723 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .lab-surface { border: 1px solid #d7e0ee; background: #ffffff; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07); }
+.lab-shell:not(.visual-theme-high-contrast) .lab-kicker { color: #2563eb; }
+.lab-shell:not(.visual-theme-high-contrast) .code-input-card, .lab-shell:not(.visual-theme-high-contrast) .reference-learning-deck { background: #ffffff; }
+.lab-shell:not(.visual-theme-high-contrast) .code-input-card textarea, .lab-shell:not(.visual-theme-high-contrast) .code-input-card input, .lab-shell:not(.visual-theme-high-contrast) .code-input-card select { border: 1px solid #cbd5e1 !important; background: #0f172a !important; color: #f8fafc !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+.lab-shell:not(.visual-theme-high-contrast) .code-input-card textarea:focus, .lab-shell:not(.visual-theme-high-contrast) .code-input-card input:focus { border-color: #60a5fa !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+.lab-shell:not(.visual-theme-high-contrast) .code-path-card { border: 1px solid #d7e0ee; background: #f8fbff; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06); }
+.lab-shell:not(.visual-theme-high-contrast) .story-launch-pad { border: 1px solid #bfdbfe !important; background: #eff6ff !important; }
+.lab-shell:not(.visual-theme-high-contrast) .create-story-button, .lab-shell:not(.visual-theme-high-contrast) .reference-product-header [class*="from-indigo-400"] { border: 1px solid #1d4ed8 !important; background: #2563eb !important; color: #ffffff !important; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22) !important; }
 
-.lab-shell:not(.visual-theme-high-contrast) .studio-learning-frame::before { background: #ff9cc8; filter: none; border: 2px solid #1d1723; border-radius: 1rem; transform: rotate(-6deg); }
-.lab-shell:not(.visual-theme-high-contrast) .studio-learning-frame::after { background: #beff4d; filter: none; border: 2px solid #1d1723; border-radius: 1rem; transform: rotate(9deg); }
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck { border: 2px solid #1d1723; background: #fff5ca; box-shadow: 8px 8px 0 #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck::before { background: linear-gradient(112deg, rgba(255,255,255,0.5), transparent 34%); }
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck h1,
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck p { color: #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button) { border: 2px solid #1d1723 !important; background: #fffdf7 !important; color: #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button):hover { background: #f4ebff !important; }
-.lab-shell:not(.visual-theme-high-contrast) .learning-score-card { border: 2px solid #1d1723; background: #beff4d; box-shadow: 3px 3px 0 #1d1723; }
-.lab-shell:not(.visual-theme-high-contrast) .learning-score-card * { color: #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .story-progress { border-color: rgba(29, 23, 35, 0.28); }
+.lab-shell:not(.visual-theme-high-contrast) .studio-learning-frame::before { background: rgba(191, 219, 254, 0.42); border: 0; border-radius: 999px; filter: blur(24px); transform: none; }
+.lab-shell:not(.visual-theme-high-contrast) .studio-learning-frame::after { background: rgba(186, 230, 253, 0.36); border: 0; border-radius: 999px; filter: blur(24px); transform: none; }
+.lab-shell:not(.visual-theme-high-contrast) .story-command-deck { border: 1px solid #d7e0ee; background: #ffffff; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08) !important; }
+.lab-shell:not(.visual-theme-high-contrast) .story-command-deck::before { background: linear-gradient(112deg, rgba(255,255,255,0.78), transparent 34%); }
+.lab-shell:not(.visual-theme-high-contrast) .story-command-deck h1, .lab-shell:not(.visual-theme-high-contrast) .story-command-deck p { color: #172033 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button) { border: 1px solid #d7e0ee !important; background: #ffffff !important; color: #334155 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button):hover { border-color: #93c5fd !important; background: #eff6ff !important; color: #1d4ed8 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .learning-score-card { border: 1px solid #a7f3d0; background: #ecfdf5; box-shadow: 0 8px 20px rgba(15, 118, 110, 0.08); }
+.lab-shell:not(.visual-theme-high-contrast) .learning-score-card * { color: #0f4c44 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .story-progress { border-color: #d7e0ee; }
 
-.lab-shell:not(.visual-theme-high-contrast) .story-stage,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel,
-.lab-shell:not(.visual-theme-high-contrast) .cinematic-details {
-  border-color: #1d1723 !important;
-  background: #fffdf7 !important;
-  box-shadow: 6px 6px 0 #1d1723;
-}
-.lab-shell:not(.visual-theme-high-contrast) .story-stage *,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel *,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel * { border-color: rgba(29, 23, 35, 0.25); }
-.lab-shell:not(.visual-theme-high-contrast) .story-stage h1,
-.lab-shell:not(.visual-theme-high-contrast) .story-stage h2,
-.lab-shell:not(.visual-theme-high-contrast) .story-stage h3,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h1,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h2,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h3,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel h2,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel strong { color: #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .story-stage p,
-.lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel p,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel p,
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-panel span { color: #51475c !important; }
-.lab-shell:not(.visual-theme-high-contrast) .execution-state-card,
-.lab-shell:not(.visual-theme-high-contrast) .story-scene-brief { background: #f4ebff !important; border: 2px solid #1d1723 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .cinematic-details > summary { color: #1d1723 !important; }
-
-.lab-shell:not(.visual-theme-high-contrast) .city-comparison-panel,
-.lab-shell:not(.visual-theme-high-contrast) [data-custom-city-editor] { border: 2px solid #1d1723 !important; background: #fffdf7 !important; box-shadow: 6px 6px 0 #1d1723; }
+.lab-shell:not(.visual-theme-high-contrast) .story-stage, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel, .lab-shell:not(.visual-theme-high-contrast) .cinematic-details { border-color: #d7e0ee !important; background: #ffffff !important; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06); }
+.lab-shell:not(.visual-theme-high-contrast) .story-stage *, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel *, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel * { border-color: #d7e0ee; }
+.lab-shell:not(.visual-theme-high-contrast) .story-stage h1, .lab-shell:not(.visual-theme-high-contrast) .story-stage h2, .lab-shell:not(.visual-theme-high-contrast) .story-stage h3, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h1, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h2, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel h3, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel h2, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel strong { color: #172033 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .story-stage p, .lab-shell:not(.visual-theme-high-contrast) .story-explanation-panel p, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel p, .lab-shell:not(.visual-theme-high-contrast) .execution-state-panel span { color: #62748a !important; }
+.lab-shell:not(.visual-theme-high-contrast) .execution-state-card, .lab-shell:not(.visual-theme-high-contrast) .story-scene-brief { background: #f8fbff !important; border: 1px solid #d7e0ee !important; }
+.lab-shell:not(.visual-theme-high-contrast) .cinematic-details > summary { color: #172033 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .city-comparison-panel, .lab-shell:not(.visual-theme-high-contrast) [data-custom-city-editor] { border: 1px solid #d7e0ee !important; background: #ffffff !important; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06); }
 
 @media (max-width: 768px) {
-  .reference-hero::after { right: 0; top: 0; width: 4.5rem; height: 4.5rem; box-shadow: 5px 5px 0 #1d1723; }
+  .reference-hero::after { right: 0; top: 0; width: 4.5rem; height: 4.5rem; box-shadow: 0 14px 28px rgba(37, 99, 235, 0.10); }
   .lab-shell:not(.visual-theme-high-contrast) .lab-surface,
   .lab-shell:not(.visual-theme-high-contrast) .story-command-deck,
-  .lab-shell:not(.visual-theme-high-contrast) .city-comparison-panel { box-shadow: 4px 4px 0 #1d1723 !important; }
+  .lab-shell:not(.visual-theme-high-contrast) .city-comparison-panel { box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08) !important; }
 }
 
 .landing-mode-code [data-algorithm-only],
@@ -542,9 +482,9 @@
 
 /* Keep the generated-scene and explanation pair intentionally dark inside the paper workspace. */
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage {
-  border-color: rgba(34, 211, 238, 0.42) !important;
-  background: radial-gradient(circle at 74% 4%, rgba(45, 212, 191, 0.17), transparent 28%), radial-gradient(circle at 10% 3%, rgba(129, 140, 248, 0.22), transparent 28%), linear-gradient(150deg, #0b1d31 0%, #06101f 58%, #090b1b 100%) !important;
-  box-shadow: 0 30px 74px rgba(3, 11, 25, 0.46), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+  border-color: #1e3a8a !important;
+  background: radial-gradient(circle at 74% 4%, rgba(14, 165, 233, 0.16), transparent 28%), radial-gradient(circle at 10% 3%, rgba(37, 99, 235, 0.19), transparent 28%), linear-gradient(150deg, #111c31 0%, #091323 58%, #0a1020 100%) !important;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.24), inset 0 1px 0 rgba(255,255,255,0.12) !important;
 }
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage h1,
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage h2,
@@ -552,21 +492,21 @@
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage strong { color: #f4fbff !important; }
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage > p { color: #c8deed !important; }
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .primary-cinematic-scene,
-.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .primary-cinematic-scene .cinematic-panel { border-color: rgba(103, 232, 249, 0.35) !important; background: #020916 !important; box-shadow: none !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .primary-cinematic-scene .cinematic-panel { border-color: rgba(96, 165, 250, 0.42) !important; background: #07111f !important; box-shadow: none !important; }
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .visual-first-intro,
-.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .interactive-state-map { border-color: rgba(165, 180, 252, 0.30) !important; background: rgba(5, 15, 30, 0.68) !important; }
-.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .visual-first-intro p { color: #67e8f9 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .interactive-state-map { border-color: rgba(147, 197, 253, 0.30) !important; background: rgba(7, 17, 31, 0.70) !important; }
+.lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .visual-first-intro p { color: #7dd3fc !important; }
 .lab-shell:not(.visual-theme-high-contrast) .primary-visual-stage .interactive-state-map > summary { color: #e0e7ff !important; }
 .lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel {
-  border-color: rgba(251, 191, 36, 0.34) !important;
-  background: radial-gradient(circle at 95% 2%, rgba(251, 191, 36, 0.12), transparent 34%), linear-gradient(155deg, #21150d, #110c0a 68%) !important;
-  box-shadow: 0 28px 64px rgba(35, 20, 6, 0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+  border-color: #bfdbfe !important;
+  background: radial-gradient(circle at 95% 2%, rgba(191, 219, 254, 0.60), transparent 34%), linear-gradient(155deg, #ffffff, #f4f9ff 68%) !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.88) !important;
 }
 .lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h1,
 .lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h2,
-.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h3 { color: #fffdf5 !important; }
-.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card { border-color: rgba(251, 191, 36, 0.34) !important; background: linear-gradient(140deg, rgba(120, 53, 15, 0.42), rgba(28, 16, 8, 0.96)) !important; }
-.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card p:last-child { color: #fff8e7 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel h3 { color: #172033 !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card { border-color: #bfdbfe !important; background: #eff6ff !important; }
+.lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card p:last-child { color: #172033 !important; }
 
 @layer components {
   /**

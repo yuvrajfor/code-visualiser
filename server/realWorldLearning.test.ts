@@ -560,4 +560,14 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".execution-state-enter");
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
+
+  it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
+    expect(styleSource).toContain("Modern blue-slate product palette");
+    expect(styleSource).toContain("background-color: #f4f7fb");
+    expect(styleSource).toContain("background: #eff6ff");
+    expect(styleSource).toContain(".visual-theme-high-contrast");
+    expect(styleSource).not.toContain("#beff4d");
+    expect(styleSource).not.toContain("#ff9cc8");
+    expect(styleSource).not.toContain("#fff5ca");
+  });
 });

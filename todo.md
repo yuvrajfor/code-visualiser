@@ -187,3 +187,7 @@
 - [x] Show a friendly learner notice while retaining the interactive 3D cinematic scene when an AI visual cannot be created.
 - [x] Add quota-exhaustion regression coverage and verify the repaired generation workflow on phone and desktop.
 - [x] Save a checkpoint for the graceful AI-visual capacity fallback.
+- [x] Audit the current paper-and-ink colour tokens and identify the visual surfaces causing the interface to feel unsatisfactory.
+- [x] Replace the current warm, mixed palette with a cohesive modern colour system across navigation, workspace, controls, and learning surfaces.
+- [x] Preserve high-contrast accessibility and verify readable text, focus states, and responsive colour treatment.
+- [x] Add regression coverage, run visual validation, and save a checkpoint for the colour-system redesign.
