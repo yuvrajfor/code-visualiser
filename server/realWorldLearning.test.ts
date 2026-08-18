@@ -581,17 +581,41 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
-  it("keeps a persistent light-and-dark appearance switch separate from the learner visual world", () => {
+  it("keeps a persistent System–Light–Dark appearance choice separate from the learner visual world", () => {
     expect(appSource).toContain("switchable");
-    expect(homeSource).toContain("const { theme, toggleTheme } = useTheme()");
+    expect(homeSource).toContain("const { theme, preference, setPreference } = useTheme()");
     expect(homeSource).toContain("data-appearance={theme}");
     expect(homeSource).toContain("data-appearance-toggle");
-    expect(homeSource).toContain("Switch to ${theme === \"light\" ? \"dark\" : \"light\"} appearance");
+    expect(homeSource).toContain('value="system"');
+    expect(homeSource).toContain('value="light"');
+    expect(homeSource).toContain('value="dark"');
+    expect(homeSource).toContain("System follows your device");
     expect(styleSource).toContain("Appearance system: visual worlds describe the learning analogy");
     expect(styleSource).toContain("html.dark .lab-shell:not(.visual-theme-high-contrast)");
     expect(styleSource).toContain("--appearance-page: #070b17");
     expect(styleSource).toContain("html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast)");
     expect(styleSource).toContain(".appearance-toggle:focus-visible");
+  });
+
+  it("follows operating-system changes only when the learner selects System", () => {
+    const themeContextSource = readFileSync(new URL("../client/src/contexts/ThemeContext.tsx", import.meta.url), "utf8");
+
+    expect(themeContextSource).toContain('export type ThemePreference = Theme | "system"');
+    expect(themeContextSource).toContain('const SYSTEM_MEDIA_QUERY = "(prefers-color-scheme: dark)"');
+    expect(themeContextSource).toContain('return "system"');
+    expect(themeContextSource).toContain('preference !== "system"');
+    expect(themeContextSource).toContain('mediaQuery.addEventListener?.("change", handleSystemChange)');
+    expect(themeContextSource).toContain('localStorage.setItem("appearance-preference", preference)');
+  });
+
+  it("uses one continuous framed canvas behind visual worlds without weakening high contrast", () => {
+    expect(styleSource).toContain("One continuous application frame");
+    expect(styleSource).toContain("--frame-base");
+    expect(styleSource).toContain("--frame-edge");
+    expect(styleSource).toContain("--world-accent");
+    expect(styleSource).toContain("Mandala remains a living learning-world");
+    expect(styleSource).toContain("@keyframes mandala-frame-drift");
+    expect(styleSource).toContain(".visual-theme-high-contrast");
   });
 
   it("keeps the mandala theme colourful, living, and safe to pause for reduced motion", () => {

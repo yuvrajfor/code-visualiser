@@ -243,3 +243,9 @@
 - [x] Refine spacing, responsive hierarchy, focus states, and interaction feedback throughout the website.
 - [x] Add regression coverage and validate the full learner flow in both light and dark modes on phone and desktop.
 - [x] Save a checkpoint for the full-site light-and-dark interface improvement.
+- [x] Research current system-aware appearance preferences and cohesive product-background patterns.
+- [x] Audit the current theme provider, persistence rules, and multi-layered background composition.
+- [x] Add an explicit System appearance preference that follows live OS light-and-dark changes while preserving manual choices.
+- [x] Refine the site background into one cohesive framed composition across Code Studio, Algorithm Lab, and learner states.
+- [x] Add regression coverage and validate System, Light, and Dark modes on desktop and mobile.
+- [x] Save a checkpoint for the system-aware appearance and unified background refinement.

@@ -1294,6 +1294,17 @@
 .appearance-toggle:active { transform: scale(0.97); }
 .appearance-toggle:focus-visible { outline: 3px solid color-mix(in srgb, var(--appearance-focus) 58%, transparent); outline-offset: 3px; }
 
+[data-appearance-menu] {
+  border-color: var(--appearance-line) !important;
+  background: var(--appearance-panel) !important;
+  color: var(--appearance-ink) !important;
+  box-shadow: 0 18px 40px var(--appearance-shadow) !important;
+}
+.appearance-menu-label { color: var(--appearance-ink) !important; }
+.appearance-menu-copy { color: var(--appearance-muted) !important; }
+.appearance-menu-item { color: var(--appearance-ink) !important; }
+.appearance-menu-item:focus { background: var(--appearance-panel-soft) !important; color: var(--appearance-focus) !important; }
+
 html.dark .lab-shell:not(.visual-theme-high-contrast) {
   --lab-ink: #070b17;
   --lab-panel: #111a2d;
@@ -1408,4 +1419,54 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card [data-cod
 
 @media (prefers-reduced-motion: reduce) {
   .appearance-toggle { transition: none; }
+}
+
+/* One continuous application frame. Theme worlds add only a quiet accent layer
+   while this shared canvas provides the outer edge, depth, and reading calm. */
+.lab-shell:not(.visual-theme-high-contrast) {
+  --frame-base: linear-gradient(145deg, #f8f5ed 0%, #f4f3fb 52%, #edf8f2 100%);
+  --frame-edge: linear-gradient(135deg, rgba(124, 58, 237, 0.13) 0%, transparent 15%, transparent 84%, rgba(5, 150, 105, 0.11) 100%);
+  --frame-glow: radial-gradient(900px 420px at 50% -8%, rgba(255, 255, 255, 0.82), transparent 69%);
+  --world-accent: none;
+  background-color: #f8f5ed !important;
+  background-image: var(--world-accent), var(--frame-glow), var(--frame-edge), var(--frame-base) !important;
+  background-attachment: fixed, fixed, fixed, fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: inset 0 0 0 1px rgba(117, 80, 42, 0.11), inset 0 0 110px rgba(96, 55, 22, 0.05);
+}
+
+.lab-shell.visual-theme-kitchen:not(.visual-theme-high-contrast) { --world-accent: radial-gradient(620px 340px at 8% 6%, rgba(245, 158, 11, 0.15), transparent 74%); }
+.lab-shell.visual-theme-office:not(.visual-theme-high-contrast) { --world-accent: radial-gradient(620px 340px at 8% 6%, rgba(56, 189, 248, 0.16), transparent 74%); }
+.lab-shell.visual-theme-game:not(.visual-theme-high-contrast) { --world-accent: radial-gradient(620px 340px at 8% 6%, rgba(192, 132, 252, 0.17), transparent 74%); }
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) {
+  --frame-base: linear-gradient(145deg, #0b1120 0%, #090f1e 52%, #07141a 100%);
+  --frame-edge: linear-gradient(135deg, rgba(129, 140, 248, 0.16) 0%, transparent 16%, transparent 84%, rgba(45, 212, 191, 0.12) 100%);
+  --frame-glow: radial-gradient(900px 420px at 50% -8%, rgba(71, 85, 175, 0.24), transparent 69%);
+  background-color: #070b17 !important;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.16), inset 0 0 120px rgba(0, 0, 0, 0.24);
+}
+
+/* Mandala remains a living learning-world, composed inside the same frame rather
+   than introducing a second page-sized backdrop. */
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  --world-accent:
+    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.15) 0 2%, transparent 2.25% 5.5%, rgba(124, 58, 237, 0.09) 5.7% 6.2%, transparent 6.4% 10.5%),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(190, 24, 93, 0.065) 0deg 6deg, transparent 6deg 12deg),
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(14, 116, 144, 0.065) 18.2% 18.7%, transparent 19% 30%, rgba(5, 150, 105, 0.05) 30.2% 30.7%, transparent 31% 100%);
+  background-image: var(--world-accent), var(--frame-glow), var(--frame-edge), var(--frame-base) !important;
+  background-position: 50% -11rem, 50% -11rem, 50% -11rem, 50% -11rem, 50% -11rem, 50% -11rem, 0 0, 0 0, 0 0;
+  background-size: 32rem 32rem, 38rem 38rem, 46rem 46rem, cover, cover, cover, cover, cover, cover;
+  animation: mandala-frame-drift 28s linear infinite alternate;
+}
+
+@keyframes mandala-frame-drift {
+  0% { background-position: 46% -12rem, 54% -12rem, 50% -10rem, 50% -11rem, 50% -11rem, 50% -11rem, 0 0, 0 0, 0 0; }
+  50% { background-position: 54% -9rem, 46% -14rem, 52% -12rem, 50% -11rem, 50% -11rem, 50% -11rem, 0 0, 0 0, 0 0; }
+  100% { background-position: 49% -14rem, 52% -9rem, 47% -8rem, 50% -11rem, 50% -11rem, 50% -11rem, 0 0, 0 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { animation: none; }
 }

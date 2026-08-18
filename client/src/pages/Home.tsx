@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Coffee,
   Code2,
+  ChevronDown,
   CornerDownLeft,
   CornerDownRight,
   Download,
@@ -49,9 +50,11 @@ import {
   Wrench,
   X,
   Moon,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +69,7 @@ import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspace
 import { defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, onboardingSteps, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach, type OnboardingWorkspace, type OnboardingStatus, type SharedGraphScenario } from "@/lib/learningFlow";
 import { createCityMapExportData, getCityMapExportFileBase } from "@/lib/cityMapExports";
 import { getStoryLearningScore } from "@/lib/learningScore";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme, type ThemePreference } from "@/contexts/ThemeContext";
 
 type Language = "javascript" | "python" | "c" | "java";
 
@@ -870,7 +873,7 @@ function CinematicScenePanel({ scene, status, depthEnabled, motionEnabled, isFoc
 }
 
 export default function Home() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, preference, setPreference } = useTheme();
   const saveSubmission = trpc.submissions.save.useMutation({
     onSuccess: () => toast.success("Your code session has been saved."),
     onError: () => toast.error("Your visual still works, but this session could not be saved."),
@@ -1453,10 +1456,25 @@ export default function Home() {
             <button type="button" data-active={landingWorkspace === "algorithms" || activeView === "comparison"} onClick={() => openLearningWorkspace("algorithms")} className="lab-tab rounded-lg px-3 py-2 text-xs font-bold">Algorithm lab</button>
           </nav>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleTheme} data-appearance-toggle className="appearance-toggle h-10 shrink-0 rounded-xl px-3 text-xs font-extrabold" aria-label={`Switch to ${theme === "light" ? "dark" : "light"} appearance`} title={`Switch to ${theme === "light" ? "dark" : "light"} appearance`}>
-              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              <span className="hidden sm:inline">{theme === "light" ? "Dark" : "Light"}</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" data-appearance-toggle className="appearance-toggle h-10 shrink-0 rounded-xl px-3 text-xs font-extrabold" aria-label={`Appearance: ${preference === "system" ? `System, currently ${theme}` : preference}. Choose System, Light, or Dark.`} title="Choose System, Light, or Dark appearance">
+                  {preference === "system" ? <Monitor className="h-4 w-4" /> : theme === "light" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{preference === "system" ? "System" : theme === "light" ? "Light" : "Dark"}</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent data-appearance-menu align="end" className="appearance-menu min-w-48 rounded-xl p-1.5">
+                <DropdownMenuLabel className="appearance-menu-label text-xs font-extrabold">Appearance</DropdownMenuLabel>
+                <p className="appearance-menu-copy px-2 pb-2 text-[11px] leading-4">System follows your device. Light and Dark stay as your personal choice.</p>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={preference} onValueChange={(value) => setPreference(value as ThemePreference)}>
+                  <DropdownMenuRadioItem value="system" className="appearance-menu-item rounded-lg"><Monitor className="h-4 w-4" />System <span className="ml-auto text-[10px] font-bold opacity-65">Now {theme}</span></DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="light" className="appearance-menu-item rounded-lg"><Sun className="h-4 w-4" />Light</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="dark" className="appearance-menu-item rounded-lg"><Moon className="h-4 w-4" />Dark</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {activeView === "studio" && <><Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button></>}
             {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace("code"); }} aria-label="Back to workspace" title="Back to workspace" className="shrink-0 rounded-xl border-white/10 bg-white/5 px-3 text-xs text-white hover:bg-white/10 sm:px-4"><span className="sm:hidden">Back</span><span className="hidden sm:inline">Back to workspace</span></Button> : landingWorkspace === "overview" ? <Button onClick={() => openLearningWorkspace("code")} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button> : null}
           </div>
