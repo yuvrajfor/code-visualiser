@@ -1146,3 +1146,124 @@
 .visual-theme-high-contrast .simple-state-tools button, .visual-theme-high-contrast .simple-array-panel, .visual-theme-high-contrast .simple-variable-panel, .visual-theme-high-contrast .simple-array-cell { border-color: #fff !important; background: #000 !important; color: #fff !important; }
 .visual-theme-high-contrast .simple-state-tools > span, .visual-theme-high-contrast .simple-state-section-heading > span, .visual-theme-high-contrast .simple-state-section-heading small, .visual-theme-high-contrast .simple-array-cell small, .visual-theme-high-contrast .simple-variable-panel th, .visual-theme-high-contrast .simple-variable-panel td, .visual-theme-high-contrast .simple-state-empty, .visual-theme-high-contrast .simple-pointer { color: #ffe600 !important; }
 @media (max-width: 760px) { .simple-state-details { grid-template-columns: 1fr; } .simple-array-cells { grid-template-columns: repeat(4, minmax(0, 1fr)); } .simple-state-tools { align-items: flex-end; flex-direction: column; gap: 0.25rem; } }
+
+/* Colourful mandala contrast repair: every learning surface has a dark foreground. */
+.visual-theme-mandala .simple-story-page .simple-code-panel,
+.visual-theme-mandala .simple-story-page .simple-visual-panel,
+.visual-theme-mandala .simple-story-page .simple-explanation-panel {
+  border-color: #c0843d !important;
+  background: #fffdf8 !important;
+  box-shadow: 0 12px 26px rgba(88, 28, 135, 0.10) !important;
+}
+
+.visual-theme-mandala .simple-story-page .simple-panel-label,
+.visual-theme-mandala .simple-story-page .simple-explanation-entry-meta,
+.visual-theme-mandala .simple-story-page .simple-state-section-heading > span {
+  color: #9a3412 !important;
+}
+
+.visual-theme-mandala .simple-story-page :is(h1, h2, h3, h4, strong, code),
+.visual-theme-mandala .simple-story-page .execution-source-card code,
+.visual-theme-mandala .simple-story-page .simple-2d-context code,
+.visual-theme-mandala .simple-story-page .simple-variable-panel tbody th {
+  color: #172033 !important;
+}
+
+.visual-theme-mandala .simple-story-page :is(p, span, small, td),
+.visual-theme-mandala .simple-story-page .simple-2d-caption,
+.visual-theme-mandala .simple-story-page .simple-state-empty {
+  color: #334155 !important;
+}
+
+.visual-theme-mandala .simple-story-page .execution-source-card,
+.visual-theme-mandala .simple-story-page .simple-explanation-copy,
+.visual-theme-mandala .simple-story-page .simple-array-panel,
+.visual-theme-mandala .simple-story-page .simple-variable-panel {
+  border-color: #d7b46a !important;
+  background: #fffaf0 !important;
+}
+
+.visual-theme-mandala .simple-story-page .simple-explanation-copy.is-current {
+  border-color: #7c3aed !important;
+  background: #f7f0ff !important;
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.16) !important;
+}
+
+.visual-theme-mandala .simple-story-page .simple-2d-subject {
+  border-color: #2563eb !important;
+  background: #eaf2ff !important;
+}
+.visual-theme-mandala .simple-story-page .simple-2d-subject strong { color: #1e3a8a !important; }
+.visual-theme-mandala .simple-story-page .simple-2d-action {
+  border-color: #b45309 !important;
+  background: #fff2d8 !important;
+}
+.visual-theme-mandala .simple-story-page .simple-2d-action strong { color: #78350f !important; }
+.visual-theme-mandala .simple-story-page .simple-2d-result {
+  border-color: #047857 !important;
+  background: #e8faf1 !important;
+}
+.visual-theme-mandala .simple-story-page .simple-2d-result strong { color: #065f46 !important; }
+.visual-theme-mandala .simple-story-page .simple-2d-node-label { color: #475569 !important; }
+.visual-theme-mandala .simple-story-page .simple-2d-arrow { color: #7c3aed !important; }
+
+.visual-theme-mandala .simple-story-page .simple-array-cell {
+  border-color: #7c3aed !important;
+  background: #f4efff !important;
+}
+.visual-theme-mandala .simple-story-page .simple-array-cell strong { color: #4c1d95 !important; }
+.visual-theme-mandala .simple-story-page .simple-pointer,
+.visual-theme-mandala .simple-story-page .simple-state-tools > span { color: #9f1239 !important; }
+.visual-theme-mandala .simple-story-page .simple-state-tools button {
+  border-color: #7c3aed !important;
+  background: #ffffff !important;
+  color: #4c1d95 !important;
+}
+.visual-theme-mandala .simple-story-page .simple-state-tools button:hover:not(:disabled) {
+  background: #f4efff !important;
+  color: #3b0764 !important;
+}
+.visual-theme-mandala .simple-story-page .simple-state-tools button:focus-visible,
+.visual-theme-mandala .simple-story-page button:focus-visible {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px;
+}
+
+/* Living mandala backdrop: active behind the work, never on top of it. */
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  background-color: #f8f5ed;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.15) 0 2%, transparent 2.25% 5.5%, rgba(124, 58, 237, 0.09) 5.7% 6.2%, transparent 6.4% 10.5%),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(190, 24, 93, 0.065) 0deg 6deg, transparent 6deg 12deg),
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(14, 116, 144, 0.065) 18.2% 18.7%, transparent 19% 30%, rgba(5, 150, 105, 0.05) 30.2% 30.7%, transparent 31% 100%),
+    linear-gradient(140deg, #fff8e8 0%, #f7f0ff 48%, #edfff5 100%);
+  background-position: 50% -11rem, 50% -11rem, 50% -11rem, 0 0;
+  background-size: 32rem 32rem, 38rem 38rem, 46rem 46rem, 100% 100%;
+  animation: mandala-drift 28s linear infinite alternate;
+  will-change: background-position;
+}
+
+@keyframes mandala-drift {
+  0% {
+    background-position: 46% -12rem, 54% -12rem, 50% -10rem, 0 0;
+  }
+  50% {
+    background-position: 54% -9rem, 46% -14rem, 52% -12rem, 0 50%;
+  }
+  100% {
+    background-position: 49% -14rem, 52% -9rem, 47% -8rem, 0 100%;
+  }
+}
+
+.visual-theme-mandala .simple-story-page .simple-visual-panel,
+.visual-theme-mandala .simple-story-page .simple-code-panel,
+.visual-theme-mandala .simple-story-page .simple-explanation-panel {
+  backdrop-filter: saturate(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+    animation: none;
+    background-position: 50% -11rem, 50% -11rem, 50% -11rem, 0 0;
+  }
+}

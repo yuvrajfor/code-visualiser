@@ -228,3 +228,12 @@
 - [x] Add a before-versus-after comparison toggle for direct state-change inspection.
 - [x] Add regression coverage and validate the themed enhanced visualizer on phone and desktop.
 - [x] Save a checkpoint for the mandala-art theme and 2D state-visualization enhancements.
+- [x] Audit all mandala-theme foreground, background, border, and diagram colours for unreadable combinations.
+- [x] Apply a colourful, high-contrast palette to text, controls, explanation cards, and 2D execution diagrams.
+- [x] Preserve the mandala motif and high-contrast accessibility option while ensuring every learner-facing word is visible.
+- [x] Add regression coverage and validate readable colours on phone and desktop.
+- [x] Save a checkpoint for the colourful contrast and readability repair.
+- [x] Add subtle animated mandala layers behind the interface so the theme feels alive without distracting from learning.
+- [x] Respect reduced-motion preferences and high-contrast mode by disabling or simplifying decorative background motion.
+- [x] Validate that the animated backdrop preserves readable text, controls, code, and 2D diagram state on phone and desktop.
+- [x] Save a checkpoint for the living mandala background and readable colourful interface.

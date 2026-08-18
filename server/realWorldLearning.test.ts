@@ -580,6 +580,15 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
+  it("keeps the mandala theme colourful, living, and safe to pause for reduced motion", () => {
+    expect(styleSource).toContain("Living mandala backdrop");
+    expect(styleSource).toContain(".lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast)");
+    expect(styleSource).toContain("background-color: #f8f5ed");
+    expect(styleSource).toContain("@keyframes mandala-drift");
+    expect(styleSource).toContain("animation: mandala-drift 28s linear infinite alternate");
+    expect(styleSource).toContain(".lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {\n    animation: none;");
+  });
+
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
     expect(styleSource).toContain("Modern blue-slate product palette");
     expect(styleSource).toContain("background-color: #f4f7fb");
