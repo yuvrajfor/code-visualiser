@@ -508,6 +508,43 @@
 .lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card { border-color: #bfdbfe !important; background: #eff6ff !important; }
 .lab-shell:not(.visual-theme-high-contrast) .direct-explanation-panel .direct-explanation-card p:last-child { color: #172033 !important; }
 
+/* Final execution workspace: an original source → scene → explanation learning flow. */
+.final-execution-workspace { align-items: start; }
+.execution-rail { position: sticky; top: 1rem; border: 1px solid #d7e0ee !important; background: #ffffff !important; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07) !important; }
+.execution-rail-header h2 { margin-top: 0.35rem; color: #172033; font-size: 0.98rem; font-weight: 850; letter-spacing: -0.025em; }
+.execution-rail-header > p:last-child { margin-top: 0.35rem; color: #62748a; font-size: 0.72rem; line-height: 1.15rem; }
+.execution-source-card { border: 1px solid #bfdbfe; border-radius: 0.9rem; background: linear-gradient(145deg, #eff6ff, #f8fbff); padding: 0.75rem; }
+.execution-source-card span, .execution-source-card strong { color: #1d4ed8; font-size: 0.60rem; font-weight: 850; letter-spacing: 0.10em; text-transform: uppercase; }
+.execution-source-card code { display: block; margin-top: 0.58rem; overflow-wrap: anywhere; color: #172033; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; font-weight: 650; line-height: 1.22rem; }
+.execution-rail .execution-state-panel { margin-top: 0.75rem; border-color: #d7e0ee !important; background: #f8fbff !important; box-shadow: none !important; }
+.execution-rail .execution-state-panel h2 { color: #172033 !important; }
+.execution-rail .execution-state-panel p, .execution-rail .execution-state-panel span { color: #62748a !important; }
+.execution-rail .execution-state-card { background: #ffffff !important; border-color: #d7e0ee !important; }
+.execution-rail .execution-state-card strong { color: #172033 !important; }
+.execution-rail-steps { border-top: 1px solid #e2e8f0; padding-top: 0.9rem; }
+.execution-rail-steps > div > p, .execution-rail-steps > div > span { color: #64748b; font-size: 0.60rem; font-weight: 850; letter-spacing: 0.12em; text-transform: uppercase; }
+.execution-rail-steps button { display: grid; width: 100%; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: 0.55rem; align-items: center; border: 1px solid transparent; border-radius: 0.7rem; background: transparent; padding: 0.5rem; text-align: left; transition: background 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.execution-rail-steps button:hover { border-color: #bfdbfe; background: #f8fbff; }
+.execution-rail-steps button.is-active { border-color: #93c5fd; background: #eff6ff; }
+.execution-rail-steps button > span { grid-row: span 2; display: grid; height: 1.5rem; width: 1.5rem; place-items: center; border-radius: 0.5rem; background: #e2e8f0; color: #334155; font-size: 0.62rem; font-weight: 850; }
+.execution-rail-steps button.is-active > span { background: #2563eb; color: #fff; }
+.execution-rail-steps button strong { overflow: hidden; color: #334155; font-size: 0.67rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.execution-rail-steps button small { overflow: hidden; color: #64748b; font-size: 0.60rem; text-overflow: ellipsis; white-space: nowrap; }
+.direct-explanation-panel .explanation-next-step { border-top: 1px solid #d7e0ee; padding-top: 1rem; }
+.direct-explanation-panel .explanation-next-step > p:last-child { margin-top: 0.35rem; color: #475569 !important; font-size: 0.76rem; line-height: 1.25rem; }
+.direct-explanation-panel [data-active-code-line] { border-color: #bfdbfe !important; background: #f8fbff !important; }
+.direct-explanation-panel [data-active-code-line] code { color: #172033 !important; }
+@media (max-width: 1279px) { .execution-rail { position: static; } .execution-rail-steps { display: none; } }
+@media (max-width: 640px) { .execution-rail .execution-state-grid { grid-template-columns: 1fr; } .execution-rail .execution-state-change { grid-column: auto; } }
+.visual-theme-high-contrast .execution-rail, .visual-theme-high-contrast .execution-rail .execution-state-panel, .visual-theme-high-contrast .execution-rail .execution-state-card, .visual-theme-high-contrast .execution-source-card { border-color: #fff !important; background: #000 !important; box-shadow: none !important; }
+.visual-theme-high-contrast .execution-rail-header h2, .visual-theme-high-contrast .execution-source-card code, .visual-theme-high-contrast .execution-rail .execution-state-card strong { color: #fff !important; }
+.visual-theme-high-contrast .execution-rail-header > p:last-child, .visual-theme-high-contrast .execution-rail .execution-state-panel p, .visual-theme-high-contrast .execution-rail .execution-state-panel span { color: #fff !important; }
+.visual-theme-high-contrast .execution-source-card span, .visual-theme-high-contrast .execution-source-card strong, .visual-theme-high-contrast .execution-rail-steps > div > p, .visual-theme-high-contrast .execution-rail-steps > div > span { color: #ffe600 !important; }
+.visual-theme-high-contrast .execution-rail-steps { border-color: #fff; }
+.visual-theme-high-contrast .execution-rail-steps button.is-active { border-color: #ffe600; background: #000; }
+.visual-theme-high-contrast .execution-rail-steps button > span { background: #fff; color: #000; }
+.visual-theme-high-contrast .execution-rail-steps button.is-active > span { background: #ffe600; color: #000; }
+
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.

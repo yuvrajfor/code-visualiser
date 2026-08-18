@@ -534,7 +534,9 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("From your code");
     expect(homeSource).toContain("What this means");
     expect(homeSource).toContain("Watch the visual first");
-    expect(homeSource).toContain("AI explanation · read second");
+    expect(homeSource).toContain("Step explanation");
+    expect(homeSource).toContain("data-execution-rail");
+    expect(homeSource).toContain("Active source line");
     expect(homeSource).toContain("Interactive state map");
     expect(homeSource).toContain("data-ai-visual-fallback");
     expect(homeSource).toContain("AI visuals are temporarily unavailable");
@@ -543,7 +545,7 @@ describe("state-first Code Studio workspace contract", () => {
   it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
     expect(homeSource).toContain("<SceneKindIcon kind={preset.kind}");
     expect(homeSource).toContain("<ThemeKindIcon theme={theme.id}");
-    expect(homeSource).toContain("<SceneKindIcon kind={step.story.kind}");
+    expect(homeSource).toContain("<SceneKindIcon kind={currentStep.story.kind}");
     expect(homeSource).not.toContain("{preset.icon}");
     expect(homeSource).not.toContain("{theme.icon}");
     expect(homeSource).not.toMatch(/[🛠📦🧠]/u);

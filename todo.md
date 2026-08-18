@@ -195,3 +195,14 @@
 - [x] Consolidate the requested Code Studio colour edits into valid, readable component styling.
 - [x] Run regression, type, build, and browser checks for the cleaned visual edits.
 - [x] Save a checkpoint for the validated visual-editor colour cleanup.
+- [x] Audit the full learner journey to identify the highest-impact causes of the unsatisfying final outcome.
+- [x] Establish one cohesive final design system for interface hierarchy, colour, typography, and learner controls.
+- [x] Improve the code-story visual stage so each step reads as a clear, purposeful real-world scene rather than decoration.
+- [x] Refine explanation presentation so beginners can scan the current action, reason, and result immediately.
+- [x] Add regression coverage and validate the complete final experience on phone and desktop.
+- [x] Save a final checkpoint for the comprehensive Code Story Studio polish.
+- [x] Study the supplied Python Tutor reference and document transferable execution-visualizer interaction principles.
+- [x] Redesign Code Studio’s main execution view around a source line, visible state change, and plain-English explanation at each step.
+- [x] Add intuitive execution navigation inspired by the reference while preserving Code Story Studio’s original real-world scene language.
+- [x] Add regression coverage and responsive verification for the reference-informed execution flow.
+- [x] Save a final checkpoint for the Python Tutor–informed Code Story Studio redesign.
