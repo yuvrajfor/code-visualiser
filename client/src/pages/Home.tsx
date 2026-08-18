@@ -1499,53 +1499,23 @@ export default function Home() {
 
           <div className="mb-6 rounded-2xl border border-white/10 bg-[#0c0806]/75 px-4 py-3 text-xs text-[#c3b2a1]"><div className="flex flex-wrap items-center justify-between gap-3"><span><strong className="text-white">Today’s visual setting:</strong> {activeTheme.name} — {activeTheme.sceneHint}</span><details className="text-[11px]"><summary className="cursor-pointer font-bold text-[#dfc6ae]">More controls</summary><div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-[#8f7c6d]">Setting</span>{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/60 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}><ThemeKindIcon theme={theme.id} className="h-3.5 w-3.5" />{theme.shortLabel}</button>)}<span className="ml-2 text-[10px] text-[#9e8a79]">Keys: {STORY_SHORTCUTS.map((shortcut) => shortcut.keys).join(" · ")}</span></div></details></div></div>
 
-          <section className="execution-workspace-grid final-execution-workspace grid gap-5 xl:grid-cols-[17rem_minmax(0,1.22fr)_minmax(19rem,.86fr)]">
-            <aside className="execution-rail lab-surface h-fit rounded-[24px] p-4" data-execution-rail aria-label="Current code execution">
-              <header className="execution-rail-header"><p className="lab-kicker">Current execution</p><h2>Follow one line at a time.</h2><p>See the source, then watch its meaning appear in the scene.</p></header>
-              <div className="execution-source-card mt-4" data-reference-active-source>
-                <div className="flex items-center justify-between gap-3"><span>Active source line</span><strong>Line {currentStep.line}</strong></div>
+          <section className="execution-workspace-grid simple-story-page grid gap-4 xl:grid-cols-[14rem_minmax(0,1fr)_17rem]" data-simple-story-page>
+            <aside className="execution-rail simple-code-panel lab-surface h-fit rounded-[20px] p-4" data-execution-rail aria-label="Current code execution">
+              <p className="simple-panel-label">Code</p>
+              <div className="execution-source-card mt-3" data-reference-active-source data-active-code-line={currentStep.line}>
+                <div className="flex items-center justify-between gap-3"><span>Current line</span><strong>{currentStep.line}</strong></div>
                 <code>{currentStep.code.trim() || "Current source line"}</code>
               </div>
-              <ExecutionStatePanel key={`execution-state-${currentStep.step}-${visualTheme}`} step={currentStep} />
-              <div className="execution-rail-steps mt-4"><div className="flex items-center justify-between gap-3"><p>Story steps</p><span>{currentStepIndex + 1} / {steps.length}</span></div><div className="mt-2 space-y-1.5">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`rail-${step.line}-${step.code}`} onClick={() => goToStep(index)} aria-current={isActive ? "step" : undefined} className={isActive ? "is-active" : ""}><span>{index + 1}</span><strong>Line {step.line}</strong><small>{step.story.title}</small></button>; })}</div></div>
+              <div className="execution-rail-steps mt-4"><div className="flex items-center justify-between gap-3"><p>Steps</p><span>{currentStepIndex + 1} / {steps.length}</span></div><div className="mt-2 space-y-1.5">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`rail-${step.line}-${step.code}`} onClick={() => goToStep(index)} aria-current={isActive ? "step" : undefined} className={isActive ? "is-active" : ""}><span>{index + 1}</span><strong>Line {step.line}</strong><small>{step.story.title}</small></button>; })}</div></div>
             </aside>
-            <div className="lab-surface story-stage primary-visual-stage rounded-[28px] p-5 md:p-6" data-primary-visual-stage>
-              <SceneHeader story={currentStep.story} step={currentStep} />
-              <div className="visual-first-intro mt-5"><span className="visual-first-icon"><SceneKindIcon kind={currentStep.story.kind} className="h-4 w-4" /></span><div><p>Watch the visual first</p><strong>{currentStep.story.visualFocus ?? `Follow ${currentStep.story.objectLabel} while this step changes.`}</strong></div></div>
-              <div className="primary-cinematic-scene mt-4" data-primary-cinematic-scene>
-                {aiVisuals[currentAIVisualKey]?.imageUrl ? (
-                  <figure className="ai-visual-frame mb-4" data-ai-visual-ready>
-                    <img src={aiVisuals[currentAIVisualKey].imageUrl} alt={`AI visual for ${currentStep.story.title}`} className="aspect-video w-full object-cover" />
-                    <figcaption>AI visual · generated from this step’s code meaning</figcaption>
-                  </figure>
-                ) : (
-                  <div className="ai-visual-callout mb-4" data-ai-visual-control data-ai-visual-status={aiVisualStatus[currentAIVisualKey] ?? "idle"}>
-                    <div><p className="ai-visual-eyebrow">AI visual layer</p><p className="mt-1 text-xs leading-5 text-[#c6d4e9]">Create a new original picture for this one step. Your interactive 3D scene stays available underneath.</p>{aiVisuals[currentAIVisualKey]?.fallbackReason ? <p className="mt-2 text-xs font-semibold leading-5 text-amber-100" data-ai-visual-fallback aria-live="polite">{aiVisuals[currentAIVisualKey]?.message ?? "AI visuals are temporarily unavailable — using the interactive 3D scene instead."}</p> : null}</div>
-                    <Button type="button" onClick={() => void createAIVisualForCurrentStep()} disabled={aiVisualStatus[currentAIVisualKey] === "loading"} className="ai-visual-generate-button shrink-0">
-                      <Sparkles className="mr-1.5 h-4 w-4" />{aiVisualStatus[currentAIVisualKey] === "loading" ? "Creating visual…" : aiVisualStatus[currentAIVisualKey] === "fallback" || aiVisualStatus[currentAIVisualKey] === "failed" ? "Try AI visual again" : "Create AI visual"}
-                    </Button>
-                  </div>
-                )}
-                <CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} />
-              </div>
-              <details className="interactive-state-map mt-4" data-interactive-state-map>
-                <summary><span className="font-black">Interactive state map</span><span>Open the changing boxes, paths, or objects for this step</span></summary>
-                <div key={`scene-${currentStep.step}-${currentStep.story.kind}-${visualTheme}`} data-story-scene data-story-step={currentStep.step} className="mt-4"><RealWorldScene story={currentStep.story} visualTheme={visualTheme} routeState={currentStep.routeState} /></div>
-              </details>
-              <div key={`visual-focus-${currentStep.step}-${visualTheme}`} className="story-scene-brief execution-state-detail-enter mt-4" data-story-visual-focus>
-                <div data-story-visual-focus className="flex min-w-0 items-start gap-3"><div className="story-scene-brief-icon"><SceneKindIcon kind={currentStep.story.kind} className="h-4 w-4" /></div><div className="min-w-0"><p className="story-scene-brief-label">Look for this</p><p className="mt-1 text-xs leading-5 text-[#d5def2]">{currentStep.story.visualFocus ?? `Follow the ${currentStep.story.objectLabel} as this ${sceneStyles[currentStep.story.kind].label} changes.`}</p></div></div>
-                <div className="story-scene-object"><span>Highlighted object</span><strong>{currentStep.story.objectLabel}</strong></div>
-              </div>
+            <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-4 md:p-5" data-primary-visual-stage>
+              <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><span>Line {currentStep.line}</span></div>
+              <div className="primary-cinematic-scene mt-3" data-primary-cinematic-scene><CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} /></div>
             </div>
-
-            <div className="lab-surface story-explanation-panel direct-explanation-panel rounded-[28px] p-5 md:p-6" data-direct-explanation-panel>
-              <div className="flex items-center justify-between border-b border-white/10 pb-4"><div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-indigo-200" /><div><p className="lab-kicker">Step explanation</p><h2 className="mt-1 text-sm font-bold text-white">Understand the result</h2></div></div><Badge className="rounded-full border border-indigo-300/25 bg-indigo-300/10 px-3 py-1 text-[10px] font-bold text-indigo-100">Step {currentStepIndex + 1}</Badge></div>
-              <div key={`explanation-${currentStep.step}-${visualTheme}`} data-story-explanation data-explanation-quality aria-live="polite" className="explanation-enter direct-explanation-card mt-5 rounded-2xl border border-[#3d2c21] bg-gradient-to-br from-[#1c120c] to-[#0c0806] p-5 shadow-[0_18px_36px_rgba(0,0,0,0.18)]"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2bc89]">In simple English</p><p className="mt-2 text-base font-semibold leading-8 text-white">{currentStep.story.plainEnglish}</p></div>
-              <div data-explanation-support className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200">What changed</p><p className="mt-2 text-xs leading-5 text-[#d7efe2]">{currentStep.story.whatChanged}</p></div><div className="rounded-2xl border border-sky-300/15 bg-sky-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">Picture it as</p><p className="mt-2 text-xs leading-5 text-[#d9eff8]">{currentStep.story.analogy}</p></div></div>
-              <div key={`active-code-${currentStep.step}-${visualTheme}`} data-active-code-line={currentStep.line} className="execution-state-detail-enter mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><div className="flex items-center justify-between gap-3"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">The code behind this picture</p><span className="rounded-full border border-amber-200/20 bg-amber-100/10 px-2 py-1 text-[10px] font-bold text-amber-100">Active line</span></div><code className="mt-2 block whitespace-pre-wrap break-words font-mono text-xs leading-6 text-[#f9e9d5]">{currentStep.code}</code></div>
-              <details className="mt-3 rounded-2xl border border-white/10 bg-[#0c0806]/65 p-3"><summary className="cursor-pointer select-none text-xs font-bold text-[#d8c4b2] marker:text-indigo-200">View your full code <span className="ml-1 font-normal text-[#9a8777]">· Line {currentStep.line} is highlighted</span></summary><ol className="mt-3 overflow-hidden rounded-xl border border-white/8 bg-[#080605] py-1 font-mono text-[11px] leading-6">{getStoryCodeLines(userCode, currentStep.line).map((line) => <li key={line.lineNumber} data-code-line={line.lineNumber} data-active={line.isActive} className={`grid grid-cols-[2.4rem_minmax(0,1fr)] gap-3 px-3 transition-colors ${line.isActive ? "bg-amber-300/12 text-amber-50" : "text-[#a89584]"}`}><span className={`text-right text-[10px] ${line.isActive ? "font-black text-amber-200" : "text-[#6f6055]"}`}>{line.lineNumber}</span><code className="whitespace-pre-wrap break-words">{line.text || " "}</code></li>)}</ol></details>
-              <div className="explanation-next-step mt-5"><p className="lab-kicker">What to do next</p><p>Use the arrows above or choose a line from the execution list to see the next change.</p></div>
-            </div>
+            <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-4 md:p-5" data-direct-explanation-panel>
+              <p className="simple-panel-label">Explanation</p>
+              <div key={`explanation-${currentStep.step}-${visualTheme}`} data-story-explanation data-explanation-quality aria-live="polite" className="explanation-enter simple-explanation-copy mt-3"><p>{currentStep.story.plainEnglish}</p></div>
+            </aside>
           </section>
         </main>
       )}

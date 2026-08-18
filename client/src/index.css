@@ -771,3 +771,146 @@
 
 .visual-theme-high-contrast [data-story-explanation][data-explanation-quality] > p:first-child,
 .visual-theme-high-contrast [data-explanation-support] p:first-child { color: #ffeb3b !important; }
+
+/* Minimal visual-story page: one code line, one visual, one explanation. */
+.simple-story-page {
+  align-items: start;
+}
+
+.simple-story-page .lab-surface {
+  border: 1px solid #dbe4f0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+.simple-panel-label {
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.simple-code-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+.simple-story-page .execution-source-card {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  box-shadow: none;
+}
+
+.simple-story-page .execution-source-card span {
+  color: #475569;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.simple-story-page .execution-source-card strong {
+  color: #1d4ed8;
+  font-size: 0.75rem;
+}
+
+.simple-story-page .execution-source-card code {
+  color: #172033;
+  font-size: 0.76rem;
+  line-height: 1.45rem;
+}
+
+.simple-story-page .execution-rail-steps {
+  border-top-color: #e2e8f0;
+}
+
+.simple-story-page .execution-rail-steps button small {
+  display: none;
+}
+
+.simple-story-page .execution-rail-steps button {
+  grid-template-columns: 1.55rem minmax(0, 1fr);
+  padding: 0.42rem;
+}
+
+.simple-visual-panel {
+  min-width: 0;
+}
+
+.simple-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.7rem;
+}
+
+.simple-panel-heading > span {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.simple-story-page .primary-cinematic-scene {
+  min-height: 0;
+}
+
+.simple-story-page .primary-cinematic-scene > * {
+  border-radius: 0.9rem;
+}
+
+.simple-explanation-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+.simple-explanation-copy {
+  color: #172033;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.8;
+}
+
+.simple-explanation-copy > p {
+  margin: 0;
+}
+
+.visual-theme-high-contrast .simple-story-page .lab-surface,
+.visual-theme-high-contrast .simple-story-page .execution-source-card {
+  border-color: #fff !important;
+  background: #000 !important;
+  box-shadow: none !important;
+}
+
+.visual-theme-high-contrast .simple-story-page .simple-panel-label,
+.visual-theme-high-contrast .simple-story-page .execution-source-card strong { color: #ffe600 !important; }
+
+.visual-theme-high-contrast .simple-story-page .execution-source-card span,
+.visual-theme-high-contrast .simple-story-page .execution-source-card code,
+.visual-theme-high-contrast .simple-story-page .simple-panel-heading > span,
+.visual-theme-high-contrast .simple-story-page .simple-explanation-copy { color: #fff !important; }
+
+@media (max-width: 1279px) {
+  .simple-code-panel,
+  .simple-explanation-panel { position: static; }
+
+  .simple-story-page .execution-rail-steps { display: block; }
+  .simple-story-page .execution-rail-steps > div:last-child {
+    display: flex;
+    max-width: 100%;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .simple-story-page .execution-rail-steps button {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 5.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .simple-story-page { gap: 0.75rem; }
+  .simple-story-page .lab-surface { border-radius: 1rem; }
+  .simple-story-page .primary-cinematic-scene { margin-top: 0.75rem; }
+}

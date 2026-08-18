@@ -206,3 +206,8 @@
 - [x] Add intuitive execution navigation inspired by the reference while preserving Code Story Studio’s original real-world scene language.
 - [x] Add regression coverage and responsive verification for the reference-informed execution flow.
 - [x] Save a final checkpoint for the Python Tutor–informed Code Story Studio redesign.
+- [x] Audit the generated-story page and identify nonessential cards, labels, controls, and decorative treatments to remove.
+- [x] Rebuild the visual page as a minimal active-code, primary-visual, and short-explanation learning screen.
+- [x] Preserve only essential direct step navigation and accessibility controls without competing visual clutter.
+- [x] Add regression coverage and validate the simplified visual page on phone and desktop.
+- [x] Save a checkpoint for the simplified Code Story visual page.

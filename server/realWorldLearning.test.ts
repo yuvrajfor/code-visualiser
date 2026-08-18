@@ -522,7 +522,7 @@ describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
   const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
 
-  it("makes the cinematic visual primary and puts the direct explanation beside it", () => {
+  it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
     const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
     const cinematicSceneIndex = homeSource.indexOf("data-primary-cinematic-scene");
     const directExplanationIndex = homeSource.indexOf("data-direct-explanation-panel");
@@ -530,22 +530,20 @@ describe("state-first Code Studio workspace contract", () => {
     expect(primaryVisualIndex).toBeGreaterThan(-1);
     expect(cinematicSceneIndex).toBeGreaterThan(primaryVisualIndex);
     expect(directExplanationIndex).toBeGreaterThan(cinematicSceneIndex);
-    expect(homeSource).toContain("What this source line sets up");
-    expect(homeSource).toContain("From your code");
-    expect(homeSource).toContain("What this means");
-    expect(homeSource).toContain("Watch the visual first");
-    expect(homeSource).toContain("Step explanation");
+    expect(homeSource).toContain("simple-story-page");
+    expect(homeSource).toContain("Current line");
+    expect(homeSource).toContain('simple-panel-label">Visual');
+    expect(homeSource).toContain('simple-panel-label">Explanation');
     expect(homeSource).toContain("data-execution-rail");
-    expect(homeSource).toContain("Active source line");
-    expect(homeSource).toContain("Interactive state map");
-    expect(homeSource).toContain("data-ai-visual-fallback");
-    expect(homeSource).toContain("AI visuals are temporarily unavailable");
+    expect(homeSource).toContain("data-active-code-line={currentStep.line}");
+    expect(homeSource).toContain("execution-rail-steps");
+    expect(homeSource).not.toContain("Interactive state map");
+    expect(homeSource).not.toContain("data-ai-visual-control");
   });
 
   it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
     expect(homeSource).toContain("<SceneKindIcon kind={preset.kind}");
     expect(homeSource).toContain("<ThemeKindIcon theme={theme.id}");
-    expect(homeSource).toContain("<SceneKindIcon kind={currentStep.story.kind}");
     expect(homeSource).not.toContain("{preset.icon}");
     expect(homeSource).not.toContain("{theme.icon}");
     expect(homeSource).not.toMatch(/[🛠📦🧠]/u);
