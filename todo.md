@@ -211,3 +211,8 @@
 - [x] Preserve only essential direct step navigation and accessibility controls without competing visual clutter.
 - [x] Add regression coverage and validate the simplified visual page on phone and desktop.
 - [x] Save a checkpoint for the simplified Code Story visual page.
+- [x] Analyze the attached explanation-motion reference and identify transferable scrolling and pacing patterns.
+- [x] Redesign the explanation panel as a scrollable, visually structured step narrative with a clear current-step anchor.
+- [x] Add restrained, reduced-motion-safe entrance and step-change animations that guide attention without clutter.
+- [x] Add regression coverage and validate the scrollable animated explanation experience on phone and desktop.
+- [x] Save a checkpoint for the reference-informed explanation and scrolling experience.

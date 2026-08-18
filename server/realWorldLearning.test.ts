@@ -537,6 +537,10 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("data-execution-rail");
     expect(homeSource).toContain("data-active-code-line={currentStep.line}");
     expect(homeSource).toContain("execution-rail-steps");
+    expect(homeSource).toContain("data-explanation-scroll");
+    expect(homeSource).toContain("explanation-history-");
+    expect(styleSource).toContain(".simple-explanation-scroll");
+    expect(styleSource).toContain(".simple-explanation-copy.is-current");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");
   });

@@ -1513,8 +1513,10 @@ export default function Home() {
               <div className="primary-cinematic-scene mt-3" data-primary-cinematic-scene><CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} /></div>
             </div>
             <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-4 md:p-5" data-direct-explanation-panel>
-              <p className="simple-panel-label">Explanation</p>
-              <div key={`explanation-${currentStep.step}-${visualTheme}`} data-story-explanation data-explanation-quality aria-live="polite" className="explanation-enter simple-explanation-copy mt-3"><p>{currentStep.story.plainEnglish}</p></div>
+              <div className="simple-explanation-heading"><p className="simple-panel-label">Explanation</p><span>Step {currentStepIndex + 1} of {steps.length}</span></div>
+              <div className="simple-explanation-scroll mt-3" data-explanation-scroll aria-label="Explanation history">
+                {steps.slice(0, currentStepIndex + 1).map((step, index) => { const isActive = index === currentStepIndex; return <article key={`explanation-history-${step.step}-${step.line}-${index}`} data-explanation-entry={index + 1} {...(isActive ? { "data-story-explanation": true, "data-explanation-quality": true, "aria-live": "polite" } : {})} className={`simple-explanation-copy ${isActive ? "is-current explanation-enter" : ""}`}><div className="simple-explanation-entry-meta"><span>Step {index + 1}</span><span>Line {step.line}</span></div><p>{step.story.plainEnglish}</p></article>; })}
+              </div>
             </aside>
           </section>
         </main>
