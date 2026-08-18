@@ -221,3 +221,10 @@
 - [x] Replace the main visual-stage presentation with the functional 2D diagrams while retaining direct step navigation and explanations.
 - [x] Add regression coverage and validate the 2D visualizer on phone and desktop.
 - [x] Save a checkpoint for the simplified functional 2D visualizer.
+- [x] Audit the current 2D execution data and identify the safe state fields for arrays, pointers, variables, and step comparisons.
+- [x] Establish an accessible mandala-inspired theme with restrained geometric motifs that do not reduce code or diagram readability.
+- [x] Render array cells and pointer arrows from the active execution state in the 2D visualizer.
+- [x] Add a compact variable-value table that shows the current tracked state for each code step.
+- [x] Add a before-versus-after comparison toggle for direct state-change inspection.
+- [x] Add regression coverage and validate the themed enhanced visualizer on phone and desktop.
+- [x] Save a checkpoint for the mandala-art theme and 2D state-visualization enhancements.

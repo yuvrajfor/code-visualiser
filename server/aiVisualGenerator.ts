@@ -11,7 +11,7 @@ export const aiVisualInputSchema = z.object({
   visualFocus: z.string().trim().min(1).max(500),
   codeLine: z.string().trim().min(1).max(700),
   lineNumber: z.number().int().min(1).max(12_000),
-  theme: z.enum(["kitchen", "office", "game", "high-contrast"]),
+  theme: z.enum(["kitchen", "office", "game", "mandala", "high-contrast"]),
 });
 
 export type AIVisualInput = z.infer<typeof aiVisualInputSchema>;
@@ -34,6 +34,7 @@ const themeDirections: Record<AIVisualInput["theme"], string> = {
   kitchen: "a warm teaching kitchen with labelled storage boxes and tidy ingredients",
   office: "a clean modern desk with labelled folders, trays, and calm studio lighting",
   game: "a polished strategy-game tabletop with crisp tokens and clear paths",
+  mandala: "a calm educational studio framed by subtle mandala-inspired geometric rings in muted terracotta, plum, and sage",
   "high-contrast": "a bold high-contrast educational set using black, white, and bright yellow shapes",
 };
 

@@ -349,6 +349,7 @@ const themeIcons = {
   kitchen: Utensils,
   office: Archive,
   game: Palette,
+  mandala: CircleDot,
   "high-contrast": Eye,
 } satisfies Record<VisualTheme, typeof Box>;
 
@@ -702,20 +703,66 @@ function ExecutionStatePanel({ step }: { step: LearningStep }) {
   );
 }
 
-function Simple2DVisualPanel({ step }: { step: LearningStep }) {
-  const state = step.executionState ?? {
-    subject: step.story.objectLabel,
-    action: step.story.title,
-    change: step.story.whatChanged,
+function getDiagramArray(sourceLines: string[]) {
+  const literalDeclaration = [...sourceLines].reverse().map((line) => line.match(/\b([A-Za-z_$][\w$]*)\s*=\s*(?:new\s+[A-Za-z_$][\w$]*(?:\[\])?\s*)?[\[{]([^\]}]*)[\]}]/)).find(Boolean);
+  if (literalDeclaration) {
+    const name = literalDeclaration[1];
+    const cells = literalDeclaration[2].split(",").map((value) => value.trim()).filter(Boolean).slice(0, 8);
+    if (cells.length) return { name, cells };
+  }
+
+  const sizedDeclaration = [...sourceLines].reverse().map((line) => line.match(/\b([A-Za-z_$][\w$]*)\s*=\s*new\s+Array\((\d+)\)/)).find(Boolean);
+  if (sizedDeclaration) {
+    const count = Math.min(Number(sizedDeclaration[2]), 8);
+    if (Number.isFinite(count) && count > 0) return { name: sizedDeclaration[1], cells: Array.from({ length: count }, () => "empty") };
+  }
+
+  return null;
+}
+
+function getDiagramPointers(sourceLines: string[], cellCount: number) {
+  const pointers = new Map<string, number>();
+  for (const line of sourceLines) {
+    for (const match of Array.from(line.matchAll(/\b(i|j|k|left|right|start|end|mid|index|pointer|current|next)\s*=\s*(-?\d+)/gi))) {
+      const position = Number(match[2]);
+      if (Number.isFinite(position) && position >= 0 && position < cellCount) pointers.set(match[1], position);
+    }
+  }
+  return Array.from(pointers.entries()).map(([name, position]) => ({ name, position }));
+}
+
+function getTrackedVariables(sourceLines: string[], state: NonNullable<LearningStep["executionState"]>) {
+  const variables = new Map<string, string>();
+  for (const line of sourceLines) {
+    for (const match of Array.from(line.matchAll(/\b(?:let|const|var|int|long|float|double|boolean|String)?\s*([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/g))) {
+      const name = match[1];
+      const value = match[2].trim().replace(/[;,]$/, "");
+      if (name && value && name !== "if" && name !== "for") variables.set(name, value.slice(0, 28));
+    }
+  }
+  const rows = Array.from(variables.entries()).slice(-5).map(([name, value]) => ({ name, value }));
+  return rows.length ? rows : [{ name: "Focus", value: state.subject }, { name: "Change", value: state.change }];
+}
+
+function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean }) {
+  const shownStep = showBefore && previousStep ? previousStep : step;
+  const state = shownStep.executionState ?? {
+    subject: shownStep.story.objectLabel,
+    action: shownStep.story.title,
+    change: shownStep.story.whatChanged,
   };
+  const shownLines = showBefore && previousStep ? sourceLines.slice(0, -1) : sourceLines;
+  const array = getDiagramArray(shownLines);
+  const pointers = array ? getDiagramPointers(shownLines, array.cells.length) : [];
+  const variables = getTrackedVariables(shownLines, state);
 
   return (
-    <section className="simple-2d-diagram" data-primary-2d-scene aria-label={`2D visual for line ${step.line}`}>
-      <div className="simple-2d-context"><span>Line {step.line}</span><code>{step.code.trim() || "Current source line"}</code></div>
+    <section className="simple-2d-diagram" data-primary-2d-scene data-state-view={showBefore ? "before" : "after"} aria-label={`2D visual for line ${shownStep.line}`}>
+      <div className="simple-2d-context"><span>{showBefore ? "Before" : "After"} · Line {shownStep.line}</span><code>{shownStep.code.trim() || "Current source line"}</code></div>
       <div className="simple-2d-flow">
         <article className="simple-2d-node simple-2d-subject">
           <span className="simple-2d-node-label">Object</span>
-          <div><SceneKindIcon kind={step.story.kind} className="h-5 w-5" /><strong>{state.subject}</strong></div>
+          <div><SceneKindIcon kind={shownStep.story.kind} className="h-5 w-5" /><strong>{state.subject}</strong></div>
         </article>
         <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
         <article className="simple-2d-node simple-2d-action">
@@ -727,6 +774,16 @@ function Simple2DVisualPanel({ step }: { step: LearningStep }) {
           <span className="simple-2d-node-label">Result</span>
           <strong>{state.change}</strong>
         </article>
+      </div>
+      <div className="simple-state-details">
+        <section className="simple-array-panel" data-array-cells aria-label="Array cells">
+          <div className="simple-state-section-heading"><span>Array cells</span><small>{array ? array.name : "No array on this step"}</small></div>
+          {array ? <><div className="simple-array-cells">{array.cells.map((value, index) => <div key={`${array.name}-${index}-${value}`} className="simple-array-cell"><small>{index}</small><strong>{value}</strong></div>)}</div>{pointers.length ? <div className="simple-pointer-track" data-pointer-arrows aria-label="Pointer positions">{pointers.map((pointer) => <span key={`${pointer.name}-${pointer.position}`} className="simple-pointer" style={{ left: `${((pointer.position + 0.5) / array.cells.length) * 100}%` }}><b>↓</b>{pointer.name}</span>)}</div> : <p className="simple-state-empty">No index pointer moves on this line.</p>}</> : <p className="simple-state-empty">Array cells appear when this code creates or changes a list.</p>}
+        </section>
+        <section className="simple-variable-panel" data-variable-table aria-label="Tracked variable values">
+          <div className="simple-state-section-heading"><span>Tracked values</span><small>Current state</small></div>
+          <table><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead><tbody>{variables.map((variable) => <tr key={`${variable.name}-${variable.value}`}><th scope="row">{variable.name}</th><td>{variable.value}</td></tr>)}</tbody></table>
+        </section>
       </div>
       <p className="simple-2d-caption">Follow the arrows: the code picks an object, performs one action, then changes its state.</p>
     </section>
@@ -825,11 +882,26 @@ export default function Home() {
   const [selectedWalkthrough, setSelectedWalkthrough] = useState<CityRouteAlgorithm | null>(null);
   const [steps, setSteps] = useState<LearningStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showBeforeState, setShowBeforeState] = useState(false);
   const [exploredStepIndexes, setExploredStepIndexes] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => typeof window === "undefined" ? "kitchen" : getSavedVisualTheme(window.localStorage) ?? "kitchen");
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => {
+    if (typeof window === "undefined") return "mandala";
+    try {
+      const mandalaRolloutKey = "code-story-studio:mandala-rollout";
+      const savedTheme = getSavedVisualTheme(window.localStorage);
+      if (savedTheme === "high-contrast") return savedTheme;
+      if (!window.localStorage.getItem(mandalaRolloutKey)) {
+        window.localStorage.setItem(mandalaRolloutKey, "1");
+        return "mandala";
+      }
+      return savedTheme ?? "mandala";
+    } catch {
+      return "mandala";
+    }
+  });
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const [customGraphText, setCustomGraphText] = useState(customCityGraphExample);
   const [customStartStop, setCustomStartStop] = useState("Cafe");
@@ -1289,6 +1361,7 @@ export default function Home() {
   const goToStep = (index: number) => {
     setIsPlaying(false);
     const nextIndex = Math.max(0, Math.min(index, steps.length - 1));
+    setShowBeforeState(false);
     setCurrentStepIndex(nextIndex);
     playActionSound(steps[nextIndex]?.story);
   };
@@ -1489,8 +1562,8 @@ export default function Home() {
               <div className="execution-rail-steps mt-4"><div className="flex items-center justify-between gap-3"><p>Steps</p><span>{currentStepIndex + 1} / {steps.length}</span></div><div className="mt-2 space-y-1.5">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`rail-${step.line}-${step.code}`} onClick={() => goToStep(index)} aria-current={isActive ? "step" : undefined} className={isActive ? "is-active" : ""}><span>{index + 1}</span><strong>Line {step.line}</strong><small>{step.story.title}</small></button>; })}</div></div>
             </aside>
             <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-4 md:p-5" data-primary-visual-stage>
-              <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><span>Line {currentStep.line}</span></div>
-              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} /></div>
+              <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
+              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} /></div>
             </div>
             <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-4 md:p-5" data-direct-explanation-panel>
               <div className="simple-explanation-heading"><p className="simple-panel-label">Explanation</p><span>Step {currentStepIndex + 1} of {steps.length}</span></div>

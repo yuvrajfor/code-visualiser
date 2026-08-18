@@ -1,4 +1,4 @@
-export type VisualTheme = "kitchen" | "office" | "game" | "high-contrast";
+export type VisualTheme = "kitchen" | "office" | "game" | "mandala" | "high-contrast";
 
 export const VISUAL_THEME_STORAGE_KEY = "code-story-studio:visual-theme";
 
@@ -33,6 +33,14 @@ export const visualThemes: Array<{
     shortLabel: "Game",
     description: "Code becomes quest items, checkpoints, paths, and a final reward screen.",
     sceneHint: "Think of each instruction as a move in a game level.",
+  },
+  {
+    id: "mandala",
+    icon: "circle-dot",
+    name: "Mandala Study",
+    shortLabel: "Mandala",
+    description: "A calm geometric study view uses repeated patterns to frame each code state without competing with the diagram.",
+    sceneHint: "Follow the repeated rings: one clear code step at a time.",
   },
   {
     id: "high-contrast",
