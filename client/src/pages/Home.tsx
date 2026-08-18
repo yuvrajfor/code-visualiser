@@ -702,6 +702,37 @@ function ExecutionStatePanel({ step }: { step: LearningStep }) {
   );
 }
 
+function Simple2DVisualPanel({ step }: { step: LearningStep }) {
+  const state = step.executionState ?? {
+    subject: step.story.objectLabel,
+    action: step.story.title,
+    change: step.story.whatChanged,
+  };
+
+  return (
+    <section className="simple-2d-diagram" data-primary-2d-scene aria-label={`2D visual for line ${step.line}`}>
+      <div className="simple-2d-context"><span>Line {step.line}</span><code>{step.code.trim() || "Current source line"}</code></div>
+      <div className="simple-2d-flow">
+        <article className="simple-2d-node simple-2d-subject">
+          <span className="simple-2d-node-label">Object</span>
+          <div><SceneKindIcon kind={step.story.kind} className="h-5 w-5" /><strong>{state.subject}</strong></div>
+        </article>
+        <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
+        <article className="simple-2d-node simple-2d-action">
+          <span className="simple-2d-node-label">Action</span>
+          <strong>{state.action}</strong>
+        </article>
+        <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
+        <article className="simple-2d-node simple-2d-result">
+          <span className="simple-2d-node-label">Result</span>
+          <strong>{state.change}</strong>
+        </article>
+      </div>
+      <p className="simple-2d-caption">Follow the arrows: the code picks an object, performs one action, then changes its state.</p>
+    </section>
+  );
+}
+
 function CinematicScenePanel({ scene, status, depthEnabled, motionEnabled, isFocused, onToggleDepth, onToggleMotion, onToggleFocus }: { scene?: CinematicScene; status?: CinematicSceneStatus; depthEnabled: boolean; motionEnabled: boolean; isFocused: boolean; onToggleDepth: () => void; onToggleMotion: () => void; onToggleFocus: () => void }) {
   const touchCameraRef = useRef<{ pointerId: number; startX: number; startY: number; startRotateX: number; startRotateY: number } | null>(null);
   const setCameraRotation = (element: HTMLElement, rotateX: number, rotateY: number) => {
@@ -871,41 +902,6 @@ export default function Home() {
     }, 2800);
     return () => window.clearInterval(progressTimer);
   }, [interpretStory.isPending]);
-
-  useEffect(() => {
-    if (activeView !== "studio" || !currentStep) return;
-    const candidateIndexes = [currentStepIndex - 1, currentStepIndex, currentStepIndex + 1];
-    for (const index of candidateIndexes) {
-      const candidate = steps[index];
-      if (!candidate) continue;
-      const key = getCinematicSceneKey(candidate);
-      if (cinematicRequestKeysRef.current.has(key)) continue;
-      cinematicRequestKeysRef.current.add(key);
-      setCinematicSceneStatus((existing) => ({ ...existing, [key]: "loading" }));
-      void cinematicScene.mutateAsync({
-        kind: candidate.story.kind,
-        title: candidate.story.title,
-        plainEnglish: candidate.story.plainEnglish,
-        visualFocus: candidate.story.visualFocus ?? candidate.story.analogy,
-        codeLine: candidate.code || "Code step",
-        lineNumber: candidate.line,
-      }).then((scene) => {
-        setCinematicScenes((existing) => ({ ...existing, [key]: scene }));
-        setCinematicSceneStatus((existing) => ({ ...existing, [key]: "ready" }));
-      }).catch(() => {
-        setCinematicSceneStatus((existing) => ({ ...existing, [key]: "failed" }));
-      });
-    }
-  }, [activeView, cinematicScene, currentStep, currentStepIndex, steps]);
-
-  useEffect(() => {
-    if (!cinematicFocused) return;
-    const closeFocusOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setCinematicFocused(false);
-    };
-    window.addEventListener("keydown", closeFocusOnEscape);
-    return () => window.removeEventListener("keydown", closeFocusOnEscape);
-  }, [cinematicFocused]);
 
   const openLearningWorkspace = (workspace: OnboardingWorkspace) => {
     setActiveView("landing");
@@ -1478,26 +1474,10 @@ export default function Home() {
 
       {activeView === "studio" && currentStep && (
         <main className="lab-grid studio-learning-frame mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
-          <div className="reference-story-command lab-surface story-command-bar story-command-deck mb-5 flex flex-col justify-between gap-4 rounded-3xl p-5 md:flex-row md:items-center" data-code-story-workspace>
-            <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-[11px] font-bold text-[#cbb59f] transition hover:text-white"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><p className="mt-3 lab-kicker">Your visual story · Step {currentStepIndex + 1} of {steps.length}</p><h1 className="mt-1 text-xl font-extrabold tracking-tight text-white">{userProblem || "Your code story"}</h1><p className="mt-1 text-xs text-[#a89787]">Watch the picture change, then read the same idea in simple English.</p></div>
-            <div className="flex flex-wrap items-center gap-2">
-              <section className="learning-score-card" data-learning-score data-score-status={learningScore.isComplete ? "complete" : "in-progress"} aria-label={`Learning score: ${learningScore.score} out of 100. ${learningScore.status}`}>
-                <span className="learning-score-icon"><Award className="h-4 w-4" aria-hidden="true" /></span>
-                <span className="min-w-0"><span className="learning-score-label">Learning score</span><strong>{learningScore.score}<small>/100</small></strong><span className="learning-score-status" aria-live="polite">{learningScore.status}</span></span>
-              </section>
-              <div className="story-progress mr-1 hidden min-w-32 sm:block" aria-label={`Story progress: step ${currentStepIndex + 1} of ${steps.length}`}>
-                <div className="mb-1 flex justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#aebad0]"><span>Story position</span><span>Step {currentStepIndex + 1}/{steps.length}</span></div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-indigo-300 to-cyan-300 transition-[width] duration-300" style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }} /></div>
-              </div>
-              <Button variant="outline" size="icon" onClick={() => goToStep(0)} aria-label="Restart story" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]" title="Start again"><RotateCcw className="h-4 w-4" /></Button>
-              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex - 1)} aria-label="Previous step" disabled={currentStepIndex === 0} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronLeft className="h-4 w-4" /></Button>
-              <Button onClick={() => setIsPlaying((value) => !value)} className="h-10 rounded-xl bg-gradient-to-r from-[#ffbd7d] to-[#d86527] px-5 text-xs font-black text-[#160b06]">{isPlaying ? <Pause className="mr-1.5 h-4 w-4" /> : <Play className="mr-1.5 h-4 w-4" />}{isPlaying ? "Pause story" : "Play story"}</Button>
-              <Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex + 1)} aria-label="Next step" disabled={currentStepIndex === steps.length - 1} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#0c0806] text-[#f2c69b] hover:bg-[#251911]"><ChevronRight className="h-4 w-4" /></Button>
-              <label className="ml-1 flex items-center gap-2 text-[11px] text-[#a89787]">Speed <input aria-label="Story playback speed" type="range" min="1000" max="4200" step="400" value={speedMs} onChange={(event) => setSpeedMs(Number(event.target.value))} className="w-20 accent-[#f59e0b]" /></label>
-            </div>
+          <div className="simple-story-toolbar mb-5 flex flex-wrap items-center justify-between gap-3" data-code-story-workspace>
+            <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 transition hover:text-slate-950"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><h1 className="mt-1 text-lg font-extrabold tracking-tight text-slate-950">{userProblem || "Your code story"}</h1></div>
+            <div className="flex items-center gap-2" data-simple-step-controls><Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex - 1)} aria-label="Previous step" disabled={currentStepIndex === 0} className="h-9 w-9"><ChevronLeft className="h-4 w-4" /></Button><span className="min-w-20 text-center text-xs font-bold text-slate-700" data-simple-step-status>Step {currentStepIndex + 1} / {steps.length}</span><Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex + 1)} aria-label="Next step" disabled={currentStepIndex === steps.length - 1} className="h-9 w-9"><ChevronRight className="h-4 w-4" /></Button></div>
           </div>
-
-          <div className="mb-6 rounded-2xl border border-white/10 bg-[#0c0806]/75 px-4 py-3 text-xs text-[#c3b2a1]"><div className="flex flex-wrap items-center justify-between gap-3"><span><strong className="text-white">Today’s visual setting:</strong> {activeTheme.name} — {activeTheme.sceneHint}</span><details className="text-[11px]"><summary className="cursor-pointer font-bold text-[#dfc6ae]">More controls</summary><div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-[#8f7c6d]">Setting</span>{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[10px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/60 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}><ThemeKindIcon theme={theme.id} className="h-3.5 w-3.5" />{theme.shortLabel}</button>)}<span className="ml-2 text-[10px] text-[#9e8a79]">Keys: {STORY_SHORTCUTS.map((shortcut) => shortcut.keys).join(" · ")}</span></div></details></div></div>
 
           <section className="execution-workspace-grid simple-story-page grid gap-4 xl:grid-cols-[14rem_minmax(0,1fr)_17rem]" data-simple-story-page>
             <aside className="execution-rail simple-code-panel lab-surface h-fit rounded-[20px] p-4" data-execution-rail aria-label="Current code execution">
@@ -1510,7 +1490,7 @@ export default function Home() {
             </aside>
             <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-4 md:p-5" data-primary-visual-stage>
               <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><span>Line {currentStep.line}</span></div>
-              <div className="primary-cinematic-scene mt-3" data-primary-cinematic-scene><CinematicScenePanel scene={cinematicScenes[currentCinematicKey]} status={cinematicSceneStatus[currentCinematicKey]} depthEnabled={cinematicDepthEnabled} motionEnabled={cinematicMotionEnabled} isFocused={cinematicFocused} onToggleDepth={() => setCinematicDepthEnabled((enabled) => !enabled)} onToggleMotion={() => setCinematicMotionEnabled((enabled) => !enabled)} onToggleFocus={() => setCinematicFocused((focused) => !focused)} /></div>
+              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} /></div>
             </div>
             <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-4 md:p-5" data-direct-explanation-panel>
               <div className="simple-explanation-heading"><p className="simple-panel-label">Explanation</p><span>Step {currentStepIndex + 1} of {steps.length}</span></div>

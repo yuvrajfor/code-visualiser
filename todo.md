@@ -216,3 +216,8 @@
 - [x] Add restrained, reduced-motion-safe entrance and step-change animations that guide attention without clutter.
 - [x] Add regression coverage and validate the scrollable animated explanation experience on phone and desktop.
 - [x] Save a checkpoint for the reference-informed explanation and scrolling experience.
+- [x] Audit the main learner visual stage and identify cinematic 3D treatments that obscure functional code-state learning.
+- [x] Define a simple 2D diagram language using labelled boxes, arrows, lists, routes, and explicit state highlights.
+- [x] Replace the main visual-stage presentation with the functional 2D diagrams while retaining direct step navigation and explanations.
+- [x] Add regression coverage and validate the 2D visualizer on phone and desktop.
+- [x] Save a checkpoint for the simplified functional 2D visualizer.

@@ -524,12 +524,12 @@ describe("state-first Code Studio workspace contract", () => {
 
   it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
     const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
-    const cinematicSceneIndex = homeSource.indexOf("data-primary-cinematic-scene");
+    const diagramIndex = homeSource.indexOf("<Simple2DVisualPanel step={currentStep} />", primaryVisualIndex);
     const directExplanationIndex = homeSource.indexOf("data-direct-explanation-panel");
 
     expect(primaryVisualIndex).toBeGreaterThan(-1);
-    expect(cinematicSceneIndex).toBeGreaterThan(primaryVisualIndex);
-    expect(directExplanationIndex).toBeGreaterThan(cinematicSceneIndex);
+    expect(diagramIndex).toBeGreaterThan(primaryVisualIndex);
+    expect(directExplanationIndex).toBeGreaterThan(diagramIndex);
     expect(homeSource).toContain("simple-story-page");
     expect(homeSource).toContain("Current line");
     expect(homeSource).toContain('simple-panel-label">Visual');
@@ -539,8 +539,13 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("execution-rail-steps");
     expect(homeSource).toContain("data-explanation-scroll");
     expect(homeSource).toContain("explanation-history-");
+    expect(homeSource).toContain("Object");
+    expect(homeSource).toContain("Action");
+    expect(homeSource).toContain("Result");
+    expect(homeSource).not.toContain("data-primary-cinematic-scene");
     expect(styleSource).toContain(".simple-explanation-scroll");
     expect(styleSource).toContain(".simple-explanation-copy.is-current");
+    expect(styleSource).toContain(".simple-2d-diagram");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");
   });
