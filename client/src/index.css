@@ -1470,3 +1470,91 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) {
 @media (prefers-reduced-motion: reduce) {
   .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { animation: none; }
 }
+
+/* Colourful living Mandala: the full product joins the visual world through
+   restrained jewel-tone edges while dense learning content stays calm and legible. */
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  --mandala-violet: #7c3aed;
+  --mandala-rose: #db2777;
+  --mandala-sun: #d97706;
+  --mandala-aqua: #0891b2;
+  --mandala-leaf: #059669;
+  --world-accent:
+    radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.34) 0 1.5%, rgba(244, 114, 182, 0.12) 1.7% 4%, transparent 4.25% 7%),
+    repeating-conic-gradient(from 9deg at 50% 50%, rgba(124, 58, 237, 0.16) 0deg 4deg, rgba(14, 165, 233, 0.09) 4deg 8deg, transparent 8deg 15deg),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(219, 39, 119, 0.11) 0deg 7deg, transparent 7deg 14deg),
+    radial-gradient(circle at 50% 50%, transparent 0 19%, rgba(5, 150, 105, 0.13) 19.3% 19.8%, transparent 20.1% 31%, rgba(217, 119, 6, 0.11) 31.3% 31.9%, transparent 32.2% 100%);
+  --frame-edge: linear-gradient(135deg, rgba(124, 58, 237, 0.20) 0%, transparent 16%, transparent 83%, rgba(5, 150, 105, 0.16) 100%);
+  --frame-glow: radial-gradient(940px 480px at 50% -8%, rgba(255, 251, 235, 0.88), transparent 70%);
+  background-position: 48% -10rem, 54% -13rem, 46% -11rem, 50% -12rem, 50% -11rem, 50% -11rem, 0 0 !important;
+  background-size: 26rem 26rem, 39rem 39rem, 49rem 49rem, 59rem 59rem, cover, cover, cover !important;
+  animation: mandala-frame-drift 24s linear infinite alternate;
+}
+
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  --world-accent:
+    radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.22) 0 1.5%, rgba(244, 114, 182, 0.14) 1.7% 4%, transparent 4.25% 7%),
+    repeating-conic-gradient(from 9deg at 50% 50%, rgba(167, 139, 250, 0.17) 0deg 4deg, rgba(34, 211, 238, 0.11) 4deg 8deg, transparent 8deg 15deg),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(251, 113, 133, 0.12) 0deg 7deg, transparent 7deg 14deg),
+    radial-gradient(circle at 50% 50%, transparent 0 19%, rgba(45, 212, 191, 0.12) 19.3% 19.8%, transparent 20.1% 31%, rgba(251, 191, 36, 0.10) 31.3% 31.9%, transparent 32.2% 100%);
+  --frame-edge: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, transparent 16%, transparent 83%, rgba(45, 212, 191, 0.16) 100%);
+  --frame-glow: radial-gradient(940px 480px at 50% -8%, rgba(76, 29, 149, 0.25), transparent 70%);
+}
+
+@keyframes mandala-frame-drift {
+  0% { background-position: 44% -12rem, 56% -15rem, 46% -10rem, 52% -13rem, 50% -11rem, 50% -11rem, 0 0; }
+  50% { background-position: 55% -9rem, 45% -11rem, 53% -14rem, 47% -9rem, 50% -11rem, 50% -11rem, 0 0; }
+  100% { background-position: 49% -15rem, 52% -8rem, 45% -12rem, 55% -11rem, 50% -11rem, 50% -11rem, 0 0; }
+}
+
+html:not(.dark) .visual-theme-mandala:not(.visual-theme-high-contrast) :is(header, .reference-nav, .lab-surface, .code-input-card, .code-path-card, .story-command-deck, .city-comparison-panel, [data-custom-city-editor], .execution-rail, .execution-rail .execution-state-panel, .execution-rail .execution-state-card, .simple-story-toolbar, .simple-2d-diagram, .simple-array-panel, .simple-variable-panel, .simple-explanation-copy) {
+  border-color: rgba(124, 58, 237, 0.30) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 241, 0.93) 52%, rgba(248, 245, 255, 0.95)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 18px 38px rgba(88, 28, 135, 0.13) !important;
+}
+
+html:not(.dark) .visual-theme-mandala:not(.visual-theme-high-contrast) .reference-nav,
+html:not(.dark) .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-story-toolbar {
+  border-color: rgba(217, 119, 6, 0.34) !important;
+  background: linear-gradient(100deg, rgba(255, 250, 238, 0.96), rgba(250, 244, 255, 0.96), rgba(236, 253, 245, 0.95)) !important;
+}
+
+html:not(.dark) .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-story-page .simple-explanation-copy.is-current {
+  border-color: var(--mandala-rose) !important;
+  background: linear-gradient(135deg, #fff1f8, #f8f2ff 58%, #ecfeff) !important;
+  box-shadow: inset 3px 0 0 var(--mandala-rose), 0 12px 24px rgba(190, 24, 93, 0.14) !important;
+}
+
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-subject { border-color: #2563eb !important; background: linear-gradient(135deg, #e0f2fe, #eef2ff) !important; color: #1e3a8a !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-action { border-color: var(--mandala-rose) !important; background: linear-gradient(135deg, #fff1f2, #fdf2f8) !important; color: #9d174d !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-result { border-color: var(--mandala-leaf) !important; background: linear-gradient(135deg, #ecfdf5, #ecfeff) !important; color: #065f46 !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell { border-color: rgba(124, 58, 237, 0.60) !important; background: linear-gradient(135deg, #f5f3ff, #fdf2f8) !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell:nth-child(3n + 2) { border-color: rgba(219, 39, 119, 0.56) !important; background: linear-gradient(135deg, #fff1f2, #fff7ed) !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell:nth-child(3n) { border-color: rgba(8, 145, 178, 0.56) !important; background: linear-gradient(135deg, #ecfeff, #ecfdf5) !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-pointer { color: var(--mandala-rose) !important; }
+.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-arrow { color: var(--mandala-violet) !important; }
+
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) :is(header, .reference-nav, .lab-surface, .code-input-card, .code-path-card, .story-command-deck, .city-comparison-panel, [data-custom-city-editor], .execution-rail, .execution-rail .execution-state-panel, .execution-rail .execution-state-card, .simple-story-toolbar, .simple-2d-diagram, .simple-array-panel, .simple-variable-panel, .simple-explanation-copy) {
+  border-color: rgba(167, 139, 250, 0.38) !important;
+  background: linear-gradient(135deg, rgba(22, 20, 54, 0.94), rgba(20, 25, 56, 0.94) 52%, rgba(10, 50, 57, 0.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(216, 180, 254, 0.14), 0 18px 42px rgba(3, 7, 18, 0.38) !important;
+}
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-story-page .simple-explanation-copy.is-current { border-color: #f472b6 !important; background: linear-gradient(135deg, rgba(131, 24, 67, 0.34), rgba(76, 29, 149, 0.28), rgba(8, 47, 73, 0.30)) !important; box-shadow: inset 3px 0 0 #f472b6, 0 12px 24px rgba(190, 24, 93, 0.20) !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-subject { border-color: #60a5fa !important; background: rgba(30, 64, 175, 0.30) !important; color: #dbeafe !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-action { border-color: #f9a8d4 !important; background: rgba(157, 23, 77, 0.30) !important; color: #fce7f3 !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-result { border-color: #6ee7b7 !important; background: rgba(5, 150, 105, 0.26) !important; color: #d1fae5 !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell { border-color: rgba(216, 180, 254, 0.68) !important; background: linear-gradient(135deg, rgba(76, 29, 149, 0.34), rgba(131, 24, 67, 0.24)) !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell:nth-child(3n) { border-color: rgba(103, 232, 249, 0.64) !important; background: linear-gradient(135deg, rgba(8, 47, 73, 0.45), rgba(6, 78, 59, 0.30)) !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-input-card :is(h1, h2, h3, h4, label, p, span),
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card :is(h1, h2, h3, h4, p, span),
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .reference-path-note :is(h1, h2, h3, h4, p, span) { color: #eef2ff !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-input-card :is(.text-indigo-100, .text-cyan-100, .lab-kicker),
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card :is(.lab-kicker, .text-indigo-100, .text-cyan-100),
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .reference-path-note :is(.lab-kicker, .text-indigo-100, .text-cyan-100) { color: #a5f3fc !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card:nth-of-type(3n + 1) { border-color: rgba(167, 139, 250, 0.54) !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card:nth-of-type(3n + 2) { border-color: rgba(251, 113, 133, 0.50) !important; }
+html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card:nth-of-type(3n) { border-color: rgba(45, 212, 191, 0.50) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { animation: none !important; }
+}

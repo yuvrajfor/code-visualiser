@@ -249,3 +249,8 @@
 - [x] Refine the site background into one cohesive framed composition across Code Studio, Algorithm Lab, and learner states.
 - [x] Add regression coverage and validate System, Light, and Dark modes on desktop and mobile.
 - [x] Save a checkpoint for the system-aware appearance and unified background refinement.
+- [x] Audit the existing Mandala palette, animation layers, and readability safeguards.
+- [x] Define a richer colourful Mandala palette for the background, panels, controls, and visualizer accents.
+- [x] Implement the enhanced living Mandala interface with restrained motion and clear content surfaces.
+- [x] Add regression coverage and validate Mandala readability, responsive workflow, and reduced-motion behaviour.
+- [x] Save a checkpoint for the colourful living Mandala interface enhancement.

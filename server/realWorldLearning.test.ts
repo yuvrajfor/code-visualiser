@@ -620,11 +620,15 @@ describe("state-first Code Studio workspace contract", () => {
 
   it("keeps the mandala theme colourful, living, and safe to pause for reduced motion", () => {
     expect(styleSource).toContain("Living mandala backdrop");
+    expect(styleSource).toContain("Colourful living Mandala");
     expect(styleSource).toContain(".lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast)");
-    expect(styleSource).toContain("background-color: #f8f5ed");
-    expect(styleSource).toContain("@keyframes mandala-drift");
-    expect(styleSource).toContain("animation: mandala-drift 28s linear infinite alternate");
-    expect(styleSource).toContain(".lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {\n    animation: none;");
+    expect(styleSource).toContain("--mandala-violet: #7c3aed");
+    expect(styleSource).toContain("--mandala-rose: #db2777");
+    expect(styleSource).toContain("@keyframes mandala-frame-drift");
+    expect(styleSource).toContain("animation: mandala-frame-drift 24s linear infinite alternate");
+    expect(styleSource).toContain("simple-array-cell:nth-child(3n + 2)");
+    expect(styleSource).toContain("html.dark .visual-theme-mandala:not(.visual-theme-high-contrast)");
+    expect(styleSource).toContain("animation: none !important");
   });
 
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
