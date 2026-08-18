@@ -521,6 +521,7 @@ describe("AI visual capacity fallback", () => {
 
 describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
+  const appSource = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
   const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
 
   it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
@@ -578,6 +579,19 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".visual-theme-high-contrast");
     expect(styleSource).toContain(".execution-state-enter");
     expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
+  });
+
+  it("keeps a persistent light-and-dark appearance switch separate from the learner visual world", () => {
+    expect(appSource).toContain("switchable");
+    expect(homeSource).toContain("const { theme, toggleTheme } = useTheme()");
+    expect(homeSource).toContain("data-appearance={theme}");
+    expect(homeSource).toContain("data-appearance-toggle");
+    expect(homeSource).toContain("Switch to ${theme === \"light\" ? \"dark\" : \"light\"} appearance");
+    expect(styleSource).toContain("Appearance system: visual worlds describe the learning analogy");
+    expect(styleSource).toContain("html.dark .lab-shell:not(.visual-theme-high-contrast)");
+    expect(styleSource).toContain("--appearance-page: #070b17");
+    expect(styleSource).toContain("html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast)");
+    expect(styleSource).toContain(".appearance-toggle:focus-visible");
   });
 
   it("keeps the mandala theme colourful, living, and safe to pause for reduced motion", () => {

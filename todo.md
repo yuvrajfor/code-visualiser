@@ -237,3 +237,9 @@
 - [x] Respect reduced-motion preferences and high-contrast mode by disabling or simplifying decorative background motion.
 - [x] Validate that the animated backdrop preserves readable text, controls, code, and 2D diagram state on phone and desktop.
 - [x] Save a checkpoint for the living mandala background and readable colourful interface.
+- [x] Audit all home, Code Studio, Algorithm Lab, onboarding, export, and visualizer surfaces for inconsistent colour and layout treatment.
+- [x] Define one professional light-and-dark token system with readable text, controls, cards, diagrams, and mandala backgrounds.
+- [x] Add a persistent light-and-dark mode control and apply it consistently across the full website.
+- [x] Refine spacing, responsive hierarchy, focus states, and interaction feedback throughout the website.
+- [x] Add regression coverage and validate the full learner flow in both light and dark modes on phone and desktop.
+- [x] Save a checkpoint for the full-site light-and-dark interface improvement.

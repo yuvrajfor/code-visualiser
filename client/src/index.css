@@ -1267,3 +1267,145 @@
     background-position: 50% -11rem, 50% -11rem, 50% -11rem, 0 0;
   }
 }
+
+/* Appearance system: visual worlds describe the learning analogy, while the
+   persisted light/dark choice controls the product surfaces around it. */
+.lab-shell {
+  --appearance-page: #f8f5ed;
+  --appearance-panel: #fffdf8;
+  --appearance-panel-soft: #fffaf0;
+  --appearance-line: #d9c6ae;
+  --appearance-ink: #172033;
+  --appearance-muted: #526174;
+  --appearance-accent: #4f46e5;
+  --appearance-focus: #7c3aed;
+  --appearance-shadow: rgba(88, 28, 135, 0.10);
+}
+
+.appearance-toggle {
+  gap: 0.45rem;
+  border: 1px solid var(--appearance-line) !important;
+  background: var(--appearance-panel) !important;
+  color: var(--appearance-ink) !important;
+  box-shadow: 0 8px 18px var(--appearance-shadow);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 180ms cubic-bezier(0.23, 1, 0.32, 1), border-color 180ms cubic-bezier(0.23, 1, 0.32, 1), color 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.appearance-toggle:hover { border-color: var(--appearance-focus) !important; background: var(--appearance-panel-soft) !important; color: var(--appearance-focus) !important; }
+.appearance-toggle:active { transform: scale(0.97); }
+.appearance-toggle:focus-visible { outline: 3px solid color-mix(in srgb, var(--appearance-focus) 58%, transparent); outline-offset: 3px; }
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) {
+  --lab-ink: #070b17;
+  --lab-panel: #111a2d;
+  --lab-line: rgba(148, 163, 184, 0.20);
+  --lab-muted: #aebbd0;
+  --appearance-page: #070b17;
+  --appearance-panel: #111a2d;
+  --appearance-panel-soft: #17233c;
+  --appearance-line: rgba(148, 163, 184, 0.24);
+  --appearance-ink: #f5f7ff;
+  --appearance-muted: #aebbd0;
+  --appearance-accent: #a5b4fc;
+  --appearance-focus: #67e8f9;
+  --appearance-shadow: rgba(1, 5, 16, 0.40);
+  background-color: var(--appearance-page) !important;
+  background-image:
+    radial-gradient(900px 480px at 5% -4%, rgba(99, 102, 241, 0.22), transparent 60%),
+    radial-gradient(760px 460px at 98% 4%, rgba(45, 212, 191, 0.12), transparent 64%),
+    linear-gradient(180deg, #0b1120 0%, #070b17 56%, #050812 100%) !important;
+  color: var(--appearance-ink) !important;
+}
+
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.12) 0 2%, transparent 2.25% 5.5%, rgba(167, 139, 250, 0.11) 5.7% 6.2%, transparent 6.4% 10.5%),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(244, 114, 182, 0.075) 0deg 6deg, transparent 6deg 12deg),
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(34, 211, 238, 0.07) 18.2% 18.7%, transparent 19% 30%, rgba(74, 222, 128, 0.05) 30.2% 30.7%, transparent 31% 100%),
+    linear-gradient(145deg, #0d1024 0%, #100c25 52%, #07171c 100%) !important;
+}
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) header,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-nav,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .lab-surface,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-path-card,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .story-command-deck,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .city-comparison-panel,
+html.dark .lab-shell:not(.visual-theme-high-contrast) [data-custom-city-editor],
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail .execution-state-panel,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail .execution-state-card,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-toolbar,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-diagram,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-array-panel,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-variable-panel,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-explanation-copy {
+  border-color: var(--appearance-line) !important;
+  background: var(--appearance-panel) !important;
+  box-shadow: 0 16px 38px var(--appearance-shadow) !important;
+  color: var(--appearance-ink) !important;
+}
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-brand-lockup > p:first-child,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-hero-heading,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-path-note *,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .story-command-deck :is(h1, h2, h3, p),
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail :is(h2, strong, code),
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-page :is(h1, h2, h3, h4, strong, code),
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-context code,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-node,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-variable-panel tbody th {
+  color: var(--appearance-ink) !important;
+}
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-path-note :is(h1, h2, h3, p, span) {
+  color: #f5f7ff !important;
+}
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-path-note .lab-kicker,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .reference-path-note :is(.text-indigo-100, .text-cyan-100) {
+  color: #93c5fd !important;
+}
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) :is(.reference-hero p, .reference-path-note p, .execution-rail-header > p:last-child, .execution-rail .execution-state-panel p, .execution-rail .execution-state-panel span, .simple-panel-label, .simple-panel-heading > span, .simple-explanation-heading > span, .simple-explanation-entry-meta, .simple-story-page .simple-2d-caption, .simple-state-tools > span, .simple-state-section-heading small, .simple-state-empty, .simple-variable-panel td, .simple-variable-panel thead th, .simple-2d-context) {
+  color: var(--appearance-muted) !important;
+}
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .lab-tab,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button),
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-toolbar button,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-state-tools button {
+  border-color: var(--appearance-line) !important;
+  background: var(--appearance-panel-soft) !important;
+  color: var(--appearance-ink) !important;
+}
+html.dark .lab-shell:not(.visual-theme-high-contrast) .lab-tab:hover,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .story-command-deck button:not(.create-story-button):hover,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-toolbar button:hover:not(:disabled),
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-state-tools button:hover:not(:disabled) { border-color: var(--appearance-focus) !important; background: rgba(99, 102, 241, 0.18) !important; color: #e0e7ff !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .lab-tab[data-active="true"],
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail-steps button.is-active { border-color: rgba(129, 140, 248, 0.64) !important; background: rgba(99, 102, 241, 0.24) !important; color: #e0e7ff !important; }
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-page .execution-source-card,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-page .simple-explanation-copy,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .execution-rail .execution-state-card,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-node { border-color: var(--appearance-line) !important; background: var(--appearance-panel-soft) !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-story-page .simple-explanation-copy.is-current { border-color: #818cf8 !important; background: rgba(67, 56, 202, 0.22) !important; box-shadow: 0 10px 22px rgba(67, 56, 202, 0.20) !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-subject { border-color: #60a5fa !important; background: rgba(30, 64, 175, 0.24) !important; color: #dbeafe !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-action { border-color: #c4b5fd !important; background: rgba(109, 40, 217, 0.20) !important; color: #ede9fe !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-result { border-color: #6ee7b7 !important; background: rgba(5, 150, 105, 0.20) !important; color: #d1fae5 !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-array-cell { border-color: rgba(165, 180, 252, 0.62) !important; background: rgba(67, 56, 202, 0.22) !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-array-cell strong { color: #e0e7ff !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-array-cell small,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-node-label,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-arrow { color: var(--appearance-muted) !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-pointer { color: #c4b5fd !important; }
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card textarea,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card input,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card select { border-color: rgba(129, 140, 248, 0.34) !important; background: #080e1c !important; color: #f8fafc !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card [data-code-only] h2,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .code-input-card [data-code-only] p { color: var(--appearance-ink) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .appearance-toggle { transition: none; }
+}
