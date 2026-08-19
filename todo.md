@@ -254,3 +254,9 @@
 - [x] Implement the enhanced living Mandala interface with restrained motion and clear content surfaces.
 - [x] Add regression coverage and validate Mandala readability, responsive workflow, and reduced-motion behaviour.
 - [x] Save a checkpoint for the colourful living Mandala interface enhancement.
+- [x] Audit the existing visual-setting persistence, interaction sounds, and Mandala controls.
+- [x] Define saved accent colour, Calm/Bright/Festival intensity, optional sound, and reduced-motion behaviours.
+- [x] Add an accessible Mandala customisation panel with persistent accent colour, intensity, and sound controls.
+- [x] Implement subtle theme-specific interaction sounds that remain optional and respect accessibility preferences.
+- [x] Add regression coverage and validate personalised Mandala controls, sound safety, responsive workflows, and visual clarity.
+- [x] Save a checkpoint for the finished Mandala personalisation and interface polish.

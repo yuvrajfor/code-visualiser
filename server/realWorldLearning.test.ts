@@ -631,6 +631,23 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("animation: none !important");
   });
 
+  it("lets learners persist a personalised Mandala accent, intensity, and optional chimes", () => {
+    expect(homeSource).toContain("code-story-studio:mandala-accent");
+    expect(homeSource).toContain("code-story-studio:mandala-intensity");
+    expect(homeSource).toContain("code-story-studio:mandala-sounds");
+    expect(homeSource).toContain("data-mandala-customization");
+    expect(homeSource).toContain("Mandala intensity");
+    expect(homeSource).toContain("Mandala chimes");
+    expect(homeSource).toContain('data-mandala-intensity={mandalaIntensity}');
+    expect(homeSource).toContain("playMandalaInteractionSound");
+    expect(styleSource).toContain("Personal Mandala settings use one user-selected jewel tone");
+    expect(styleSource).toContain("--mandala-user-accent");
+    expect(styleSource).toContain('data-mandala-intensity="festival"');
+    expect(styleSource).toContain(".mandala-intensity-slider");
+    expect(styleSource).toContain(".mandala-sound-toggle");
+    expect(styleSource).toContain("--mandala-motion-duration: 0s");
+  });
+
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
     expect(styleSource).toContain("Modern blue-slate product palette");
     expect(styleSource).toContain("background-color: #f4f7fb");

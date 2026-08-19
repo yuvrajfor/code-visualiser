@@ -72,6 +72,13 @@ import { getStoryLearningScore } from "@/lib/learningScore";
 import { useTheme, type ThemePreference } from "@/contexts/ThemeContext";
 
 type Language = "javascript" | "python" | "c" | "java";
+type MandalaIntensity = "calm" | "bright" | "festival";
+
+const mandalaIntensityOptions: { value: MandalaIntensity; label: string; detail: string }[] = [
+  { value: "calm", label: "Calm", detail: "Slow, soft colour" },
+  { value: "bright", label: "Bright", detail: "Balanced jewel tones" },
+  { value: "festival", label: "Festival", detail: "Vivid and celebratory" },
+];
 
 type LearningStep = {
   step: number;
@@ -894,6 +901,17 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [mandalaAccent, setMandalaAccent] = useState(() => {
+    if (typeof window === "undefined") return "#7c3aed";
+    const saved = window.localStorage.getItem("code-story-studio:mandala-accent");
+    return saved && /^#[0-9a-f]{6}$/i.test(saved) ? saved : "#7c3aed";
+  });
+  const [mandalaIntensity, setMandalaIntensity] = useState<MandalaIntensity>(() => {
+    if (typeof window === "undefined") return "bright";
+    const saved = window.localStorage.getItem("code-story-studio:mandala-intensity");
+    return saved === "calm" || saved === "festival" || saved === "bright" ? saved : "bright";
+  });
+  const [mandalaSoundsEnabled, setMandalaSoundsEnabled] = useState(() => typeof window === "undefined" ? false : window.localStorage.getItem("code-story-studio:mandala-sounds") === "on");
   const [visualTheme, setVisualTheme] = useState<VisualTheme>(() => {
     if (typeof window === "undefined") return "mandala";
     try {
@@ -930,6 +948,7 @@ export default function Home() {
   const [cinematicFocused, setCinematicFocused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const mandalaSoundTimeRef = useRef(0);
   const cinematicRequestKeysRef = useRef(new Set<string>());
   const currentStep = steps[currentStepIndex];
   const currentCinematicKey = currentStep ? getCinematicSceneKey(currentStep) : "";
@@ -948,6 +967,13 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") saveVisualTheme(visualTheme, window.localStorage);
   }, [visualTheme]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("code-story-studio:mandala-accent", mandalaAccent);
+    window.localStorage.setItem("code-story-studio:mandala-intensity", mandalaIntensity);
+    window.localStorage.setItem("code-story-studio:mandala-sounds", mandalaSoundsEnabled ? "on" : "off");
+  }, [mandalaAccent, mandalaIntensity, mandalaSoundsEnabled]);
 
   useEffect(() => {
     if (activeView !== "studio" || !steps.length) return;
@@ -1018,6 +1044,35 @@ export default function Home() {
       oscillator.stop(audio.currentTime + profile.duration + 0.02);
     } catch {
       // Sound is an optional learning aid. Browsers can restrict it until interaction.
+    }
+  };
+
+  const playMandalaInteractionSound = (kind: "accent" | "intensity" | "step") => {
+    if (!soundEnabled || !mandalaSoundsEnabled || visualTheme !== "mandala" || typeof window === "undefined") return;
+    const now = window.performance.now();
+    if (now - mandalaSoundTimeRef.current < 110) return;
+    mandalaSoundTimeRef.current = now;
+    try {
+      audioRef.current ??= new AudioContext();
+      const audio = audioRef.current;
+      const tones = kind === "accent" ? [523.25, 659.25] : kind === "intensity" ? [392, 587.33] : [440, 523.25];
+      const duration = kind === "step" ? 0.09 : 0.14;
+      void audio.resume();
+      tones.forEach((tone, index) => {
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        oscillator.type = index === 0 ? "sine" : "triangle";
+        oscillator.frequency.setValueAtTime(tone, audio.currentTime + index * 0.025);
+        gain.gain.setValueAtTime(0.0001, audio.currentTime + index * 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.028, audio.currentTime + index * 0.025 + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duration + index * 0.025);
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+        oscillator.start(audio.currentTime + index * 0.025);
+        oscillator.stop(audio.currentTime + duration + index * 0.025 + 0.015);
+      });
+    } catch {
+      // Optional chimes must never block learning when browser audio is unavailable.
     }
   };
 
@@ -1371,6 +1426,7 @@ export default function Home() {
     setShowBeforeState(false);
     setCurrentStepIndex(nextIndex);
     playActionSound(steps[nextIndex]?.story);
+    playMandalaInteractionSound("step");
   };
 
   const goToComparisonStep = (index: number) => {
@@ -1387,6 +1443,7 @@ export default function Home() {
           return index;
         }
         playActionSound(steps[index + 1]?.story);
+        playMandalaInteractionSound("step");
         return index + 1;
       });
     }, speedMs);
@@ -1432,6 +1489,7 @@ export default function Home() {
           setCurrentStepIndex((index) => {
             const nextIndex = action === "previous" ? Math.max(0, index - 1) : action === "next" ? Math.min(steps.length - 1, index + 1) : 0;
             playActionSound(steps[nextIndex]?.story);
+            playMandalaInteractionSound("step");
             return nextIndex;
           });
         }
@@ -1444,7 +1502,7 @@ export default function Home() {
   }, [activeView, steps, soundEnabled, comparisonLength]);
 
   return (
-    <div className={`lab-shell visual-theme-${visualTheme} min-h-screen overflow-x-hidden`} data-visual-theme={visualTheme} data-appearance={theme}>
+    <div className={`lab-shell visual-theme-${visualTheme} min-h-screen overflow-x-hidden`} data-visual-theme={visualTheme} data-appearance={theme} data-mandala-intensity={mandalaIntensity} data-mandala-sound={mandalaSoundsEnabled ? "on" : "off"} style={{ "--mandala-user-accent": mandalaAccent } as React.CSSProperties}>
       <header className="product-header reference-product-header sticky top-0 z-50 border-b px-5 py-3 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <button onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("home")); }} className="flex items-center gap-3 text-left" aria-label="Go to learning home">
@@ -1565,7 +1623,7 @@ export default function Home() {
                 <div className="rounded-2xl border border-amber-300/20 bg-amber-300/[0.07] p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em]" style={{ color: "#302727" }}>2 · See the idea</p><p className="mt-1 text-xs leading-5" style={{ color: "#170f07" }}>We turn each important line into familiar objects and actions.</p></div>
                 <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.06] p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em]" style={{ color: "#365044" }}>3 · Understand it</p><p className="mt-1 text-xs leading-5" style={{ color: "#4f695a" }}>Read the explanation in plain English and move at your own speed.</p></div>
               </div>
-              <details className="mt-5 border-t border-white/10 pt-4"><summary className="cursor-pointer text-xs font-bold text-[#d6c2ad]">Choose a visual setting</summary><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`rounded-xl border p-2 text-center text-[10px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/65 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}><ThemeKindIcon theme={theme.id} className="mx-auto mb-1 h-4 w-4" />{theme.shortLabel}</button>)}</div><p className="mt-2 text-[11px] leading-relaxed text-[#a89787]">{activeTheme.description}</p></details>
+              <details className="mt-5 border-t border-white/10 pt-4"><summary className="cursor-pointer text-xs font-bold text-[#d6c2ad]">Choose a visual setting</summary><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">{visualThemes.map((theme) => <button key={theme.id} onClick={() => setVisualTheme(theme.id)} aria-pressed={visualTheme === theme.id} className={`rounded-xl border p-2 text-center text-[10px] font-bold transition ${visualTheme === theme.id ? "border-amber-300/65 bg-amber-300/10 text-amber-100" : "border-white/10 bg-[#0c0806] text-[#a89787] hover:text-white"}`}><ThemeKindIcon theme={theme.id} className="mx-auto mb-1 h-4 w-4" />{theme.shortLabel}</button>)}</div><p className="mt-2 text-[11px] leading-relaxed text-[#a89787]">{activeTheme.description}</p>{visualTheme === "mandala" && <section className="mandala-customization-panel mt-4" data-mandala-customization aria-labelledby="mandala-customization-title"><div className="flex items-start justify-between gap-3"><div><p id="mandala-customization-title" className="text-xs font-extrabold">Make Mandala yours</p><p className="mt-1 text-[10px] leading-4">Your choices save on this device. Chimes stay optional.</p></div><Palette className="h-4 w-4" aria-hidden="true" /></div><label className="mandala-accent-control mt-4"><span><b>Accent colour</b><small>{mandalaAccent.toUpperCase()}</small></span><input type="color" value={mandalaAccent} onChange={(event) => setMandalaAccent(event.target.value)} onBlur={() => playMandalaInteractionSound("accent")} aria-label="Choose your Mandala accent colour" /></label><div className="mt-4"><div className="flex items-end justify-between gap-3"><div><b className="text-[11px]">Mandala intensity</b><p className="mt-1 text-[10px]">{mandalaIntensityOptions.find((option) => option.value === mandalaIntensity)?.detail}</p></div><span className="mandala-intensity-value">{mandalaIntensity}</span></div><input className="mandala-intensity-slider mt-3" type="range" min="0" max="2" step="1" value={mandalaIntensityOptions.findIndex((option) => option.value === mandalaIntensity)} onChange={(event) => setMandalaIntensity(mandalaIntensityOptions[Number(event.target.value)]?.value ?? "bright")} onPointerUp={() => playMandalaInteractionSound("intensity")} aria-label="Mandala intensity" aria-valuetext={mandalaIntensity} /><div className="mt-2 grid grid-cols-3 gap-1">{mandalaIntensityOptions.map((option) => <button key={option.value} type="button" onClick={() => { setMandalaIntensity(option.value); playMandalaInteractionSound("intensity"); }} aria-pressed={mandalaIntensity === option.value} className="mandala-intensity-option">{option.label}</button>)}</div></div><button type="button" className="mandala-sound-toggle mt-4" role="switch" aria-checked={mandalaSoundsEnabled} onClick={() => { setMandalaSoundsEnabled((enabled) => !enabled); playMandalaInteractionSound("accent"); }}><span className="grid h-7 w-7 place-items-center rounded-lg"><Volume2 className="h-3.5 w-3.5" /></span><span><b>Mandala chimes</b><small>{mandalaSoundsEnabled ? "On for story steps and settings" : "Off — choose this for soft interaction sound"}</small></span><span className="mandala-sound-state">{mandalaSoundsEnabled ? "On" : "Off"}</span></button></section>}</details>
             </aside>
           </section>
         </main>

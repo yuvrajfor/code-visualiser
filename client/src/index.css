@@ -1558,3 +1558,69 @@ html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card
 @media (prefers-reduced-motion: reduce) {
   .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { animation: none !important; }
 }
+
+/* Personal Mandala settings use one user-selected jewel tone without changing
+   the calm reading surfaces needed for code and beginner explanations. */
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) {
+  --mandala-user-accent: #7c3aed;
+  --mandala-accent-strength: 19%;
+  --mandala-motion-duration: 30s;
+  --mandala-panel-tint: 7%;
+  --frame-edge: linear-gradient(135deg, color-mix(in srgb, var(--mandala-user-accent) var(--mandala-accent-strength), transparent) 0%, transparent 16%, transparent 83%, rgba(5, 150, 105, 0.16) 100%);
+  --frame-glow: radial-gradient(940px 480px at 50% -8%, color-mix(in srgb, var(--mandala-user-accent) var(--mandala-panel-tint), #ffffff), transparent 70%);
+  animation-duration: var(--mandala-motion-duration) !important;
+}
+.lab-shell.visual-theme-mandala[data-mandala-intensity="calm"] { --mandala-accent-strength: 11%; --mandala-motion-duration: 44s; --mandala-panel-tint: 4%; }
+.lab-shell.visual-theme-mandala[data-mandala-intensity="bright"] { --mandala-accent-strength: 21%; --mandala-motion-duration: 29s; --mandala-panel-tint: 8%; }
+.lab-shell.visual-theme-mandala[data-mandala-intensity="festival"] { --mandala-accent-strength: 32%; --mandala-motion-duration: 18s; --mandala-panel-tint: 12%; }
+
+.mandala-customization-panel {
+  border: 1px solid color-mix(in srgb, var(--mandala-user-accent) 42%, rgba(255, 255, 255, 0.28));
+  border-radius: 0.9rem;
+  padding: 0.8rem;
+  color: #2d183b;
+  background:
+    radial-gradient(190px 76px at 96% 0%, color-mix(in srgb, var(--mandala-user-accent) 16%, transparent), transparent 75%),
+    linear-gradient(135deg, rgba(255, 249, 253, 0.96), rgba(246, 242, 255, 0.96) 52%, rgba(238, 253, 250, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 10px 24px color-mix(in srgb, var(--mandala-user-accent) 14%, transparent);
+}
+.mandala-customization-panel > div:first-child > p:last-child,
+.mandala-customization-panel p,
+.mandala-accent-control small,
+.mandala-sound-toggle small { color: #664f70; }
+.mandala-customization-panel > div:first-child > svg { color: var(--mandala-user-accent); }
+.mandala-accent-control { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.mandala-accent-control > span { display: grid; gap: 0.1rem; font-size: 0.68rem; }
+.mandala-accent-control small { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; }
+.mandala-accent-control input[type="color"] { width: 2.25rem; height: 2rem; padding: 0.18rem; cursor: pointer; border: 1px solid color-mix(in srgb, var(--mandala-user-accent) 58%, #ffffff); border-radius: 0.65rem; background: #fff; }
+.mandala-accent-control input[type="color"]:focus-visible { outline: 3px solid color-mix(in srgb, var(--mandala-user-accent) 48%, transparent); outline-offset: 2px; }
+.mandala-intensity-value { border-radius: 999px; padding: 0.18rem 0.42rem; color: var(--mandala-user-accent); background: color-mix(in srgb, var(--mandala-user-accent) 12%, transparent); font-size: 0.58rem; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; }
+.mandala-intensity-slider { width: 100%; height: 0.4rem; cursor: pointer; accent-color: var(--mandala-user-accent); }
+.mandala-intensity-option { border: 1px solid color-mix(in srgb, var(--mandala-user-accent) 20%, #d7cce1); border-radius: 0.48rem; padding: 0.38rem 0.16rem; color: #664f70; background: rgba(255, 255, 255, 0.68); font-size: 0.58rem; font-weight: 800; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.mandala-intensity-option:hover { border-color: var(--mandala-user-accent); color: var(--mandala-user-accent); }
+.mandala-intensity-option:active { transform: scale(0.96); }
+.mandala-intensity-option[aria-pressed="true"] { border-color: var(--mandala-user-accent); color: #fff; background: var(--mandala-user-accent); box-shadow: 0 5px 12px color-mix(in srgb, var(--mandala-user-accent) 28%, transparent); }
+.mandala-sound-toggle { display: grid; grid-template-columns: auto 1fr auto; align-items: center; width: 100%; gap: 0.55rem; border: 1px solid color-mix(in srgb, var(--mandala-user-accent) 28%, #dacfe5); border-radius: 0.78rem; padding: 0.5rem; color: #2d183b; background: rgba(255, 255, 255, 0.62); text-align: left; transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.mandala-sound-toggle:hover { border-color: var(--mandala-user-accent); }
+.mandala-sound-toggle:active { transform: scale(0.98); }
+.mandala-sound-toggle > span:first-child { color: #fff; background: var(--mandala-user-accent); }
+.mandala-sound-toggle b, .mandala-sound-toggle small { display: block; }
+.mandala-sound-toggle b { font-size: 0.65rem; }
+.mandala-sound-toggle small { margin-top: 0.1rem; font-size: 0.58rem; line-height: 1.2; }
+.mandala-sound-state { border-radius: 999px; padding: 0.14rem 0.34rem; color: var(--mandala-user-accent); background: color-mix(in srgb, var(--mandala-user-accent) 12%, transparent); font-size: 0.57rem; font-weight: 900; }
+
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-array-cell,
+.lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .simple-2d-action { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mandala-user-accent) 24%, transparent), 0 7px 16px color-mix(in srgb, var(--mandala-user-accent) 8%, transparent); }
+.lab-shell.visual-theme-mandala[data-mandala-intensity="festival"]:not(.visual-theme-high-contrast) .simple-2d-diagram { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mandala-user-accent) 24%, transparent), 0 20px 48px color-mix(in srgb, var(--mandala-user-accent) 18%, transparent) !important; }
+.lab-shell.visual-theme-mandala[data-mandala-intensity="calm"]:not(.visual-theme-high-contrast) .simple-2d-diagram { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mandala-user-accent) 12%, transparent), 0 12px 28px color-mix(in srgb, var(--mandala-user-accent) 8%, transparent) !important; }
+
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .mandala-customization-panel { color: #f4edff; border-color: color-mix(in srgb, var(--mandala-user-accent) 48%, rgba(216, 180, 254, 0.38)); background: radial-gradient(190px 76px at 96% 0%, color-mix(in srgb, var(--mandala-user-accent) 22%, transparent), transparent 75%), linear-gradient(135deg, rgba(33, 22, 66, 0.96), rgba(26, 28, 65, 0.96) 52%, rgba(10, 55, 61, 0.94)); }
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .mandala-customization-panel :is(p, small) { color: #d8d5ee; }
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .mandala-intensity-option,
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .mandala-sound-toggle { border-color: color-mix(in srgb, var(--mandala-user-accent) 34%, rgba(216, 180, 254, 0.32)); color: #f4edff; background: rgba(9, 13, 37, 0.46); }
+html.dark .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) .mandala-accent-control input[type="color"] { border-color: color-mix(in srgb, var(--mandala-user-accent) 58%, #d8b4fe); background: #111a35; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { --mandala-motion-duration: 0s; }
+  .mandala-intensity-option, .mandala-sound-toggle { transition: none; }
+}
