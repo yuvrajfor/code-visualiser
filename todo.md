@@ -291,3 +291,8 @@
 - [x] Make the Code Story workspace denser, improve bold readable explanation styling, and implement dynamic result-scene variants.
 - [x] Add regression coverage and validate result variation, text readability, and responsive learner flow.
 - [x] Save a checkpoint for the dense, readable, dynamic result-visual upgrade.
+- [x] Audit repository files and dependencies for safe removal, and assess the supplied Three.js reference against the existing SVG visual system.
+- [x] Remove only demonstrably unused repository items and apply targeted visual improvements that preserve accessibility and source-grounded learning.
+- [x] Run regression, type, build, and responsive visual validation after cleanup.
+- [ ] Create a verified commit authored by Yuvraj and push it to the connected GitHub repository.
+- [ ] Save a checkpoint for the cleaned, pushed repository state.
