@@ -20,4 +20,8 @@ Run these commands from the repository root:
 | `pnpm check` | Type-checks frontend, backend, and shared code. |
 | `pnpm build` | Builds the frontend bundle and production backend server. |
 
-The default SVG visual works everywhere. The optional 3D result view uses React Three Fiber with WebGL fallback and loads only when a learner requests it.
+The default SVG visual works everywhere. The optional 3D result view uses React Three Fiber with direct Three.js orbit controls, WebGL fallback, and dedicated lazy runtime/layout chunks that load only when a learner opens it.
+
+## Code structure analysis
+
+JavaScript and TypeScript use Babel with an Esprima recovery fallback. Python, C, and Java use cached Tree-sitter WebAssembly grammars inside the backend process; learner source is parsed as text and is never executed. When a grammar is temporarily unavailable, the existing conservative structural summary keeps the learning flow available.

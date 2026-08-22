@@ -94,7 +94,7 @@ type LearningStep = {
 
 type CodeStructureSummary = {
   language: string;
-  parser: "babel" | "esprima" | "heuristic";
+  parser: "babel" | "esprima" | "tree-sitter" | "heuristic";
   parseStatus: "parsed" | "recovered" | "fallback";
   nodeCount: number;
   declarations: number;
@@ -822,7 +822,7 @@ function ResultStageSculpture({ variant, tone }: { variant: ResultSceneVariant; 
   return <g {...shared}><path className="result-sculpture-top" d="M756 164 790 143 824 164 790 185Z" /><path className="result-sculpture-left" d="M756 164v30l34 20v-29Z" /><path className="result-sculpture-right" d="M824 164v30l-34 20v-29Z" /><path className="result-sculpture-beam" d="M790 143v-45M772 109l18-11 18 11M772 109v22M808 109v22" /><path className="result-sculpture-spark" d="m847 108 5 9 10 4-10 5-5 10-5-10-10-5 10-4Z" /></g>;
 }
 
-function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, showThreeResult }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean; showThreeResult: boolean }) {
+function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, showThreeResult, language, structure }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean; showThreeResult: boolean; language: Language; structure: CodeStructureSummary | null }) {
   const [selectedStageNode, setSelectedStageNode] = useState<"object" | "action" | "result">("result");
   const shownStep = showBefore && previousStep ? previousStep : step;
   const state = shownStep.executionState ?? {
@@ -890,7 +890,13 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, show
         </div>
         <p className="simple-2d-stage-status" aria-live="polite"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" />{selectedStageNode === "object" ? `Focus: ${state.subject}` : selectedStageNode === "action" ? `Action: ${state.action}` : `Result: ${state.change}`}</p>
       </div>
-      {showThreeResult ? <React.Suspense fallback={<div className="three-result-loading" data-three-result-loading>Loading the interactive 3D result…</div>}><CodeResultThreeScene subject={state.subject} action={state.action} result={state.change} variant={resultScene.variant} /></React.Suspense> : null}
+      <section className="language-result-dossier" data-language-result-template={language} aria-label={`${language} result structure`}>
+        <div><span>Result template</span><strong>{language === "python" ? "Indented flow" : language === "c" ? "Memory blocks" : language === "java" ? "Class pipeline" : "Expression graph"}</strong></div>
+        <div className="language-result-metrics">
+          <span><b>{structure?.functions ?? 0}</b> instructions</span><span><b>{structure?.branches ?? 0}</b> choices</span><span><b>{structure?.loops ?? 0}</b> repeats</span><span><b>{structure?.calls ?? 0}</b> calls</span>
+        </div>
+      </section>
+      {showThreeResult ? <React.Suspense fallback={<div className="three-result-loading" data-three-result-loading>Loading the interactive 3D result…</div>}><CodeResultThreeScene subject={state.subject} action={state.action} result={state.change} variant={resultScene.variant} language={language} structure={structure} /></React.Suspense> : null}
       <div className="simple-state-details">
         <section className="simple-array-panel" data-array-cells aria-label="Array cells">
           <div className="simple-state-section-heading"><span>Array cells</span><small>{array ? array.name : "No array on this step"}</small></div>
@@ -1748,7 +1754,7 @@ export default function Home() {
             </aside>
             <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-3.5 md:p-4" data-primary-visual-stage>
               <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-three-result-toggle onClick={() => setShowThreeResult((visible) => !visible)} aria-pressed={showThreeResult}>{showThreeResult ? "Hide 3D" : "Open 3D"}</button><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
-              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} showThreeResult={showThreeResult} /></div>
+              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} showThreeResult={showThreeResult} language={selectedLang} structure={currentStructure} /></div>
               <section className="persistent-step-explanation mt-3" data-persistent-explanation aria-label="Current plain-English explanation">
                 <div><span>What happens now</span><strong>Line {currentStep.line}</strong></div>
                 <p>{currentStep.story.plainEnglish}</p>

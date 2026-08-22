@@ -167,6 +167,14 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("@react-three") || id.includes("/three@") || id.includes("/three/")) return "three-result-runtime";
+          if (id.includes("d3-force-3d") || id.includes("/d3-")) return "three-result-layout";
+        },
+      },
+    },
   },
   server: {
     host: true,

@@ -13,7 +13,7 @@ import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterprete
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 import { generateAIVisual } from "./aiVisualGenerator";
 import { createStoryRequestCapacity, StoryRequestCapacityError } from "./storyRequestCapacity";
-import { analyzeCodeStructure } from "./codeStructureAnalyzer";
+import { analyzeCodeStructure, analyzeCodeStructureWithTreeSitter } from "./codeStructureAnalyzer";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -558,12 +558,20 @@ describe("language-aware code structure analysis", () => {
     expect(structure.branches).toBeGreaterThanOrEqual(1);
   });
 
-  it("uses a conservative structural fallback for supported non-JavaScript languages", () => {
-    const structure = analyzeCodeStructure("for i in range(3):\n  print(i)", "python");
+  it("uses cached Tree-sitter grammars for Python, C, and Java without executing learner code", async () => {
+    const [python, c, java] = await Promise.all([
+      analyzeCodeStructureWithTreeSitter("for item in basket:\n  print(item)", "python"),
+      analyzeCodeStructureWithTreeSitter("int sum(int left, int right) { if (left > right) return left; return left + right; }", "c"),
+      analyzeCodeStructureWithTreeSitter("class Cart { int size() { for (int i = 0; i < 2; i++) { } return 2; } }", "java"),
+    ]);
 
-    expect(structure).toMatchObject({ language: "python", parser: "heuristic", parseStatus: "fallback" });
-    expect(structure.loops).toBeGreaterThanOrEqual(1);
-    expect(structure.calls).toBeGreaterThanOrEqual(1);
+    for (const structure of [python, c, java]) {
+      expect(structure).toMatchObject({ parser: "tree-sitter" });
+      expect(structure.nodeCount).toBeGreaterThan(3);
+    }
+    expect(python.loops).toBeGreaterThanOrEqual(1);
+    expect(c.functions).toBeGreaterThanOrEqual(1);
+    expect(java.functions).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -574,6 +582,8 @@ describe("state-first Code Studio workspace contract", () => {
   const svgBackgroundSource = readFileSync(new URL("../frontend/src/components/LivingSvgBackground.tsx", import.meta.url), "utf8");
   const threeSceneSource = readFileSync(new URL("../frontend/src/components/CodeResultThreeScene.tsx", import.meta.url), "utf8");
   const projectReadme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  const viteSource = readFileSync(new URL("../vite.config.ts", import.meta.url), "utf8");
+  const analyzerSource = readFileSync(new URL("../backend/codeStructureAnalyzer.ts", import.meta.url), "utf8");
 
   it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
     const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
@@ -618,13 +628,23 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("showThreeResult");
     expect(homeSource).toContain("currentStructure ?");
     expect(threeSceneSource).toContain('from "@react-three/fiber"');
-    expect(threeSceneSource).toContain('from "@react-three/drei"');
+    expect(threeSceneSource).toContain('from "three/examples/jsm/controls/OrbitControls.js"');
     expect(threeSceneSource).toContain('from "d3-force-3d"');
-    expect(threeSceneSource).toContain("<OrbitControls");
+    expect(threeSceneSource).toContain("function CameraOrbit");
     expect(threeSceneSource).toContain('data-three-layout="d3-force-3d"');
+    expect(threeSceneSource).toContain("data-three-template={visual.template}");
+    expect(homeSource).toContain("data-language-result-template={language}");
+    expect(styleSource).toContain(".language-result-dossier");
+    expect(styleSource).toContain(".code-result-three-legend");
     expect(styleSource).toContain(".code-result-three-scene");
     expect(projectReadme).toContain("`frontend/`");
     expect(projectReadme).toContain("`backend/`");
+    expect(projectReadme).toContain("Tree-sitter WebAssembly grammars");
+    expect(viteSource).toContain('return "three-result-runtime"');
+    expect(viteSource).toContain('return "three-result-layout"');
+    expect(analyzerSource).toContain('tree-sitter-python.wasm');
+    expect(analyzerSource).toContain('tree-sitter-c.wasm');
+    expect(analyzerSource).toContain('tree-sitter-java.wasm');
   });
 
   it("uses cohesive custom SVG concept glyphs and a restrained depth frame instead of browser emoji cues", () => {

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { createRealWorldStory, type RealWorldStory } from "../frontend/src/lib/realWorldLearning";
 import { createStoryRequestCapacity } from "./storyRequestCapacity";
-import { analyzeCodeStructure, type CodeStructureSummary } from "./codeStructureAnalyzer";
+import { analyzeCodeStructure, analyzeCodeStructureWithTreeSitter, type CodeStructureSummary } from "./codeStructureAnalyzer";
 
 export const API_SCENE_KINDS = [
   "workbench",
@@ -253,6 +253,10 @@ export function resolveInterpreterStory(code: string, content: unknown, language
   }
 }
 
+async function enrichStoryStructure(story: ApiCodeStory, code: string, language: string): Promise<ApiCodeStory> {
+  return { ...story, structure: await analyzeCodeStructureWithTreeSitter(code, language) };
+}
+
 const codeStoryResponseSchema = {
   type: "json_schema" as const,
   json_schema: {
@@ -326,10 +330,10 @@ export async function interpretCodeAsVisualStory(input: InterpreterInput, princi
         ],
         response_format: codeStoryResponseSchema,
       });
-      return resolveInterpreterStory(input.code, response.choices[0]?.message.content, input.language);
+      return enrichStoryStructure(resolveInterpreterStory(input.code, response.choices[0]?.message.content, input.language), input.code, input.language);
     } catch (error) {
       if (error instanceof CodeStoryInterpreterError) throw error;
-      return createFallbackApiCodeStory(input.code, input.language);
+      return enrichStoryStructure(createFallbackApiCodeStory(input.code, input.language), input.code, input.language);
     } finally {
       releaseCapacity();
     }
