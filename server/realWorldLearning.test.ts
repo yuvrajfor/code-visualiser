@@ -563,7 +563,7 @@ describe("state-first Code Studio workspace contract", () => {
 
   it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
     expect(homeSource).toContain("<SceneKindIcon kind={preset.kind}");
-    expect(homeSource).toContain("<ThemeKindIcon theme={theme.id}");
+    expect(homeSource).not.toContain("<ThemeKindIcon theme={theme.id}");
     expect(homeSource).not.toContain("{preset.icon}");
     expect(homeSource).not.toContain("{theme.icon}");
     expect(homeSource).not.toMatch(/[🛠📦🧠]/u);
@@ -631,15 +631,15 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("animation: none !important");
   });
 
-  it("lets learners persist a personalised Mandala accent, intensity, and optional chimes", () => {
+  it("retires learner-facing visual-setting controls while preserving the accessible product frame", () => {
     expect(homeSource).toContain("code-story-studio:mandala-accent");
     expect(homeSource).toContain("code-story-studio:mandala-intensity");
     expect(homeSource).toContain("code-story-studio:mandala-sounds");
-    expect(homeSource).toContain("data-mandala-customization");
-    expect(homeSource).toContain("Mandala intensity");
-    expect(homeSource).toContain("Mandala chimes");
+    expect(homeSource).not.toContain("data-mandala-customization");
+    expect(homeSource).not.toContain("Choose a visual setting");
+    expect(homeSource).not.toContain("Algorithm lab");
+    expect(homeSource).not.toContain("Open Algorithm Lab");
     expect(homeSource).toContain('data-mandala-intensity={mandalaIntensity}');
-    expect(homeSource).toContain("playMandalaInteractionSound");
     expect(styleSource).toContain("Personal Mandala settings use one user-selected jewel tone");
     expect(styleSource).toContain("--mandala-user-accent");
     expect(styleSource).toContain('data-mandala-intensity="festival"');
@@ -648,10 +648,10 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("--mandala-motion-duration: 0s");
   });
 
-  it("keeps the interactive fog layer bundled, Mandala-aware, and safe for reading controls", () => {
+  it("keeps the interactive fog layer bundled, appearance-aware, and safe for reading controls", () => {
     const fogSource = readFileSync(new URL("../client/src/components/VantaFogBackground.tsx", import.meta.url), "utf8");
 
-    expect(homeSource).toContain('VantaFogBackground active={visualTheme === "mandala"}');
+    expect(homeSource).toContain('VantaFogBackground active={visualTheme !== "high-contrast"}');
     expect(fogSource).toContain('import("vanta/dist/vanta.fog.min")');
     expect(fogSource).toContain("THREE,");
     expect(fogSource).toContain("effectRef.current?.destroy()");
@@ -659,6 +659,10 @@ describe("state-first Code Studio workspace contract", () => {
     expect(fogSource).toContain("deviceAllowsAnimatedBackground");
     expect(fogSource).toContain("mouseControls: true");
     expect(fogSource).toContain("touchControls: true");
+    expect(fogSource).toContain("highlightColor: 0xeac34b");
+    expect(fogSource).toContain("midtoneColor: 0x563f3f");
+    expect(fogSource).toContain("lowlightColor: 0x323138");
+    expect(fogSource).toContain("baseColor: 0x3b3535");
     expect(styleSource).toContain(".vanta-fog-layer");
     expect(styleSource).toContain("pointer-events: none");
     expect(styleSource).toContain(".lab-shell > :not(.vanta-fog-layer)");

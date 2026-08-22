@@ -79,13 +79,19 @@ export function VantaFogBackground({
     }
 
     let cancelled = false;
-    const colour = normalizeHex(accent);
     const option = intensityOptions[intensity];
     const isDark = appearance === "dark";
-    const highlight = mixHex(colour, "#fef3c7", isDark ? 0.22 : 0.38);
-    const midtone = mixHex(colour, isDark ? "#172554" : "#ecfeff", isDark ? 0.34 : 0.18);
-    const lowlight = isDark ? "#070b17" : "#2e1065";
-    const base = isDark ? "#0f172a" : "#f8fafc";
+    // Light intentionally uses Vanta FOG's original palette, matching the first
+    // configuration supplied for this site. Dark uses the supplied gold-charcoal
+    // values for a calmer, warmer nighttime atmosphere.
+    const appearancePalette = isDark
+      ? {
+          highlightColor: 0xeac34b,
+          midtoneColor: 0x563f3f,
+          lowlightColor: 0x323138,
+          baseColor: 0x3b3535,
+        }
+      : {};
 
     const createEffect = async () => {
       try {
@@ -100,10 +106,7 @@ export function VantaFogBackground({
           gyroControls: false,
           minHeight: 200,
           minWidth: 200,
-          highlightColor: toColourNumber(highlight),
-          midtoneColor: toColourNumber(midtone),
-          lowlightColor: toColourNumber(lowlight),
-          baseColor: toColourNumber(base),
+          ...appearancePalette,
           blurFactor: option.blurFactor,
           speed: option.speed,
           zoom: option.zoom,
@@ -120,7 +123,7 @@ export function VantaFogBackground({
       effectRef.current?.destroy();
       effectRef.current = null;
     };
-  }, [accent, active, appearance, intensity, motionAllowed]);
+  }, [active, appearance, intensity, motionAllowed]);
 
   const option = intensityOptions[intensity];
   return <div ref={frameRef} aria-hidden="true" className="vanta-fog-layer" data-fog-status={status} data-fog-intensity={intensity} style={{ "--fog-opacity": option.opacity } as CSSProperties} />;

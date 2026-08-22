@@ -265,3 +265,8 @@
 - [x] Connect fog colours and opacity to Mandala accent and intensity choices while respecting reduced-motion and low-power safeguards.
 - [x] Add regression coverage and validate the animated background on desktop and mobile in light and dark appearances.
 - [x] Save a checkpoint for the interactive fog background enhancement.
+- [x] Audit the existing Vanta FOG configuration, appearance state, navigation, and visual-setting controls.
+- [x] Apply the brighter supplied Vanta fog palette in Light mode and the supplied gold-charcoal palette in Dark mode.
+- [x] Remove the Algorithm Lab navigation and visual-setting controls so the interactive fog becomes the primary site background.
+- [x] Add regression coverage and validate the simplified Code Studio flow in light and dark appearances on mobile and desktop.
+- [x] Save a checkpoint for the dual-palette fog background and simplified interface.
