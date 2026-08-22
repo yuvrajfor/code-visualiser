@@ -822,6 +822,15 @@ function ResultStageSculpture({ variant, tone }: { variant: ResultSceneVariant; 
   return <g {...shared}><path className="result-sculpture-top" d="M756 164 790 143 824 164 790 185Z" /><path className="result-sculpture-left" d="M756 164v30l34 20v-29Z" /><path className="result-sculpture-right" d="M824 164v30l-34 20v-29Z" /><path className="result-sculpture-beam" d="M790 143v-45M772 109l18-11 18 11M772 109v22M808 109v22" /><path className="result-sculpture-spark" d="m847 108 5 9 10 4-10 5-5 10-5-10-10-5 10-4Z" /></g>;
 }
 
+function ResultStageTelemetry({ tone }: { tone: number }) {
+  return <g className={`simple-2d-stage-result-telemetry result-telemetry-tone-${tone}`} aria-hidden="true">
+    <path className="result-telemetry-rail" d="M718 88h148M732 79v18M765 79v18M798 79v18M831 79v18" />
+    <path className="result-telemetry-tower" d="M874 137v-38l12-7 12 7v38M874 111l12 7 12-7" />
+    <path className="result-telemetry-shadow" d="m718 207 42-25 42 25-42 24Z" />
+    <circle className="result-telemetry-pip" cx="738" cy="88" r="4" /><circle className="result-telemetry-pip" cx="770" cy="88" r="4" /><circle className="result-telemetry-pip" cx="802" cy="88" r="4" /><circle className="result-telemetry-pip" cx="834" cy="88" r="4" />
+  </g>;
+}
+
 function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, showThreeResult, language, structure }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean; showThreeResult: boolean; language: Language; structure: CodeStructureSummary | null }) {
   const [selectedStageNode, setSelectedStageNode] = useState<"object" | "action" | "result">("result");
   const shownStep = showBefore && previousStep ? previousStep : step;
@@ -861,6 +870,7 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, show
             <g className="simple-2d-stage-prism simple-2d-stage-prism-object"><path d="M117 158 146 139 175 158 146 177Z" /><path d="M117 158v20l29 19v-20ZM175 158v20l-29 19v-20Z" /></g>
             <g className="simple-2d-stage-prism simple-2d-stage-prism-action"><path d="M451 139 480 120 509 139 480 158Z" /><path d="M451 139v20l29 19v-20ZM509 139v20l-29 19v-20Z" /></g>
             <g className="simple-2d-stage-result-platform" data-result-depth-platform={resultScene.variant}><path d="M730 188 806 143 882 188 806 232Z" /><path d="M730 188v17l76 45v-18ZM882 188v17l-76 45v-18Z" /></g>
+            <ResultStageTelemetry tone={resultScene.seed} />
             <ResultStageSculpture variant={resultScene.variant} tone={resultScene.seed} />
           </g>
           <g className="simple-2d-stage-orbits"><ellipse cx="480" cy="124" rx="402" ry="86" /><ellipse cx="480" cy="124" rx="290" ry="52" /></g>
@@ -890,6 +900,10 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, show
         </div>
         <p className="simple-2d-stage-status" aria-live="polite"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" />{selectedStageNode === "object" ? `Focus: ${state.subject}` : selectedStageNode === "action" ? `Action: ${state.action}` : `Result: ${state.change}`}</p>
       </div>
+      <section className="visual-stage-readout" data-visual-stage-readout aria-label="Visual state readout">
+        <div><span>Visual focus</span><strong>{selectedStageNode === "result" ? resultScene.label : selectedStageNode}</strong></div>
+        <span><b>{variables.length}</b> values</span><span><b>{array?.cells.length ?? 0}</b> cells</span><span><b>{pointers.length}</b> pointers</span><span><b>{structure?.nodeCount ?? 0}</b> syntax nodes</span>
+      </section>
       <section className="language-result-dossier" data-language-result-template={language} aria-label={`${language} result structure`}>
         <div><span>Result template</span><strong>{language === "python" ? "Indented flow" : language === "c" ? "Memory blocks" : language === "java" ? "Class pipeline" : "Expression graph"}</strong></div>
         <div className="language-result-metrics">

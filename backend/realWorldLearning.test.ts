@@ -605,6 +605,8 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("data-state-comparison-toggle");
     expect(homeSource).toContain("data-array-cells");
     expect(homeSource).toContain("data-variable-table");
+    expect(homeSource).toContain("data-visual-stage-readout");
+    expect(homeSource).toContain("ResultStageTelemetry");
     expect(homeSource).toContain('?? "mandala"');
     expect(homeSource).toContain("Object");
     expect(homeSource).toContain("Action");
@@ -617,6 +619,8 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".simple-explanation-scroll");
     expect(styleSource).toContain(".simple-explanation-copy.is-current");
     expect(styleSource).toContain(".simple-2d-diagram");
+    expect(styleSource).toContain(".visual-stage-readout");
+    expect(styleSource).toContain(".simple-2d-stage-result-telemetry");
     expect(styleSource).toContain("Mandala study theme");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");
