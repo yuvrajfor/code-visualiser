@@ -29,8 +29,8 @@ export class StoryRequestCapacityError extends Error {
  */
 export function createStoryRequestCapacity(options: StoryRequestCapacityOptions = {}) {
   const windowMs = options.windowMs ?? 60_000;
-  const maxRequestsPerWindow = options.maxRequestsPerWindow ?? 6;
-  const maxConcurrentRequests = options.maxConcurrentRequests ?? 4;
+  const maxRequestsPerWindow = options.maxRequestsPerWindow ?? 8;
+  const maxConcurrentRequests = options.maxConcurrentRequests ?? 6;
   const maxConcurrentRequestsPerPrincipal = options.maxConcurrentRequestsPerPrincipal ?? 1;
   const maxTrackedPrincipals = options.maxTrackedPrincipals ?? 1_000;
   const now = options.now ?? (() => Date.now());

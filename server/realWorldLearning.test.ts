@@ -731,11 +731,17 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".result-scene-route .result-sculpture-route");
     expect(homeSource).toContain('data-dense-learning-workspace');
     expect(homeSource).toContain('className="simple-explanation-lede"');
+    expect(homeSource).toContain('data-persistent-explanation');
     expect(styleSource).toContain("Dense learner workspace");
     expect(styleSource).toContain(".simple-2d-stage-result-sculpture");
+    expect(styleSource).toContain(".simple-2d-stage-data-cubes");
+    expect(styleSource).toContain(".simple-2d-stage-result-platform");
     expect(styleSource).toContain(".result-sculpture-route");
     expect(styleSource).toContain(".result-sculpture-loop");
     expect(styleSource).toContain(".simple-explanation-copy.is-current > p");
+    expect(styleSource).toContain(".persistent-step-explanation");
+    expect(styleSource).toContain("opacity: 0.92");
+    expect(styleSource).not.toContain("opacity: 0.66;");
     expect(styleSource).toContain("@keyframes story-stage-result-arrive");
   });
 

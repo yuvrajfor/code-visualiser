@@ -838,9 +838,15 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
           <rect width="960" height="248" rx="28" fill="url(#story-stage-glow)" />
           <path className="simple-2d-stage-floor" d="M66 184 480 75 894 184 480 239Z" fill="url(#story-stage-floor)" />
           <path className="simple-2d-stage-floor-grid" d="M134 184 480 91 826 184M207 203 480 129 753 203M480 76v160M322 117v101M638 117v101" />
+          <g className="simple-2d-stage-data-cubes" aria-hidden="true">
+            <path d="M230 112 242 105 254 112 242 119Z" /><path d="M230 112v11l12 7v-11ZM254 112v11l-12 7v-11Z" />
+            <path d="M674 160 686 153 698 160 686 167Z" /><path d="M674 160v11l12 7v-11ZM698 160v11l-12 7v-11Z" />
+            <path d="M707 96 717 90 727 96 717 102Z" /><path d="M707 96v9l10 6v-9ZM727 96v9l-10 6v-9Z" />
+          </g>
           <g className="simple-2d-stage-prisms" filter="url(#story-stage-shadow)">
             <g className="simple-2d-stage-prism simple-2d-stage-prism-object"><path d="M117 158 146 139 175 158 146 177Z" /><path d="M117 158v20l29 19v-20ZM175 158v20l-29 19v-20Z" /></g>
             <g className="simple-2d-stage-prism simple-2d-stage-prism-action"><path d="M451 139 480 120 509 139 480 158Z" /><path d="M451 139v20l29 19v-20ZM509 139v20l-29 19v-20Z" /></g>
+            <g className="simple-2d-stage-result-platform" data-result-depth-platform={resultScene.variant}><path d="M730 188 806 143 882 188 806 232Z" /><path d="M730 188v17l76 45v-18ZM882 188v17l-76 45v-18Z" /></g>
             <ResultStageSculpture variant={resultScene.variant} tone={resultScene.seed} />
           </g>
           <g className="simple-2d-stage-orbits"><ellipse cx="480" cy="124" rx="402" ry="86" /><ellipse cx="480" cy="124" rx="290" ry="52" /></g>
@@ -1722,6 +1728,11 @@ export default function Home() {
             <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-3.5 md:p-4" data-primary-visual-stage>
               <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
               <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} /></div>
+              <section className="persistent-step-explanation mt-3" data-persistent-explanation aria-label="Current plain-English explanation">
+                <div><span>What happens now</span><strong>Line {currentStep.line}</strong></div>
+                <p>{currentStep.story.plainEnglish}</p>
+                <small>This explanation stays visible while you explore the 3D visual.</small>
+              </section>
             </div>
             <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-3.5 md:p-4" data-direct-explanation-panel>
               <div className="simple-explanation-heading"><p className="simple-panel-label">Explanation</p><span>Step {currentStepIndex + 1} of {steps.length}</span></div>

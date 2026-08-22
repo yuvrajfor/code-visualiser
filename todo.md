@@ -301,3 +301,8 @@
 - [x] Implement high-impact request resilience and capacity controls without exposing technical errors to learners.
 - [x] Add regression coverage and validate repeated and concurrent-like story requests.
 - [x] Save a checkpoint for the multi-user readiness upgrade.
+- [x] Audit whitespace, explanation hover behavior, result-scene depth, and current per-instance capacity controls.
+- [x] Design a denser learning workspace with explanations that remain clearly visible after hover ends.
+- [x] Implement denser visual/result surfaces, richer source-grounded 3D SVG detail, and multi-user capacity refinements.
+- [x] Add regression coverage and validate density, persistent explanation readability, result-stage depth, and resilient request behavior.
+- [ ] Save a checkpoint for the dense workspace and persistent-explanation upgrade.

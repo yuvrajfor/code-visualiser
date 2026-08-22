@@ -915,7 +915,7 @@
 }
 
 .simple-explanation-copy:not(.is-current) {
-  opacity: 0.66;
+  opacity: 0.92;
 }
 
 .simple-explanation-copy.is-current {
@@ -1693,6 +1693,11 @@ html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card
 .simple-2d-stage-prism-object path:last-child { fill: #0e7490; stroke: #075985; }
 .simple-2d-stage-prism-action path:last-child { fill: #5b21b6; stroke: #4c1d95; }
 .simple-2d-stage-prism-result path:last-child { fill: #b45309; stroke: #92400e; }
+.simple-2d-stage-data-cubes { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.25; opacity: .72; filter: drop-shadow(0 5px 4px rgba(37,99,235,.16)); animation: story-stage-data-cubes 5.2s cubic-bezier(.45,0,.55,1) infinite alternate; }
+.simple-2d-stage-data-cubes path:nth-child(2n) { fill: #60a5fa; stroke: #1d4ed8; }
+.simple-2d-stage-result-platform { filter: drop-shadow(0 10px 8px rgba(120,53,15,.18)); opacity: .94; }
+.simple-2d-stage-result-platform path:first-child { fill: #fef3c7; stroke: #b45309; stroke-width: 1.7; }
+.simple-2d-stage-result-platform path:last-child { fill: #d97706; stroke: #92400e; stroke-width: 1.5; }
 .simple-2d-visual-stage[data-selected-stage-node="object"] .simple-2d-stage-prism-object,
 .simple-2d-visual-stage[data-selected-stage-node="action"] .simple-2d-stage-prism-action,
 .simple-2d-visual-stage[data-selected-stage-node="result"] .simple-2d-stage-prism-result { opacity: 1; filter: drop-shadow(0 0 10px currentColor); }
@@ -1728,6 +1733,7 @@ html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card
 .simple-2d-visual-stage .simple-2d-arrow svg { width: 1.15rem; height: 1.15rem; }
 .simple-2d-visual-stage .simple-2d-stage-status { padding: .25rem .55rem; border: 1px solid rgba(99,102,241,.16); border-radius: 999px; background: rgba(255,255,255,.72); backdrop-filter: blur(8px); }
 @keyframes story-stage-prism-bob { from { transform: translateY(1px); } to { transform: translateY(-8px); } }
+@keyframes story-stage-data-cubes { from { transform: translateY(3px); opacity: .46; } to { transform: translateY(-6px); opacity: .94; } }
 
 html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage[data-dimensional-svg-stage="isometric"] {
   border-color: rgba(167,139,250,.56) !important;
@@ -1739,9 +1745,13 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .s
 html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-result { border-color: #fbbf24 !important; background: linear-gradient(145deg, rgba(180,83,9,.52), rgba(120,53,15,.70)) !important; color: #fffbeb !important; }
 html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-arrow,
 html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-stage-status { color: #e0e7ff; background: rgba(15,23,42,.68); border-color: rgba(196,181,253,.30); }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-stage-data-cubes { fill: #155e75; stroke: #67e8f9; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-stage-data-cubes path:nth-child(2n) { fill: #0e7490; stroke: #a5f3fc; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-stage-result-platform path:first-child { fill: #78350f; stroke: #fbbf24; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-stage-result-platform path:last-child { fill: #451a03; stroke: #d97706; }
 
 .visual-theme-high-contrast .simple-2d-visual-stage[data-dimensional-svg-stage="isometric"] { border: 2px solid #fff !important; background: #000 !important; box-shadow: none !important; }
-.visual-theme-high-contrast .simple-2d-visual-stage :is(.simple-2d-stage-floor, .simple-2d-stage-floor-grid, .simple-2d-stage-prisms, .simple-2d-stage-orbits, .simple-2d-stage-flow-path, .simple-2d-stage-flow-trail, .simple-2d-stage-sparks, .simple-2d-stage-particles) { opacity: 0 !important; animation: none !important; }
+.visual-theme-high-contrast .simple-2d-visual-stage :is(.simple-2d-stage-floor, .simple-2d-stage-floor-grid, .simple-2d-stage-data-cubes, .simple-2d-stage-prisms, .simple-2d-stage-result-platform, .simple-2d-stage-orbits, .simple-2d-stage-flow-path, .simple-2d-stage-flow-trail, .simple-2d-stage-sparks, .simple-2d-stage-particles) { opacity: 0 !important; animation: none !important; }
 .visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-node { color: #fff !important; }
 .visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-arrow,
 .visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-stage-status { color: #ffe600 !important; background: #000 !important; border-color: #fff !important; }
@@ -1768,6 +1778,22 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .s
 [data-dense-learning-workspace] .simple-explanation-copy > p { color: #172033; font-size: .875rem; font-weight: 680; line-height: 1.58; letter-spacing: .002em; }
 [data-dense-learning-workspace] .simple-explanation-copy.is-current { border-width: 2px; box-shadow: inset 3px 0 0 #2563eb, 0 10px 20px rgba(37,99,235,.12); }
 [data-dense-learning-workspace] .simple-explanation-copy.is-current > p { color: #0f172a; font-weight: 780; }
+[data-dense-learning-workspace] .simple-explanation-copy:not(.is-current) > p { color: #334155; font-weight: 660; }
+
+.persistent-step-explanation {
+  display: grid;
+  gap: .38rem;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: .9rem;
+  background: linear-gradient(135deg, #eff6ff, #f8fbff 58%, #f5f3ff);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.88), 0 10px 20px rgba(37,99,235,.08);
+  padding: .72rem .8rem;
+}
+.persistent-step-explanation > div { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: #1d4ed8; font-size: .63rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.persistent-step-explanation > div strong { color: #334155; font-size: .65rem; }
+.persistent-step-explanation p { margin: 0; color: #172033; font-size: .86rem; font-weight: 780; line-height: 1.52; }
+.persistent-step-explanation small { color: #475569; font-size: .68rem; font-weight: 700; line-height: 1.35; }
 
 .simple-2d-stage-result-sculpture { filter: url(#story-stage-shadow); transform-origin: 805px 160px; }
 .result-sculpture-top { fill: #fef3c7; stroke: #b45309; stroke-width: 2.1; }
@@ -1811,9 +1837,17 @@ html.dark [data-dense-learning-workspace] .simple-panel-label,
 html.dark [data-dense-learning-workspace] .simple-explanation-lede { color: #cbd5e1 !important; }
 html.dark [data-dense-learning-workspace] .simple-explanation-copy > p { color: #f1f5f9 !important; }
 html.dark [data-dense-learning-workspace] .simple-explanation-copy.is-current > p { color: #ffffff !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .persistent-step-explanation { border-color: rgba(129,140,248,.64); border-left-color: #a5b4fc; background: linear-gradient(135deg, rgba(49,46,129,.42), rgba(15,23,42,.88) 62%, rgba(8,47,73,.52)); }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .persistent-step-explanation > div { color: #a5b4fc; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .persistent-step-explanation > div strong,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .persistent-step-explanation p { color: #f8fafc; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .persistent-step-explanation small { color: #cbd5e1; }
 .visual-theme-high-contrast [data-dense-learning-workspace] .simple-explanation-lede,
 .visual-theme-high-contrast [data-dense-learning-workspace] .simple-explanation-copy > p { color: #fff !important; }
 .visual-theme-high-contrast .simple-2d-stage-result-sculpture { display: none; }
+.visual-theme-high-contrast .persistent-step-explanation { border-color: #fff !important; border-left-color: #ffe600 !important; background: #000 !important; box-shadow: none !important; }
+.visual-theme-high-contrast .persistent-step-explanation :is(div, div strong, p, small) { color: #fff !important; }
+.visual-theme-high-contrast .persistent-step-explanation > div { color: #ffe600 !important; }
 
 @media (max-width: 640px) {
   [data-dense-learning-workspace] { padding-top: .9rem; }
@@ -1821,6 +1855,7 @@ html.dark [data-dense-learning-workspace] .simple-explanation-copy.is-current > 
   [data-dense-learning-workspace] .simple-explanation-scroll { max-height: 21rem; }
   [data-dense-learning-workspace] .simple-explanation-copy > p { font-size: .9rem; line-height: 1.62; }
   [data-dense-learning-workspace] .simple-2d-diagram { min-height: auto; }
+  .persistent-step-explanation { padding: .68rem .72rem; }
 }
 
 @media (max-width: 640px) {
@@ -1832,7 +1867,7 @@ html.dark [data-dense-learning-workspace] .simple-explanation-copy.is-current > 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .simple-2d-stage-orbits, .simple-2d-stage-flow-trail, .simple-2d-stage-particles, .simple-2d-stage-prism { animation: none; }
+  .simple-2d-stage-orbits, .simple-2d-stage-flow-trail, .simple-2d-stage-particles, .simple-2d-stage-data-cubes, .simple-2d-stage-prism { animation: none; }
   .simple-2d-visual-stage .simple-2d-node, .simple-2d-visual-stage .simple-2d-node:hover, .simple-2d-visual-stage .simple-2d-node.is-selected { transform: none; transition: none; }
 }
 
