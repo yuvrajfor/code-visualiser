@@ -664,6 +664,21 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".lab-shell > :not(.living-svg-background)");
   });
 
+  it("makes the primary execution visual colourful and interactive while anchoring shortcut help to its trigger", () => {
+    expect(homeSource).toContain('data-react-svg-stage data-selected-stage-node={selectedStageNode}');
+    expect(homeSource).toContain('className="simple-2d-stage-svg"');
+    expect(homeSource).toContain('className="simple-2d-stage-flow-trail"');
+    expect(homeSource).toContain('onClick={() => setSelectedStageNode("object")}');
+    expect(homeSource).toContain('onClick={() => setSelectedStageNode("action")}');
+    expect(homeSource).toContain('onClick={() => setSelectedStageNode("result")}');
+    expect(homeSource).toContain('aria-live="polite"');
+    expect(homeSource).toContain('className="shortcut-help-popover absolute right-0 top-[calc(100%+0.75rem)]');
+    expect(styleSource).toContain(".simple-2d-visual-stage");
+    expect(styleSource).toContain("@keyframes story-stage-flow");
+    expect(styleSource).toContain(".simple-2d-visual-stage .simple-2d-node.is-selected");
+    expect(styleSource).toContain(".shortcut-help-popover { position: fixed");
+  });
+
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
     expect(styleSource).toContain("Modern blue-slate product palette");
     expect(styleSource).toContain("background-color: #f4f7fb");

@@ -759,6 +759,7 @@ function getTrackedVariables(sourceLines: string[], state: NonNullable<LearningS
 }
 
 function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean }) {
+  const [selectedStageNode, setSelectedStageNode] = useState<"object" | "action" | "result">("result");
   const shownStep = showBefore && previousStep ? previousStep : step;
   const state = shownStep.executionState ?? {
     subject: shownStep.story.objectLabel,
@@ -773,21 +774,40 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
   return (
     <section className="simple-2d-diagram" data-primary-2d-scene data-state-view={showBefore ? "before" : "after"} aria-label={`2D visual for line ${shownStep.line}`}>
       <div className="simple-2d-context"><span>{showBefore ? "Before" : "After"} · Line {shownStep.line}</span><code>{shownStep.code.trim() || "Current source line"}</code></div>
-      <div className="simple-2d-flow">
-        <article className="simple-2d-node simple-2d-subject">
+      <div className="simple-2d-visual-stage" data-react-svg-stage data-selected-stage-node={selectedStageNode}>
+        <svg className="simple-2d-stage-svg" viewBox="0 0 960 248" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="story-stage-flow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#38bdf8" /><stop offset="50%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#fbbf24" /></linearGradient>
+            <radialGradient id="story-stage-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#67e8f9" stopOpacity="0.34" /><stop offset="100%" stopColor="#0f172a" stopOpacity="0" /></radialGradient>
+            <filter id="story-stage-blur"><feGaussianBlur stdDeviation="10" /></filter>
+          </defs>
+          <rect width="960" height="248" rx="28" fill="url(#story-stage-glow)" />
+          <g className="simple-2d-stage-orbits"><ellipse cx="480" cy="124" rx="402" ry="86" /><ellipse cx="480" cy="124" rx="290" ry="52" /></g>
+          <path className="simple-2d-stage-flow-path" d="M 146 124 C 270 36, 376 36, 480 124 S 690 212, 814 124" />
+          <path className="simple-2d-stage-flow-trail" d="M 146 124 C 270 36, 376 36, 480 124 S 690 212, 814 124" />
+          <g className="simple-2d-stage-sparks" filter="url(#story-stage-blur)"><circle cx="154" cy="122" r="18" /><circle cx="480" cy="124" r="24" /><circle cx="806" cy="126" r="19" /></g>
+          <g className="simple-2d-stage-particles"><circle cx="224" cy="66" r="4" /><circle cx="336" cy="190" r="3" /><circle cx="615" cy="56" r="4" /><circle cx="720" cy="188" r="3" /></g>
+        </svg>
+        <div className="simple-2d-flow">
+        <button type="button" onClick={() => setSelectedStageNode("object")} className={`simple-2d-node simple-2d-subject ${selectedStageNode === "object" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "object"}>
           <span className="simple-2d-node-label">Object</span>
           <div><SceneKindIcon kind={shownStep.story.kind} className="h-5 w-5" /><strong>{state.subject}</strong></div>
-        </article>
+          <span className="simple-2d-node-hint">Click to focus</span>
+        </button>
         <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
-        <article className="simple-2d-node simple-2d-action">
+        <button type="button" onClick={() => setSelectedStageNode("action")} className={`simple-2d-node simple-2d-action ${selectedStageNode === "action" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "action"}>
           <span className="simple-2d-node-label">Action</span>
           <strong>{state.action}</strong>
-        </article>
+          <span className="simple-2d-node-hint">Click to focus</span>
+        </button>
         <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
-        <article className="simple-2d-node simple-2d-result">
+        <button type="button" onClick={() => setSelectedStageNode("result")} className={`simple-2d-node simple-2d-result ${selectedStageNode === "result" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "result"}>
           <span className="simple-2d-node-label">Result</span>
           <strong>{state.change}</strong>
-        </article>
+          <span className="simple-2d-node-hint">Click to focus</span>
+        </button>
+        </div>
+        <p className="simple-2d-stage-status" aria-live="polite"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" />{selectedStageNode === "object" ? `Focus: ${state.subject}` : selectedStageNode === "action" ? `Action: ${state.action}` : `Result: ${state.change}`}</p>
       </div>
       <div className="simple-state-details">
         <section className="simple-array-panel" data-array-cells aria-label="Array cells">
@@ -1529,7 +1549,7 @@ export default function Home() {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-            {activeView === "studio" && <><Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button></>}
+            {activeView === "studio" && <><div className="relative"><Button variant="outline" size="icon" onClick={() => setShowShortcutHelp((value) => !value)} aria-expanded={showShortcutHelp} aria-controls="shortcut-help" className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title="Show keyboard shortcuts"><Keyboard className="h-4 w-4" /></Button>{showShortcutHelp && <aside id="shortcut-help" role="dialog" aria-label="Keyboard shortcuts" className="shortcut-help-popover absolute right-0 top-[calc(100%+0.75rem)] z-[60] w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-amber-300/25 bg-[#17100d]/95 p-4 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Story controls</p><h2 className="mt-1 text-sm font-black text-white">Keyboard shortcuts</h2></div><Button variant="ghost" size="icon" onClick={() => setShowShortcutHelp(false)} className="h-8 w-8 rounded-xl text-[#c5ad98] hover:bg-white/10 hover:text-white" aria-label="Close shortcut help"><X className="h-4 w-4" /></Button></div><p className="mt-2 text-xs leading-relaxed text-[#aa9684]">Shortcuts work while viewing a story. They never interrupt typing in the editor.</p><div className="mt-4 space-y-2">{STORY_SHORTCUTS.map((shortcut) => <div key={shortcut.label} className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0c0806] px-3 py-2"><span className="text-xs text-[#d8c4b2]">{shortcut.label}</span><kbd className="rounded-md border border-[#5e4432] bg-[#241711] px-2 py-1 font-mono text-[10px] font-bold text-amber-100">{shortcut.keys}</kbd></div>)}</div></aside>}</div><Button variant="outline" size="icon" onClick={() => setSoundEnabled((value) => !value)} className="h-10 w-10 rounded-xl border-[#3c2b20] bg-[#1a120e] text-[#efc194] hover:bg-[#271a13]" title={soundEnabled ? "Turn sound off" : "Turn sound on"}>{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</Button></>}
             {activeView !== "landing" ? <Button variant="outline" onClick={() => { setActiveView("landing"); setLandingWorkspace("code"); }} aria-label="Back to workspace" title="Back to workspace" className="shrink-0 rounded-xl border-white/10 bg-white/5 px-3 text-xs text-white hover:bg-white/10 sm:px-4"><span className="sm:hidden">Back</span><span className="hidden sm:inline">Back to workspace</span></Button> : landingWorkspace === "overview" ? <Button onClick={() => openLearningWorkspace("code")} className="rounded-xl bg-gradient-to-r from-indigo-400 to-cyan-300 px-5 text-xs font-black text-[#08101e] shadow-[0_0_28px_rgba(99,102,241,0.30)] hover:from-indigo-300 hover:to-cyan-200">Create a visual story <ArrowRight className="ml-1 h-4 w-4" /></Button> : null}
           </div>
         </div>
@@ -1547,7 +1567,6 @@ export default function Home() {
         onSkip={() => finishOnboarding(onboardingWorkspace)}
       />}
 
-      {showShortcutHelp && <aside id="shortcut-help" role="dialog" aria-label="Keyboard shortcuts" className="fixed right-4 top-[4.8rem] z-[60] w-[min(22rem,calc(100vw-2rem))] rounded-3xl border border-amber-300/25 bg-[#17100d]/95 p-4 shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur-xl"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">Story controls</p><h2 className="mt-1 text-sm font-black text-white">Keyboard shortcuts</h2></div><Button variant="ghost" size="icon" onClick={() => setShowShortcutHelp(false)} className="h-8 w-8 rounded-xl text-[#c5ad98] hover:bg-white/10 hover:text-white" aria-label="Close shortcut help"><X className="h-4 w-4" /></Button></div><p className="mt-2 text-xs leading-relaxed text-[#aa9684]">Shortcuts work while viewing a story. They never interrupt typing in the editor.</p><div className="mt-4 space-y-2">{STORY_SHORTCUTS.map((shortcut) => <div key={shortcut.label} className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0c0806] px-3 py-2"><span className="text-xs text-[#d8c4b2]">{shortcut.label}</span><kbd className="rounded-md border border-[#5e4432] bg-[#241711] px-2 py-1 font-mono text-[10px] font-bold text-amber-100">{shortcut.keys}</kbd></div>)}</div></aside>}
 
       {activeView === "landing" && (
         <main className={`lab-grid landing-mode-${landingWorkspace} mx-auto w-full max-w-7xl px-5 py-10 md:px-8 md:py-14`} data-learning-workspace={landingWorkspace}>

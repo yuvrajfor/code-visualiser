@@ -275,3 +275,8 @@
 - [x] Tune SVG colour, visibility, light/dark appearance, pointer safety, and reduced-motion fallback.
 - [x] Add regression coverage and validate the visible SVG animation on desktop and mobile.
 - [x] Save a checkpoint for the visible animated SVG background upgrade.
+- [x] Audit the primary React SVG visual stage, current colour states, and keyboard-help panel placement.
+- [x] Design richer animated SVG state visuals with clear interactive colour and motion feedback.
+- [x] Fix keyboard-help placement so it opens adjacent to its trigger on desktop and remains usable on mobile.
+- [x] Add regression coverage and validate the upgraded visual stage and keyboard help on desktop and mobile.
+- [x] Save a checkpoint for the richer visual experience and keyboard-help placement fix.
