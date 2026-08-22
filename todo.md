@@ -326,3 +326,8 @@
 - [x] Implement final visual-density, result-scene, and interaction refinements without reducing readability or accessibility.
 - [x] Validate the hosted experience with regression, type, build, and phone/desktop learner-flow checks.
 - [x] Save a hosting-ready checkpoint for the final polished workspace.
+- [x] Inventory active repository structure, imports, dependencies, and generated artifacts before cleanup.
+- [x] Identify files, packages, and obsolete artifacts that are conclusively unused by the production app and tests.
+- [x] Remove only confirmed-unused repository items and simplify maintenance surfaces without changing learner functionality.
+- [x] Validate the streamlined repository with regression, type, build, workflow, and integrity checks.
+- [ ] Save a checkpoint for the verified repository cleanup.
