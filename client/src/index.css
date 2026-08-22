@@ -1746,6 +1746,83 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .s
 .visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-arrow,
 .visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-stage-status { color: #ffe600 !important; background: #000 !important; border-color: #fff !important; }
 
+/* Dense learner workspace: compact structure, strong type, and source-specific results. */
+[data-dense-learning-workspace] { max-width: 84rem; }
+[data-dense-learning-workspace] .simple-story-toolbar { padding: .75rem .9rem; }
+[data-dense-learning-workspace] .simple-panel-label { color: #334155; font-size: .68rem; font-weight: 900; letter-spacing: .15em; }
+[data-dense-learning-workspace] .execution-source-card { padding: .72rem; }
+[data-dense-learning-workspace] .execution-source-card code { font-size: .82rem; font-weight: 750; line-height: 1.55; }
+[data-dense-learning-workspace] .execution-rail-steps { margin-top: .75rem; }
+[data-dense-learning-workspace] .execution-rail-steps button { padding: .4rem .45rem; }
+[data-dense-learning-workspace] .simple-2d-diagram { min-height: 18.25rem; padding: .78rem; }
+[data-dense-learning-workspace] .simple-2d-context { padding-bottom: .58rem; }
+[data-dense-learning-workspace] .simple-2d-flow { min-height: 12.75rem; gap: .46rem; }
+[data-dense-learning-workspace] .simple-2d-node { padding: .74rem .62rem; }
+[data-dense-learning-workspace] .simple-2d-node-label { margin-bottom: .35rem; font-size: .59rem; font-weight: 900; }
+[data-dense-learning-workspace] .simple-2d-node strong { font-size: .86rem; font-weight: 850; line-height: 1.3; }
+
+.simple-explanation-lede { margin: .38rem 0 0; color: #475569; font-size: .72rem; font-weight: 800; letter-spacing: .01em; }
+[data-dense-learning-workspace] .simple-explanation-scroll { gap: .45rem; max-height: min(34rem, calc(100vh - 9.5rem)); }
+[data-dense-learning-workspace] .simple-explanation-copy { border-radius: .72rem; padding: .72rem .76rem; }
+[data-dense-learning-workspace] .simple-explanation-entry-meta { margin-bottom: .35rem; font-size: .65rem; font-weight: 850; }
+[data-dense-learning-workspace] .simple-explanation-copy > p { color: #172033; font-size: .875rem; font-weight: 680; line-height: 1.58; letter-spacing: .002em; }
+[data-dense-learning-workspace] .simple-explanation-copy.is-current { border-width: 2px; box-shadow: inset 3px 0 0 #2563eb, 0 10px 20px rgba(37,99,235,.12); }
+[data-dense-learning-workspace] .simple-explanation-copy.is-current > p { color: #0f172a; font-weight: 780; }
+
+.simple-2d-stage-result-sculpture { filter: url(#story-stage-shadow); transform-origin: 805px 160px; }
+.result-sculpture-top { fill: #fef3c7; stroke: #b45309; stroke-width: 2.1; }
+.result-sculpture-left { fill: #fbbf24; stroke: #b45309; stroke-width: 2.1; }
+.result-sculpture-right { fill: #d97706; stroke: #92400e; stroke-width: 2.1; }
+.result-sculpture-top-secondary { fill: #fde68a; }
+.result-sculpture-left-secondary { fill: #f59e0b; }
+.result-sculpture-right-secondary { fill: #b45309; }
+.result-sculpture-link { fill: none; stroke: #ec4899; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.result-sculpture-orb { fill: #fce7f3; stroke: #be185d; stroke-width: 3; }
+.result-sculpture-orb-top { fill: #fbcfe8; }
+.result-sculpture-route { fill: none; stroke: #0ea5e9; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 5 8; }
+.result-sculpture-marker { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 2.4; }
+.result-sculpture-marker-end { fill: #bfdbfe; }
+.result-sculpture-marker-dot { fill: #1d4ed8; }
+.result-sculpture-gate-top { fill: #ffe4e6; stroke: #be123c; stroke-width: 2.2; }
+.result-sculpture-gate-left { fill: #fb7185; stroke: #be123c; stroke-width: 2.2; }
+.result-sculpture-gate-right { fill: #e11d48; stroke: #9f1239; stroke-width: 2.2; }
+.result-sculpture-branch { fill: none; stroke: #e11d48; stroke-width: 4; stroke-linecap: round; }
+.result-sculpture-loop { fill: none; stroke: #10b981; stroke-width: 10; transform: skewX(-14deg); transform-origin: center; }
+.result-sculpture-loop-back { stroke: #6ee7b7; stroke-width: 6; }
+.result-sculpture-loop-arrow { fill: #059669; stroke: #047857; stroke-width: 1.5; }
+.result-sculpture-pillar { fill: #d1fae5; stroke: #047857; stroke-width: 2.2; }
+.result-sculpture-beam { fill: none; stroke: #7c3aed; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.result-sculpture-spark { fill: #c4b5fd; stroke: #6d28d9; stroke-width: 2; }
+.result-scene-tone-1 { filter: saturate(1.25) brightness(1.04); }
+.result-scene-tone-2 { filter: saturate(1.42) hue-rotate(-8deg); }
+.simple-2d-visual-stage[data-result-scene="network"] .simple-2d-stage-prism-result { opacity: .24; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .simple-2d-stage-result-sculpture { animation: story-stage-result-arrive 520ms cubic-bezier(.23,1,.32,1) both; }
+  .result-scene-loop .result-sculpture-loop { animation: story-stage-loop-rotate 4.4s linear infinite; }
+  .result-scene-route .result-sculpture-route { animation: story-stage-route-dash 1.7s linear infinite; }
+}
+
+@keyframes story-stage-result-arrive { from { opacity: .15; transform: translateY(12px) scale(.84); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes story-stage-loop-rotate { to { transform: skewX(-14deg) rotate(360deg); } }
+@keyframes story-stage-route-dash { to { stroke-dashoffset: -42; } }
+
+html.dark [data-dense-learning-workspace] .simple-panel-label,
+html.dark [data-dense-learning-workspace] .simple-explanation-lede { color: #cbd5e1 !important; }
+html.dark [data-dense-learning-workspace] .simple-explanation-copy > p { color: #f1f5f9 !important; }
+html.dark [data-dense-learning-workspace] .simple-explanation-copy.is-current > p { color: #ffffff !important; }
+.visual-theme-high-contrast [data-dense-learning-workspace] .simple-explanation-lede,
+.visual-theme-high-contrast [data-dense-learning-workspace] .simple-explanation-copy > p { color: #fff !important; }
+.visual-theme-high-contrast .simple-2d-stage-result-sculpture { display: none; }
+
+@media (max-width: 640px) {
+  [data-dense-learning-workspace] { padding-top: .9rem; }
+  [data-dense-learning-workspace] .simple-story-toolbar { padding: .65rem .72rem; }
+  [data-dense-learning-workspace] .simple-explanation-scroll { max-height: 21rem; }
+  [data-dense-learning-workspace] .simple-explanation-copy > p { font-size: .9rem; line-height: 1.62; }
+  [data-dense-learning-workspace] .simple-2d-diagram { min-height: auto; }
+}
+
 @media (max-width: 640px) {
   .shortcut-help-popover { position: fixed; right: 1rem; left: 1rem; top: 4.75rem; width: auto; max-height: calc(100dvh - 6rem); overflow: auto; }
   .simple-2d-visual-stage .simple-2d-flow { min-height: 18rem; padding: 1.2rem .8rem 2.3rem; }

@@ -692,6 +692,25 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".shortcut-help-popover { position: fixed");
   });
 
+  it("keeps each code result visually source-grounded with a compact, readable result scene", () => {
+    expect(homeSource).toContain("type ResultSceneVariant");
+    expect(homeSource).toContain("function getResultScene(step: LearningStep");
+    expect(homeSource).toContain('data-result-scene={resultScene.variant}');
+    expect(homeSource).toContain('data-result-scene-object": variant');
+    expect(homeSource).toContain('"stack", "network", "route", "branch", "loop", "build"');
+    expect(homeSource).toContain("result-scene-${variant}");
+    expect(styleSource).toContain(".result-scene-loop .result-sculpture-loop");
+    expect(styleSource).toContain(".result-scene-route .result-sculpture-route");
+    expect(homeSource).toContain('data-dense-learning-workspace');
+    expect(homeSource).toContain('className="simple-explanation-lede"');
+    expect(styleSource).toContain("Dense learner workspace");
+    expect(styleSource).toContain(".simple-2d-stage-result-sculpture");
+    expect(styleSource).toContain(".result-sculpture-route");
+    expect(styleSource).toContain(".result-sculpture-loop");
+    expect(styleSource).toContain(".simple-explanation-copy.is-current > p");
+    expect(styleSource).toContain("@keyframes story-stage-result-arrive");
+  });
+
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
     expect(styleSource).toContain("Modern blue-slate product palette");
     expect(styleSource).toContain("background-color: #f4f7fb");

@@ -765,6 +765,49 @@ function getTrackedVariables(sourceLines: string[], state: NonNullable<LearningS
   return rows.length ? rows : [{ name: "Focus", value: state.subject }, { name: "Change", value: state.change }];
 }
 
+type ResultSceneVariant = "stack" | "network" | "route" | "branch" | "loop" | "build";
+
+function getResultSceneSeed(value: string) {
+  return Array.from(value).reduce((total, character, index) => (total + character.charCodeAt(0) * (index + 11)) % 997, 0);
+}
+
+function getResultScene(step: LearningStep, state: NonNullable<LearningStep["executionState"]>) {
+  const seed = getResultSceneSeed(`${step.code}|${state.subject}|${state.change}`);
+  const sourceSpecificVariants: ResultSceneVariant[] = ["stack", "network", "route", "branch", "loop", "build"];
+  const variantByKind: Partial<Record<RealWorldStory["kind"], ResultSceneVariant>> = {
+    "storage-shelf": "stack",
+    "sorting-tray": "stack",
+    "linked-chain": "network",
+    "family-tree": "network",
+    "city-map": "route",
+    "delivery-desk": "route",
+    "decision-gate": "branch",
+    "conveyor-loop": "loop",
+    "recursion-stairs": "loop",
+    "workshop": "build",
+  };
+  const variant = variantByKind[step.story.kind] ?? sourceSpecificVariants[seed % sourceSpecificVariants.length]!;
+  const labelByVariant: Record<ResultSceneVariant, string> = {
+    stack: "stacked state",
+    network: "connected result",
+    route: "completed route",
+    branch: "chosen path",
+    loop: "repeat cycle",
+    build: "built result",
+  };
+  return { variant, seed: seed % 3, label: labelByVariant[variant] };
+}
+
+function ResultStageSculpture({ variant, tone }: { variant: ResultSceneVariant; tone: number }) {
+  const shared = { className: `simple-2d-stage-result-sculpture result-scene-${variant} result-scene-tone-${tone}`, "data-result-scene-object": variant };
+  if (variant === "stack") return <g {...shared}><path className="result-sculpture-top" d="M748 158 782 137 816 158 782 179Z" /><path className="result-sculpture-left" d="M748 158v28l34 21v-27Z" /><path className="result-sculpture-right" d="M816 158v28l-34 21v-27Z" /><path className="result-sculpture-top result-sculpture-top-secondary" d="M800 137 830 118 860 137 830 156Z" /><path className="result-sculpture-left result-sculpture-left-secondary" d="M800 137v24l30 18v-23Z" /><path className="result-sculpture-right result-sculpture-right-secondary" d="M860 137v24l-30 18v-23Z" /></g>;
+  if (variant === "network") return <g {...shared}><path className="result-sculpture-link" d="M757 171 794 134 840 163M794 134l41-29" /><circle className="result-sculpture-orb" cx="757" cy="171" r="13" /><circle className="result-sculpture-orb" cx="794" cy="134" r="16" /><circle className="result-sculpture-orb" cx="840" cy="163" r="14" /><circle className="result-sculpture-orb result-sculpture-orb-top" cx="835" cy="105" r="12" /></g>;
+  if (variant === "route") return <g {...shared}><path className="result-sculpture-route" d="M748 176c31-58 64 35 96-44 12-30 30-31 43-10" /><path className="result-sculpture-marker" d="M766 132c0-12 20-12 20 0 0 10-10 19-10 19s-10-9-10-19Z" /><circle cx="776" cy="132" r="3" className="result-sculpture-marker-dot" /><path className="result-sculpture-marker result-sculpture-marker-end" d="M856 115c0-12 20-12 20 0 0 10-10 19-10 19s-10-9-10-19Z" /><circle cx="866" cy="115" r="3" className="result-sculpture-marker-dot" /></g>;
+  if (variant === "branch") return <g {...shared}><path className="result-sculpture-gate-top" d="M782 113 822 137 782 161 742 137Z" /><path className="result-sculpture-gate-left" d="M742 137v30l40 24v-30Z" /><path className="result-sculpture-gate-right" d="M822 137v30l-40 24v-30Z" /><path className="result-sculpture-branch" d="m782 174-41 24M782 174l47 20" /><circle className="result-sculpture-orb" cx="737" cy="200" r="8" /><circle className="result-sculpture-orb" cx="833" cy="196" r="8" /></g>;
+  if (variant === "loop") return <g {...shared}><ellipse className="result-sculpture-loop" cx="803" cy="151" rx="58" ry="24" /><ellipse className="result-sculpture-loop result-sculpture-loop-back" cx="803" cy="151" rx="37" ry="14" /><path className="result-sculpture-loop-arrow" d="m849 139 12 12-16 5" /><path className="result-sculpture-pillar" d="M791 131v-31l12-8 12 8v31" /></g>;
+  return <g {...shared}><path className="result-sculpture-top" d="M756 164 790 143 824 164 790 185Z" /><path className="result-sculpture-left" d="M756 164v30l34 20v-29Z" /><path className="result-sculpture-right" d="M824 164v30l-34 20v-29Z" /><path className="result-sculpture-beam" d="M790 143v-45M772 109l18-11 18 11M772 109v22M808 109v22" /><path className="result-sculpture-spark" d="m847 108 5 9 10 4-10 5-5 10-5-10-10-5 10-4Z" /></g>;
+}
+
 function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean }) {
   const [selectedStageNode, setSelectedStageNode] = useState<"object" | "action" | "result">("result");
   const shownStep = showBefore && previousStep ? previousStep : step;
@@ -777,11 +820,12 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
   const array = getDiagramArray(shownLines);
   const pointers = array ? getDiagramPointers(shownLines, array.cells.length) : [];
   const variables = getTrackedVariables(shownLines, state);
+  const resultScene = getResultScene(shownStep, state);
 
   return (
     <section className="simple-2d-diagram" data-primary-2d-scene data-state-view={showBefore ? "before" : "after"} aria-label={`2D visual for line ${shownStep.line}`}>
       <div className="simple-2d-context"><span>{showBefore ? "Before" : "After"} · Line {shownStep.line}</span><code>{shownStep.code.trim() || "Current source line"}</code></div>
-      <div className="simple-2d-visual-stage" data-react-svg-stage data-dimensional-svg-stage="isometric" data-svg-icon-system="story-glyphs" data-selected-stage-node={selectedStageNode}>
+      <div className="simple-2d-visual-stage" data-react-svg-stage data-dimensional-svg-stage="isometric" data-svg-icon-system="story-glyphs" data-selected-stage-node={selectedStageNode} data-result-scene={resultScene.variant}>
         <svg className="simple-2d-stage-svg" viewBox="0 0 960 248" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="story-stage-flow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#38bdf8" /><stop offset="50%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#fbbf24" /></linearGradient>
@@ -797,7 +841,7 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
           <g className="simple-2d-stage-prisms" filter="url(#story-stage-shadow)">
             <g className="simple-2d-stage-prism simple-2d-stage-prism-object"><path d="M117 158 146 139 175 158 146 177Z" /><path d="M117 158v20l29 19v-20ZM175 158v20l-29 19v-20Z" /></g>
             <g className="simple-2d-stage-prism simple-2d-stage-prism-action"><path d="M451 139 480 120 509 139 480 158Z" /><path d="M451 139v20l29 19v-20ZM509 139v20l-29 19v-20Z" /></g>
-            <g className="simple-2d-stage-prism simple-2d-stage-prism-result"><path d="M785 158 814 139 843 158 814 177Z" /><path d="M785 158v20l29 19v-20ZM843 158v20l-29 19v-20Z" /></g>
+            <ResultStageSculpture variant={resultScene.variant} tone={resultScene.seed} />
           </g>
           <g className="simple-2d-stage-orbits"><ellipse cx="480" cy="124" rx="402" ry="86" /><ellipse cx="480" cy="124" rx="290" ry="52" /></g>
           <path className="simple-2d-stage-flow-path" d="M 146 124 C 270 36, 376 36, 480 124 S 690 212, 814 124" />
@@ -819,7 +863,7 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
         </button>
         <span className="simple-2d-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16h20" /><path d="m17 8 8 8-8 8" /></svg></span>
         <button type="button" onClick={() => setSelectedStageNode("result")} className={`simple-2d-node simple-2d-result ${selectedStageNode === "result" ? "is-selected" : ""}`} data-stage-node="result" aria-pressed={selectedStageNode === "result"}>
-          <span className="simple-2d-node-label">Result</span>
+          <span className="simple-2d-node-label">Result · {resultScene.label}</span>
           <div><StageRoleGlyph role="result" kind={shownStep.story.kind} /><strong>{state.change}</strong></div>
           <span className="simple-2d-node-hint">Click to focus</span>
         </button>
@@ -1660,14 +1704,14 @@ export default function Home() {
       )}
 
       {activeView === "studio" && currentStep && (
-        <main className="lab-grid studio-learning-frame mx-auto w-full max-w-7xl px-5 py-7 md:px-8">
-          <div className="simple-story-toolbar mb-5 flex flex-wrap items-center justify-between gap-3" data-code-story-workspace>
-            <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 transition hover:text-slate-950"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><h1 className="mt-1 text-lg font-extrabold tracking-tight text-slate-950">{userProblem || "Your code story"}</h1></div>
+        <main className="lab-grid studio-learning-frame mx-auto w-full max-w-7xl px-5 py-5 md:px-8" data-dense-learning-workspace>
+          <div className="simple-story-toolbar mb-3 flex flex-wrap items-center justify-between gap-3" data-code-story-workspace>
+            <div><button type="button" onClick={() => { setIsPlaying(false); setActiveView("landing"); setLandingWorkspace("code"); }} className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 transition hover:text-slate-950"><ChevronLeft className="h-3.5 w-3.5" /> Edit code</button><h1 className="mt-1 text-xl font-black tracking-tight text-slate-950">{userProblem || "Your code story"}</h1></div>
             <div className="flex items-center gap-2" data-simple-step-controls><Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex - 1)} aria-label="Previous step" disabled={currentStepIndex === 0} className="h-9 w-9"><ChevronLeft className="h-4 w-4" /></Button><span className="min-w-20 text-center text-xs font-bold text-slate-700" data-simple-step-status>Step {currentStepIndex + 1} / {steps.length}</span><Button variant="outline" size="icon" onClick={() => goToStep(currentStepIndex + 1)} aria-label="Next step" disabled={currentStepIndex === steps.length - 1} className="h-9 w-9"><ChevronRight className="h-4 w-4" /></Button></div>
           </div>
 
-          <section className="execution-workspace-grid simple-story-page grid gap-4 xl:grid-cols-[14rem_minmax(0,1fr)_17rem]" data-simple-story-page>
-            <aside className="execution-rail simple-code-panel lab-surface h-fit rounded-[20px] p-4" data-execution-rail aria-label="Current code execution">
+          <section className="execution-workspace-grid simple-story-page grid gap-3 xl:grid-cols-[14.5rem_minmax(0,1fr)_19rem]" data-simple-story-page>
+            <aside className="execution-rail simple-code-panel lab-surface h-fit rounded-[20px] p-3.5 md:p-4" data-execution-rail aria-label="Current code execution">
               <p className="simple-panel-label">Code</p>
               <div className="execution-source-card mt-3" data-reference-active-source data-active-code-line={currentStep.line}>
                 <div className="flex items-center justify-between gap-3"><span>Current line</span><strong>{currentStep.line}</strong></div>
@@ -1675,13 +1719,14 @@ export default function Home() {
               </div>
               <div className="execution-rail-steps mt-4"><div className="flex items-center justify-between gap-3"><p>Steps</p><span>{currentStepIndex + 1} / {steps.length}</span></div><div className="mt-2 space-y-1.5">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`rail-${step.line}-${step.code}`} onClick={() => goToStep(index)} aria-current={isActive ? "step" : undefined} className={isActive ? "is-active" : ""}><span>{index + 1}</span><strong>Line {step.line}</strong><small>{step.story.title}</small></button>; })}</div></div>
             </aside>
-            <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-4 md:p-5" data-primary-visual-stage>
+            <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-3.5 md:p-4" data-primary-visual-stage>
               <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
               <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} /></div>
             </div>
-            <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-4 md:p-5" data-direct-explanation-panel>
+            <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-3.5 md:p-4" data-direct-explanation-panel>
               <div className="simple-explanation-heading"><p className="simple-panel-label">Explanation</p><span>Step {currentStepIndex + 1} of {steps.length}</span></div>
-              <div className="simple-explanation-scroll mt-3" data-explanation-scroll aria-label="Explanation history">
+              <p className="simple-explanation-lede">Plain English · what this line changes</p>
+              <div className="simple-explanation-scroll mt-2.5" data-explanation-scroll aria-label="Explanation history">
                 {steps.slice(0, currentStepIndex + 1).map((step, index) => { const isActive = index === currentStepIndex; return <article key={`explanation-history-${step.step}-${step.line}-${index}`} data-explanation-entry={index + 1} {...(isActive ? { "data-story-explanation": true, "data-explanation-quality": true, "aria-live": "polite" } : {})} className={`simple-explanation-copy ${isActive ? "is-current explanation-enter" : ""}`}><div className="simple-explanation-entry-meta"><span>Step {index + 1}</span><span>Line {step.line}</span></div><p>{step.story.plainEnglish}</p></article>; })}
               </div>
             </aside>
