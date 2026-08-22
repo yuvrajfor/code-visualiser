@@ -648,6 +648,22 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("--mandala-motion-duration: 0s");
   });
 
+  it("keeps the interactive fog layer bundled, Mandala-aware, and safe for reading controls", () => {
+    const fogSource = readFileSync(new URL("../client/src/components/VantaFogBackground.tsx", import.meta.url), "utf8");
+
+    expect(homeSource).toContain('VantaFogBackground active={visualTheme === "mandala"}');
+    expect(fogSource).toContain('import("vanta/dist/vanta.fog.min")');
+    expect(fogSource).toContain("THREE,");
+    expect(fogSource).toContain("effectRef.current?.destroy()");
+    expect(fogSource).toContain("prefers-reduced-motion: reduce");
+    expect(fogSource).toContain("deviceAllowsAnimatedBackground");
+    expect(fogSource).toContain("mouseControls: true");
+    expect(fogSource).toContain("touchControls: true");
+    expect(styleSource).toContain(".vanta-fog-layer");
+    expect(styleSource).toContain("pointer-events: none");
+    expect(styleSource).toContain(".lab-shell > :not(.vanta-fog-layer)");
+  });
+
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {
     expect(styleSource).toContain("Modern blue-slate product palette");
     expect(styleSource).toContain("background-color: #f4f7fb");

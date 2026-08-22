@@ -260,3 +260,8 @@
 - [x] Implement subtle theme-specific interaction sounds that remain optional and respect accessibility preferences.
 - [x] Add regression coverage and validate personalised Mandala controls, sound safety, responsive workflows, and visual clarity.
 - [x] Save a checkpoint for the finished Mandala personalisation and interface polish.
+- [x] Audit the existing background composition and evaluate a safe Vanta FOG integration path for the React TypeScript stack.
+- [x] Add a client-only interactive fog layer that does not block code editing, navigation, or learning controls.
+- [x] Connect fog colours and opacity to Mandala accent and intensity choices while respecting reduced-motion and low-power safeguards.
+- [x] Add regression coverage and validate the animated background on desktop and mobile in light and dark appearances.
+- [x] Save a checkpoint for the interactive fog background enhancement.
