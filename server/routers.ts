@@ -47,8 +47,11 @@ export const appRouter = router({
         language: z.string().trim().min(1).max(40),
         problemTitle: z.string().max(180).optional(),
       }))
-      .mutation(async ({ input }) => {
-        return interpretCodeAsVisualStory(input);
+      .mutation(async ({ ctx, input }) => {
+        const principal = ctx.user?.id
+          ? `user:${ctx.user.id}`
+          : `visitor:${ctx.req.ip || "anonymous"}`;
+        return interpretCodeAsVisualStory(input, principal);
       }),
     cinematicScene: publicProcedure
       .input(cinematicSceneInputSchema)

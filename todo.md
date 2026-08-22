@@ -296,3 +296,8 @@
 - [x] Run regression, type, build, and responsive visual validation after cleanup.
 - [x] Create a verified commit authored by Yuvraj and push it to the connected GitHub repository.
 - [x] Save a checkpoint for the cleaned, pushed repository state.
+- [x] Audit the story-generation request path, existing caching, concurrency controls, persistence, and user-facing failure recovery.
+- [x] Design scalable safeguards for duplicate requests, fair per-user capacity limits, and friendly retry guidance.
+- [x] Implement high-impact request resilience and capacity controls without exposing technical errors to learners.
+- [x] Add regression coverage and validate repeated and concurrent-like story requests.
+- [ ] Save a checkpoint for the multi-user readiness upgrade.

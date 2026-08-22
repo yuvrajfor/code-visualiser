@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { createRealWorldStory, type RealWorldStory } from "../client/src/lib/realWorldLearning";
+import { createStoryRequestCapacity } from "./storyRequestCapacity";
 
 export const API_SCENE_KINDS = [
   "workbench",
@@ -102,6 +103,7 @@ export function createInterpreterRequestStore(options?: { ttlMs?: number; maxEnt
 }
 
 const interpreterRequestStore = createInterpreterRequestStore();
+const storyRequestCapacity = createStoryRequestCapacity();
 
 export class CodeStoryInterpreterError extends Error {
   constructor(message: string) {
@@ -303,9 +305,10 @@ ${input.code}`;
 }
 
 /** Calls the built-in server-side model. Credentials never reach the browser. */
-export async function interpretCodeAsVisualStory(input: InterpreterInput) {
+export async function interpretCodeAsVisualStory(input: InterpreterInput, principal = "visitor:anonymous") {
   getValidatedSourceLines(input.code);
   return interpreterRequestStore.resolve(input, async () => {
+    const releaseCapacity = storyRequestCapacity.acquire(principal);
     try {
       const response = await invokeLLM({
         model: "gemini-3.1-pro-preview",
@@ -323,6 +326,8 @@ export async function interpretCodeAsVisualStory(input: InterpreterInput) {
     } catch (error) {
       if (error instanceof CodeStoryInterpreterError) throw error;
       return createFallbackApiCodeStory(input.code);
+    } finally {
+      releaseCapacity();
     }
   });
 }

@@ -12,6 +12,7 @@ import { getStoryLearningScore } from "../client/src/lib/learningScore";
 import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, createSourceExecutionState, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 import { generateAIVisual } from "./aiVisualGenerator";
+import { createStoryRequestCapacity, StoryRequestCapacityError } from "./storyRequestCapacity";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -216,6 +217,33 @@ describe("createRealWorldStory", () => {
     await store.resolve(fallbackInput, fallbackLoader);
     await store.resolve(fallbackInput, fallbackLoader);
     expect(fallbackCalls).toBe(2);
+  });
+
+  it("bounds unique story work fairly while allowing capacity to recover", () => {
+    let time = 1_000;
+    const capacity = createStoryRequestCapacity({
+      now: () => time,
+      windowMs: 1_000,
+      maxRequestsPerWindow: 2,
+      maxConcurrentRequests: 2,
+      maxConcurrentRequestsPerPrincipal: 1,
+    });
+
+    const releaseA = capacity.acquire("user:a");
+    const releaseB = capacity.acquire("user:b");
+    expect(() => capacity.acquire("user:c")).toThrow(StoryRequestCapacityError);
+    expect(() => capacity.acquire("user:a")).toThrow(/still being created/);
+    releaseA();
+    releaseB();
+
+    const secondA = capacity.acquire("user:a");
+    secondA();
+    expect(() => capacity.acquire("user:a")).toThrow(/started several stories quickly/);
+
+    time += 1_001;
+    const recoveredA = capacity.acquire("user:a");
+    recoveredA();
+    expect(capacity.activeRequests).toBe(0);
   });
 
   it("marks exactly the story-driving source line as active", () => {
