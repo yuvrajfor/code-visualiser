@@ -624,7 +624,10 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".execution-workspace-grid.simple-story-page");
     expect(styleSource).toContain("@media (min-width: 641px) and (max-width: 1279px)");
     expect(styleSource).toContain("@media (min-width: 1536px)");
-    expect(styleSource).toContain(".simple-state-tools button { flex: 1 1 8rem");
+    expect(styleSource).toContain(".simple-state-tools button { flex: 1 1 calc(50% - .3rem)");
+    expect(styleSource).toContain('grid-template-areas: "object action" "result result"');
+    expect(styleSource).toContain('.simple-2d-visual-stage .simple-2d-arrow { display: none; }');
+    expect(styleSource).toContain(".visual-stage-readout { display: flex; align-items: stretch");
     expect(styleSource).toContain("Mandala study theme");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");

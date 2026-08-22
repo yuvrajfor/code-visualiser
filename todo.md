@@ -343,3 +343,8 @@
 - [x] Implement responsive layout refinements while preserving accessibility, source-grounded visuals, and readable explanations.
 - [x] Validate compact-phone, phone, tablet, laptop, and wide-desktop learner workflows alongside regression, type, and build checks.
 - [x] Save a checkpoint for the verified all-device responsive update.
+- [x] Reproduce the reported live responsive failure and identify the specific layout, sizing, or overflow cause.
+- [x] Apply targeted responsive repairs for the affected controls, panels, and visual workspace.
+- [x] Revalidate the repaired layout on live compact-phone, phone, tablet, laptop, and wide-screen workflows.
+- [x] Run regression, type, build, and repository-integrity checks after the responsive repair.
+- [ ] Save a checkpoint for the verified live responsive repair.
