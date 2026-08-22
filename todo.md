@@ -300,4 +300,4 @@
 - [x] Design scalable safeguards for duplicate requests, fair per-user capacity limits, and friendly retry guidance.
 - [x] Implement high-impact request resilience and capacity controls without exposing technical errors to learners.
 - [x] Add regression coverage and validate repeated and concurrent-like story requests.
-- [ ] Save a checkpoint for the multi-user readiness upgrade.
+- [x] Save a checkpoint for the multi-user readiness upgrade.
