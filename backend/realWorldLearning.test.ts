@@ -615,6 +615,8 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain("data-pointer-arrows");
     expect(homeSource).toContain("data-variable-table");
     expect(homeSource).toContain("data-state-comparison-toggle");
+    expect(homeSource).toContain("data-language-selector");
+    expect(homeSource).toContain("data-code-field-heading");
     expect(homeSource).not.toContain("data-primary-cinematic-scene");
     expect(styleSource).toContain(".simple-explanation-scroll");
     expect(styleSource).toContain(".simple-explanation-copy.is-current");
@@ -628,6 +630,9 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain('grid-template-areas: "object action" "result result"');
     expect(styleSource).toContain('.simple-2d-visual-stage .simple-2d-arrow { display: none; }');
     expect(styleSource).toContain(".visual-stage-readout { display: flex; align-items: stretch");
+    expect(styleSource).toContain("[data-language-selector] { display: grid !important");
+    expect(styleSource).toContain("[data-detailed-workspaces] { grid-template-columns: minmax(0, 1fr) !important");
+    expect(styleSource).toContain("[data-code-story-input] > .pointer-events-none.absolute { display: none; }");
     expect(styleSource).toContain("Mandala study theme");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");
