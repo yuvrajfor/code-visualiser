@@ -305,4 +305,4 @@
 - [x] Design a denser learning workspace with explanations that remain clearly visible after hover ends.
 - [x] Implement denser visual/result surfaces, richer source-grounded 3D SVG detail, and multi-user capacity refinements.
 - [x] Add regression coverage and validate density, persistent explanation readability, result-stage depth, and resilient request behavior.
-- [ ] Save a checkpoint for the dense workspace and persistent-explanation upgrade.
+- [x] Save a checkpoint for the dense workspace and persistent-explanation upgrade.
