@@ -523,6 +523,7 @@ describe("state-first Code Studio workspace contract", () => {
   const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
   const appSource = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
   const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
+  const svgBackgroundSource = readFileSync(new URL("../client/src/components/LivingSvgBackground.tsx", import.meta.url), "utf8");
 
   it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
     const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
@@ -648,24 +649,19 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("--mandala-motion-duration: 0s");
   });
 
-  it("keeps the interactive fog layer bundled, appearance-aware, and safe for reading controls", () => {
-    const fogSource = readFileSync(new URL("../client/src/components/VantaFogBackground.tsx", import.meta.url), "utf8");
-
-    expect(homeSource).toContain('VantaFogBackground active={visualTheme !== "high-contrast"}');
-    expect(fogSource).toContain('import("vanta/dist/vanta.fog.min")');
-    expect(fogSource).toContain("THREE,");
-    expect(fogSource).toContain("effectRef.current?.destroy()");
-    expect(fogSource).toContain("prefers-reduced-motion: reduce");
-    expect(fogSource).toContain("deviceAllowsAnimatedBackground");
-    expect(fogSource).toContain("mouseControls: true");
-    expect(fogSource).toContain("touchControls: true");
-    expect(fogSource).toContain("highlightColor: 0xeac34b");
-    expect(fogSource).toContain("midtoneColor: 0x563f3f");
-    expect(fogSource).toContain("lowlightColor: 0x323138");
-    expect(fogSource).toContain("baseColor: 0x3b3535");
-    expect(styleSource).toContain(".vanta-fog-layer");
+  it("keeps a visible animated SVG layer appearance-aware and safe for reading controls", () => {
+    expect(homeSource).toContain('LivingSvgBackground active={visualTheme !== "high-contrast"} appearance={theme}');
+    expect(svgBackgroundSource).toContain("className=\"living-svg-background\"");
+    expect(svgBackgroundSource).toContain("living-svg-orbit-one");
+    expect(svgBackgroundSource).toContain("living-svg-ribbons");
+    expect(svgBackgroundSource).toContain('data-appearance={appearance}');
+    expect(styleSource).toContain(".living-svg-background");
     expect(styleSource).toContain("pointer-events: none");
-    expect(styleSource).toContain(".lab-shell > :not(.vanta-fog-layer)");
+    expect(styleSource).toContain(".living-svg-background .living-svg-base");
+    expect(styleSource).toContain("html.dark .living-svg-background .living-svg-base");
+    expect(styleSource).toContain("@keyframes living-svg-spin");
+    expect(styleSource).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(styleSource).toContain(".lab-shell > :not(.living-svg-background)");
   });
 
   it("uses a cohesive blue-slate interface palette without the former competing warm and neon tokens", () => {

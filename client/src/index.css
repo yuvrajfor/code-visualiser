@@ -1471,26 +1471,62 @@ html.dark .lab-shell:not(.visual-theme-high-contrast) {
   .lab-shell.visual-theme-mandala:not(.visual-theme-high-contrast) { animation: none; }
 }
 
-/* Vanta FOG is an optional canvas layer. It adds depth to the Mandala frame but
-   never receives pointer input or sits above the application's real controls. */
-.vanta-fog-layer {
+/* The SVG scene is a visible, dependency-free motion layer. It never receives
+   pointer input and all application controls render above it. */
+.living-svg-background {
   position: fixed;
   inset: 0;
   z-index: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   pointer-events: none;
-  opacity: var(--fog-opacity, 0.31);
-  mix-blend-mode: screen;
-  transition: opacity 280ms cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0.94;
+  transition: opacity 280ms cubic-bezier(0.23, 1, 0.32, 1), filter 280ms cubic-bezier(0.23, 1, 0.32, 1);
 }
-.vanta-fog-layer canvas { display: block; height: 100% !important; width: 100% !important; }
-.lab-shell > :not(.vanta-fog-layer) { position: relative; z-index: 1; }
-.lab-shell > header:not(.vanta-fog-layer) { position: sticky; z-index: 50; }
-html:not(.dark) .vanta-fog-layer { mix-blend-mode: multiply; opacity: calc(var(--fog-opacity, 0.31) * 0.56); }
-.vanta-fog-layer[data-fog-status="fallback"] { opacity: 0; }
+.living-svg-background .living-svg-base { fill: #f9f1dc; }
+.living-svg-background .living-svg-stop-a { stop-color: #ff8b5d; }
+.living-svg-background .living-svg-stop-b { stop-color: #a855f7; }
+.living-svg-background .living-svg-stop-c { stop-color: #06b6d4; }
+.living-svg-background .living-svg-halo { fill: url(#living-svg-halo); opacity: 0.72; transform-origin: 50% 50%; animation: living-svg-halo-breathe 12s ease-in-out infinite alternate; }
+.living-svg-background .living-svg-halo-core { stop-color: #fde047; stop-opacity: 0.64; }
+.living-svg-background .living-svg-halo-edge { stop-color: #fb7185; stop-opacity: 0; }
+.living-svg-background .living-svg-orbit { transform-box: view-box; transform-origin: 50% 50%; }
+.living-svg-background .living-svg-orbit-one { animation: living-svg-spin 38s linear infinite; }
+.living-svg-background .living-svg-orbit-two { animation: living-svg-spin-reverse 27s linear infinite; }
+.living-svg-background .living-svg-ring { fill: none; stroke: #7c3aed; stroke-width: 2.5; opacity: 0.34; }
+.living-svg-background .living-svg-ring-dashed { stroke: #ec4899; stroke-dasharray: 4 17; stroke-width: 8; opacity: 0.42; }
+.living-svg-background .living-svg-ray { fill: url(#living-svg-ribbon); opacity: 0.55; }
+.living-svg-background .living-svg-petal { fill: url(#living-svg-ribbon); opacity: 0.22; stroke: #fff7ed; stroke-width: 2; }
+.living-svg-background .living-svg-center { fill: #fff7ed; opacity: 0.68; stroke: #f59e0b; stroke-width: 4; }
+.living-svg-background .living-svg-ribbons { fill: none; stroke: url(#living-svg-ribbon); stroke-linecap: round; stroke-width: 54; opacity: 0.2; transform-origin: 50% 50%; animation: living-svg-ribbon-float 15s ease-in-out infinite alternate; }
+.living-svg-background .living-svg-sparkles { fill: #f59e0b; opacity: 0.75; animation: living-svg-sparkle 5s ease-in-out infinite alternate; }
+.lab-shell > :not(.living-svg-background) { position: relative; z-index: 1; }
+.lab-shell > header:not(.living-svg-background) { position: sticky; z-index: 50; }
+
+html.dark .living-svg-background { opacity: 0.90; }
+html.dark .living-svg-background .living-svg-base { fill: #141216; }
+html.dark .living-svg-background .living-svg-stop-a { stop-color: #eac34b; }
+html.dark .living-svg-background .living-svg-stop-b { stop-color: #563f3f; }
+html.dark .living-svg-background .living-svg-stop-c { stop-color: #323138; }
+html.dark .living-svg-background .living-svg-halo-core { stop-color: #eac34b; stop-opacity: 0.40; }
+html.dark .living-svg-background .living-svg-halo-edge { stop-color: #563f3f; stop-opacity: 0; }
+html.dark .living-svg-background .living-svg-ring { stroke: #eac34b; opacity: 0.28; }
+html.dark .living-svg-background .living-svg-ring-dashed { stroke: #8b6a45; opacity: 0.52; }
+html.dark .living-svg-background .living-svg-petal { stroke: #f8e7bc; opacity: 0.13; }
+html.dark .living-svg-background .living-svg-center { fill: #eac34b; opacity: 0.42; stroke: #f8e7bc; }
+html.dark .living-svg-background .living-svg-sparkles { fill: #eac34b; }
+
+@keyframes living-svg-spin { to { transform: rotate(360deg); } }
+@keyframes living-svg-spin-reverse { to { transform: rotate(-360deg); } }
+@keyframes living-svg-halo-breathe { from { transform: scale(0.94); opacity: 0.46; } to { transform: scale(1.08); opacity: 0.78; } }
+@keyframes living-svg-ribbon-float { from { transform: translate3d(-24px, -10px, 0) rotate(-2deg); } to { transform: translate3d(28px, 16px, 0) rotate(2deg); } }
+@keyframes living-svg-sparkle { from { opacity: 0.28; transform: scale(0.82); } to { opacity: 0.94; transform: scale(1.22); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .vanta-fog-layer { display: none; }
+  .living-svg-background,
+  .living-svg-background * { animation: none !important; }
+  .living-svg-background { opacity: 0.60; }
 }
 
 /* Colourful living Mandala: the full product joins the visual world through

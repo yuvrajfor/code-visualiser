@@ -70,7 +70,7 @@ import { defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, g
 import { createCityMapExportData, getCityMapExportFileBase } from "@/lib/cityMapExports";
 import { getStoryLearningScore } from "@/lib/learningScore";
 import { useTheme, type ThemePreference } from "@/contexts/ThemeContext";
-import { VantaFogBackground } from "@/components/VantaFogBackground";
+import { LivingSvgBackground } from "@/components/LivingSvgBackground";
 
 type Language = "javascript" | "python" | "c" | "java";
 type MandalaIntensity = "calm" | "bright" | "festival";
@@ -1502,7 +1502,7 @@ export default function Home() {
 
   return (
     <div className={`lab-shell visual-theme-${visualTheme} min-h-screen overflow-x-hidden`} data-visual-theme={visualTheme} data-appearance={theme} data-mandala-intensity={mandalaIntensity} data-mandala-sound={mandalaSoundsEnabled ? "on" : "off"} style={{ "--mandala-user-accent": mandalaAccent } as React.CSSProperties}>
-      <VantaFogBackground active={visualTheme !== "high-contrast"} accent={mandalaAccent} intensity={mandalaIntensity} appearance={theme} />
+      <LivingSvgBackground active={visualTheme !== "high-contrast"} appearance={theme} />
       <header className="product-header reference-product-header sticky top-0 z-50 border-b px-5 py-3 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <button onClick={() => { setActiveView("landing"); setLandingWorkspace(getLearningWorkspace("home")); }} className="flex items-center gap-3 text-left" aria-label="Go to learning home">

@@ -270,3 +270,8 @@
 - [x] Remove the Algorithm Lab navigation and visual-setting controls so the interactive fog becomes the primary site background.
 - [x] Add regression coverage and validate the simplified Code Studio flow in light and dark appearances on mobile and desktop.
 - [x] Save a checkpoint for the dual-palette fog background and simplified interface.
+- [x] Audit the current fog background and define a visible animated SVG replacement for the site frame.
+- [x] Add a background-only animated SVG layer that remains clear behind Code Studio content and controls.
+- [x] Tune SVG colour, visibility, light/dark appearance, pointer safety, and reduced-motion fallback.
+- [x] Add regression coverage and validate the visible SVG animation on desktop and mobile.
+- [x] Save a checkpoint for the visible animated SVG background upgrade.
