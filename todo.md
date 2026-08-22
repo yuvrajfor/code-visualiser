@@ -306,3 +306,8 @@
 - [x] Implement denser visual/result surfaces, richer source-grounded 3D SVG detail, and multi-user capacity refinements.
 - [x] Add regression coverage and validate density, persistent explanation readability, result-stage depth, and resilient request behavior.
 - [x] Save a checkpoint for the dense workspace and persistent-explanation upgrade.
+- [x] Audit current build paths, server/client boundaries, parser support, and the primary 3D-result integration point.
+- [x] Design a clear frontend/backend workspace layout with language-aware parser fallbacks and optional React Three Fiber rendering.
+- [x] Implement the organized workspace structure, AST-backed JavaScript analysis, and an accessible optional 3D result scene.
+- [x] Add regression coverage and validate workspace commands, parser fallbacks, 3D rendering, and responsive learner flow.
+- [ ] Save a checkpoint for the organized frontend/backend and 3D visualizer architecture.

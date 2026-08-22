@@ -1,18 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { createRealWorldStory, getActionSound } from "../client/src/lib/realWorldLearning";
-import { getStoryShortcutAction } from "../client/src/lib/storyControls";
-import { getStoryCodeLines } from "../client/src/lib/storyFocus";
-import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../client/src/lib/learningThemes";
-import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../client/src/lib/cityRoutes";
-import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../client/src/lib/workspaceNavigation";
-import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../client/src/lib/learningFlow";
-import { createCityMapExportData, getCityMapExportFileBase } from "../client/src/lib/cityMapExports";
-import { getStoryLearningScore } from "../client/src/lib/learningScore";
+import { createRealWorldStory, getActionSound } from "../frontend/src/lib/realWorldLearning";
+import { getStoryShortcutAction } from "../frontend/src/lib/storyControls";
+import { getStoryCodeLines } from "../frontend/src/lib/storyFocus";
+import { getSavedVisualTheme, getVisualTheme, saveVisualTheme, visualThemes } from "../frontend/src/lib/learningThemes";
+import { createCityRouteStory, createCityRouteWalkthrough, createDijkstraRouteWalkthrough, findFastestCityPath, findShortestCityPath, getCityGraphPositions, getCityLiveNarration, getCityRouteWalkthrough, parseCityGraph } from "../frontend/src/lib/cityRoutes";
+import { getInitialLearningWorkspace, getLearningWorkspace, getLearningWorkspaceLabel } from "../frontend/src/lib/workspaceNavigation";
+import { completeOnboarding, defaultOnboardingStatus, finishOnboardingTour, getNextOnboardingStep, getPendingOnboardingWorkspace, getPreviousOnboardingStep, parseGraphScenario, readOnboardingStatus, serializeGraphScenario, shouldDisplayOnboardingCoach } from "../frontend/src/lib/learningFlow";
+import { createCityMapExportData, getCityMapExportFileBase } from "../frontend/src/lib/cityMapExports";
+import { getStoryLearningScore } from "../frontend/src/lib/learningScore";
 import { CodeStoryInterpreterError, createFallbackApiCodeStory, createInterpreterRequestStore, createSourceExecutionState, getInterpreterTextContent, getMeaningfulSourceLines, normalizeApiCodeStory, resolveInterpreterStory } from "./codeStoryInterpreter";
 import { cinematicSceneInputSchema, renderCinematicScene } from "./cinematicSceneRenderer";
 import { generateAIVisual } from "./aiVisualGenerator";
 import { createStoryRequestCapacity, StoryRequestCapacityError } from "./storyRequestCapacity";
+import { analyzeCodeStructure } from "./codeStructureAnalyzer";
 
 describe("premium learning workspace navigation", () => {
   it("opens directly into Code Studio for a new learner", () => {
@@ -547,11 +548,32 @@ describe("AI visual capacity fallback", () => {
   });
 });
 
+describe("language-aware code structure analysis", () => {
+  it("uses a source-only Babel AST for JavaScript and returns meaningful structure counts", () => {
+    const structure = analyzeCodeStructure("function add(a, b) { if (a > b) return a; return a + b; }", "javascript");
+
+    expect(structure).toMatchObject({ language: "javascript", parser: "babel", parseStatus: "parsed" });
+    expect(structure.nodeCount).toBeGreaterThan(4);
+    expect(structure.functions).toBeGreaterThanOrEqual(1);
+    expect(structure.branches).toBeGreaterThanOrEqual(1);
+  });
+
+  it("uses a conservative structural fallback for supported non-JavaScript languages", () => {
+    const structure = analyzeCodeStructure("for i in range(3):\n  print(i)", "python");
+
+    expect(structure).toMatchObject({ language: "python", parser: "heuristic", parseStatus: "fallback" });
+    expect(structure.loops).toBeGreaterThanOrEqual(1);
+    expect(structure.calls).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("state-first Code Studio workspace contract", () => {
-  const homeSource = readFileSync(new URL("../client/src/pages/Home.tsx", import.meta.url), "utf8");
-  const appSource = readFileSync(new URL("../client/src/App.tsx", import.meta.url), "utf8");
-  const styleSource = readFileSync(new URL("../client/src/index.css", import.meta.url), "utf8");
-  const svgBackgroundSource = readFileSync(new URL("../client/src/components/LivingSvgBackground.tsx", import.meta.url), "utf8");
+  const homeSource = readFileSync(new URL("../frontend/src/pages/Home.tsx", import.meta.url), "utf8");
+  const appSource = readFileSync(new URL("../frontend/src/App.tsx", import.meta.url), "utf8");
+  const styleSource = readFileSync(new URL("../frontend/src/index.css", import.meta.url), "utf8");
+  const svgBackgroundSource = readFileSync(new URL("../frontend/src/components/LivingSvgBackground.tsx", import.meta.url), "utf8");
+  const threeSceneSource = readFileSync(new URL("../frontend/src/components/CodeResultThreeScene.tsx", import.meta.url), "utf8");
+  const projectReadme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 
   it("keeps the simplified visual page focused on current code, one visual, and one explanation", () => {
     const primaryVisualIndex = homeSource.indexOf("data-primary-visual-stage");
@@ -588,6 +610,21 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain("Mandala study theme");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");
+  });
+
+  it("keeps the SVG visual as the accessible default while offering an optional force-laid React Three Fiber result scene", () => {
+    expect(homeSource).toContain("const CodeResultThreeScene = React.lazy");
+    expect(homeSource).toContain("data-three-result-toggle");
+    expect(homeSource).toContain("showThreeResult");
+    expect(homeSource).toContain("currentStructure ?");
+    expect(threeSceneSource).toContain('from "@react-three/fiber"');
+    expect(threeSceneSource).toContain('from "@react-three/drei"');
+    expect(threeSceneSource).toContain('from "d3-force-3d"');
+    expect(threeSceneSource).toContain("<OrbitControls");
+    expect(threeSceneSource).toContain('data-three-layout="d3-force-3d"');
+    expect(styleSource).toContain(".code-result-three-scene");
+    expect(projectReadme).toContain("`frontend/`");
+    expect(projectReadme).toContain("`backend/`");
   });
 
   it("uses cohesive custom SVG concept glyphs and a restrained depth frame instead of browser emoji cues", () => {
@@ -631,7 +668,7 @@ describe("state-first Code Studio workspace contract", () => {
   });
 
   it("follows operating-system changes only when the learner selects System", () => {
-    const themeContextSource = readFileSync(new URL("../client/src/contexts/ThemeContext.tsx", import.meta.url), "utf8");
+    const themeContextSource = readFileSync(new URL("../frontend/src/contexts/ThemeContext.tsx", import.meta.url), "utf8");
 
     expect(themeContextSource).toContain('export type ThemePreference = Theme | "system"');
     expect(themeContextSource).toContain('const SYSTEM_MEDIA_QUERY = "(prefers-color-scheme: dark)"');

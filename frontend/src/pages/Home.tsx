@@ -72,6 +72,8 @@ import { getStoryLearningScore } from "@/lib/learningScore";
 import { useTheme, type ThemePreference } from "@/contexts/ThemeContext";
 import { LivingSvgBackground } from "@/components/LivingSvgBackground";
 
+const CodeResultThreeScene = React.lazy(() => import("@/components/CodeResultThreeScene"));
+
 type Language = "javascript" | "python" | "c" | "java";
 type MandalaIntensity = "calm" | "bright" | "festival";
 
@@ -88,6 +90,18 @@ type LearningStep = {
   story: RealWorldStory;
   executionState?: { subject: string; action: string; change: string };
   routeState?: CityRouteState;
+};
+
+type CodeStructureSummary = {
+  language: string;
+  parser: "babel" | "esprima" | "heuristic";
+  parseStatus: "parsed" | "recovered" | "fallback";
+  nodeCount: number;
+  declarations: number;
+  functions: number;
+  branches: number;
+  loops: number;
+  calls: number;
 };
 
 type CinematicScene = {
@@ -808,7 +822,7 @@ function ResultStageSculpture({ variant, tone }: { variant: ResultSceneVariant; 
   return <g {...shared}><path className="result-sculpture-top" d="M756 164 790 143 824 164 790 185Z" /><path className="result-sculpture-left" d="M756 164v30l34 20v-29Z" /><path className="result-sculpture-right" d="M824 164v30l-34 20v-29Z" /><path className="result-sculpture-beam" d="M790 143v-45M772 109l18-11 18 11M772 109v22M808 109v22" /><path className="result-sculpture-spark" d="m847 108 5 9 10 4-10 5-5 10-5-10-10-5 10-4Z" /></g>;
 }
 
-function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean }) {
+function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore, showThreeResult }: { step: LearningStep; previousStep?: LearningStep; sourceLines: string[]; showBefore: boolean; showThreeResult: boolean }) {
   const [selectedStageNode, setSelectedStageNode] = useState<"object" | "action" | "result">("result");
   const shownStep = showBefore && previousStep ? previousStep : step;
   const state = shownStep.executionState ?? {
@@ -876,6 +890,7 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
         </div>
         <p className="simple-2d-stage-status" aria-live="polite"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" />{selectedStageNode === "object" ? `Focus: ${state.subject}` : selectedStageNode === "action" ? `Action: ${state.action}` : `Result: ${state.change}`}</p>
       </div>
+      {showThreeResult ? <React.Suspense fallback={<div className="three-result-loading" data-three-result-loading>Loading the interactive 3D result…</div>}><CodeResultThreeScene subject={state.subject} action={state.action} result={state.change} variant={resultScene.variant} /></React.Suspense> : null}
       <div className="simple-state-details">
         <section className="simple-array-panel" data-array-cells aria-label="Array cells">
           <div className="simple-state-section-heading"><span>Array cells</span><small>{array ? array.name : "No array on this step"}</small></div>
@@ -985,6 +1000,8 @@ export default function Home() {
   const [steps, setSteps] = useState<LearningStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [showBeforeState, setShowBeforeState] = useState(false);
+  const [showThreeResult, setShowThreeResult] = useState(false);
+  const [currentStructure, setCurrentStructure] = useState<CodeStructureSummary | null>(null);
   const [exploredStepIndexes, setExploredStepIndexes] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speedMs, setSpeedMs] = useState(2200);
@@ -1200,6 +1217,7 @@ export default function Home() {
 
     if (selectedWalkthrough) {
       generatedSteps = buildSteps(userCode, selectedWalkthrough);
+      setCurrentStructure(null);
     } else {
       try {
         const apiStory = await interpretStory.mutateAsync({
@@ -1215,11 +1233,13 @@ export default function Home() {
           story,
           executionState: story.executionState,
         }));
+        setCurrentStructure(apiStory.structure);
         if (apiStory.source === "fallback") {
           toast.info("We opened a clear visual guide while the code-specific interpreter is unavailable. You can try again anytime.");
         }
       } catch {
         generatedSteps = buildSteps(userCode);
+        setCurrentStructure(null);
         toast.warning("The code interpreter is busy, so we opened a simple visual guide. Try creating the story again for code-specific scenes.");
       }
     }
@@ -1229,6 +1249,7 @@ export default function Home() {
     setCinematicSceneStatus({});
     setSteps(generatedSteps);
     setCurrentStepIndex(0);
+    setShowThreeResult(false);
     setExploredStepIndexes([]);
     setIsPlaying(false);
     setCinematicFocused(false);
@@ -1726,12 +1747,12 @@ export default function Home() {
               <div className="execution-rail-steps mt-4"><div className="flex items-center justify-between gap-3"><p>Steps</p><span>{currentStepIndex + 1} / {steps.length}</span></div><div className="mt-2 space-y-1.5">{steps.map((step, index) => { const isActive = index === currentStepIndex; return <button key={`rail-${step.line}-${step.code}`} onClick={() => goToStep(index)} aria-current={isActive ? "step" : undefined} className={isActive ? "is-active" : ""}><span>{index + 1}</span><strong>Line {step.line}</strong><small>{step.story.title}</small></button>; })}</div></div>
             </aside>
             <div className="lab-surface story-stage primary-visual-stage simple-visual-panel rounded-[20px] p-3.5 md:p-4" data-primary-visual-stage>
-              <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
-              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} /></div>
+              <div className="simple-panel-heading"><p className="simple-panel-label">Visual</p><div className="simple-state-tools"><span>{showBeforeState && currentStepIndex > 0 ? "Before" : "After"} · Line {currentStep.line}</span><button type="button" data-three-result-toggle onClick={() => setShowThreeResult((visible) => !visible)} aria-pressed={showThreeResult}>{showThreeResult ? "Hide 3D" : "Open 3D"}</button><button type="button" data-state-comparison-toggle onClick={() => setShowBeforeState((visible) => !visible)} disabled={currentStepIndex === 0} aria-pressed={showBeforeState}>{showBeforeState ? "View after" : "View before"}<ArrowDownUp className="h-3.5 w-3.5" aria-hidden="true" /></button></div></div>
+              <div className="primary-2d-scene mt-3"><Simple2DVisualPanel step={currentStep} previousStep={steps[currentStepIndex - 1]} sourceLines={steps.slice(0, currentStepIndex + 1).map((entry) => entry.code)} showBefore={showBeforeState} showThreeResult={showThreeResult} /></div>
               <section className="persistent-step-explanation mt-3" data-persistent-explanation aria-label="Current plain-English explanation">
                 <div><span>What happens now</span><strong>Line {currentStep.line}</strong></div>
                 <p>{currentStep.story.plainEnglish}</p>
-                <small>This explanation stays visible while you explore the 3D visual.</small>
+                <small>{currentStructure ? `${currentStructure.parser} structure: ${currentStructure.functions} functions, ${currentStructure.branches} choices, ${currentStructure.loops} loops.` : "This explanation stays visible while you explore the 3D visual."}</small>
               </section>
             </div>
             <aside className="lab-surface story-explanation-panel direct-explanation-panel simple-explanation-panel rounded-[20px] p-3.5 md:p-4" data-direct-explanation-panel>

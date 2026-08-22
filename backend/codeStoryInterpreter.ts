@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
-import { createRealWorldStory, type RealWorldStory } from "../client/src/lib/realWorldLearning";
+import { createRealWorldStory, type RealWorldStory } from "../frontend/src/lib/realWorldLearning";
 import { createStoryRequestCapacity } from "./storyRequestCapacity";
+import { analyzeCodeStructure, type CodeStructureSummary } from "./codeStructureAnalyzer";
 
 export const API_SCENE_KINDS = [
   "workbench",
@@ -44,6 +45,7 @@ export type ApiCodeStoryStep = RealWorldStory & { lineNumber: number; executionS
 export type ApiCodeStory = {
   summary: string;
   steps: ApiCodeStoryStep[];
+  structure: CodeStructureSummary;
   source: "api" | "fallback";
 };
 
@@ -186,7 +188,7 @@ export function createSourceExecutionState(source: string): SourceExecutionState
  * order. The model supplies the learning language; the source remains the
  * authoritative code shown in the player.
  */
-export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCodeStory {
+export function normalizeApiCodeStory(code: string, candidate: unknown, language = "unknown"): ApiCodeStory {
   const parsed = apiCodeStoryResponseSchema.parse(candidate);
   const sourceLines = getValidatedSourceLines(code);
 
@@ -199,6 +201,7 @@ export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCode
 
   return {
     summary: parsed.summary,
+    structure: analyzeCodeStructure(code, language),
     source: "api",
     steps: [...parsed.steps]
       .sort((left, right) => left.lineNumber - right.lineNumber)
@@ -214,10 +217,11 @@ export function normalizeApiCodeStory(code: string, candidate: unknown): ApiCode
  * Valid source code should always reach the learning player, even when a model
  * response is empty, incomplete, or temporarily unavailable.
  */
-export function createFallbackApiCodeStory(code: string): ApiCodeStory {
+export function createFallbackApiCodeStory(code: string, language = "unknown"): ApiCodeStory {
   const sourceLines = getValidatedSourceLines(code);
   return {
     source: "fallback",
+    structure: analyzeCodeStructure(code, language),
     summary: "Here is a clear visual guide for the code you pasted. You can try again later for an extra code-specific interpretation.",
     steps: sourceLines.map((source) => ({
       ...createRealWorldStory(source.code, source.lineNumber),
@@ -239,13 +243,13 @@ export function getInterpreterTextContent(content: unknown) {
     .trim();
 }
 
-export function resolveInterpreterStory(code: string, content: unknown): ApiCodeStory {
+export function resolveInterpreterStory(code: string, content: unknown, language = "unknown"): ApiCodeStory {
   const text = getInterpreterTextContent(content);
-  if (!text) return createFallbackApiCodeStory(code);
+  if (!text) return createFallbackApiCodeStory(code, language);
   try {
-    return normalizeApiCodeStory(code, JSON.parse(text));
+    return normalizeApiCodeStory(code, JSON.parse(text), language);
   } catch {
-    return createFallbackApiCodeStory(code);
+    return createFallbackApiCodeStory(code, language);
   }
 }
 
@@ -322,10 +326,10 @@ export async function interpretCodeAsVisualStory(input: InterpreterInput, princi
         ],
         response_format: codeStoryResponseSchema,
       });
-      return resolveInterpreterStory(input.code, response.choices[0]?.message.content);
+      return resolveInterpreterStory(input.code, response.choices[0]?.message.content, input.language);
     } catch (error) {
       if (error instanceof CodeStoryInterpreterError) throw error;
-      return createFallbackApiCodeStory(input.code);
+      return createFallbackApiCodeStory(input.code, input.language);
     } finally {
       releaseCapacity();
     }
