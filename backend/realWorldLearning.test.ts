@@ -621,6 +621,10 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".simple-2d-diagram");
     expect(styleSource).toContain(".visual-stage-readout");
     expect(styleSource).toContain(".simple-2d-stage-result-telemetry");
+    expect(styleSource).toContain(".execution-workspace-grid.simple-story-page");
+    expect(styleSource).toContain("@media (min-width: 641px) and (max-width: 1279px)");
+    expect(styleSource).toContain("@media (min-width: 1536px)");
+    expect(styleSource).toContain(".simple-state-tools button { flex: 1 1 8rem");
     expect(styleSource).toContain("Mandala study theme");
     expect(homeSource).not.toContain("Interactive state map");
     expect(homeSource).not.toContain("data-ai-visual-control");

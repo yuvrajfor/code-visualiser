@@ -973,7 +973,41 @@
   .simple-story-page { gap: 0.75rem; }
   .simple-story-page .lab-surface { border-radius: 1rem; }
   .simple-story-page .primary-cinematic-scene { margin-top: 0.75rem; }
-  .simple-explanation-scroll { max-height: 19rem; }
+  .simple-panel-heading { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
+  .simple-state-tools { align-self: stretch; flex-wrap: wrap; width: 100%; }
+  .simple-state-tools > span { flex: 1 0 100%; }
+  .simple-state-tools button { flex: 1 1 8rem; justify-content: center; min-height: 2.25rem; }
+  .simple-explanation-heading { align-items: flex-start; flex-wrap: wrap; }
+  .simple-explanation-scroll { max-height: min(22rem, 54vh); }
+}
+
+/* Device-adaptive workspace: keep the source, visual, and explanation usable between phone and desktop widths. */
+.execution-workspace-grid.simple-story-page > * { min-width: 0; }
+
+@media (min-width: 641px) and (max-width: 1279px) {
+  .execution-workspace-grid.simple-story-page {
+    grid-template-columns: minmax(12.25rem, 0.72fr) minmax(0, 1.28fr);
+  }
+
+  .execution-workspace-grid.simple-story-page .simple-explanation-panel {
+    grid-column: 1 / -1;
+  }
+
+  .simple-explanation-scroll {
+    max-height: min(26rem, 54vh);
+  }
+}
+
+@media (max-width: 430px) {
+  .simple-story-page .execution-rail-steps button { min-width: 5.25rem; }
+  .simple-explanation-copy { font-size: 0.84rem; line-height: 1.62; padding: 0.75rem; }
+  .language-result-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1536px) {
+  .container { max-width: 1440px; padding-left: 2.5rem; padding-right: 2.5rem; }
+  .execution-workspace-grid.simple-story-page { grid-template-columns: 15rem minmax(0, 1fr) 21rem; gap: 1rem; }
+  .simple-explanation-scroll { max-height: min(36rem, calc(100vh - 8rem)); }
 }
 
 /* Functional 2D visual language: object → action → result. */
