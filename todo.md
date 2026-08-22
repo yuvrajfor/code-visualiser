@@ -280,3 +280,9 @@
 - [x] Fix keyboard-help placement so it opens adjacent to its trigger on desktop and remains usable on mobile.
 - [x] Add regression coverage and validate the upgraded visual stage and keyboard help on desktop and mobile.
 - [x] Save a checkpoint for the richer visual experience and keyboard-help placement fix.
+- [x] Audit current icon usage, colour hierarchy, and primary React SVG visual-stage structure.
+- [x] Design a cohesive bold SVG icon treatment and a learning-focused 3D-style SVG execution scene.
+- [x] Replace remaining interface icon treatments with custom SVG styling and strengthen colourful visual hierarchy.
+- [x] Upgrade the primary execution visual with layered, dimensional SVG objects, depth, and interactive state feedback.
+- [x] Add regression coverage and validate the enhanced iconography and 3D-style SVG stage on desktop and mobile.
+- [ ] Save a checkpoint for the enhanced SVG icon system and dimensional visual experience.

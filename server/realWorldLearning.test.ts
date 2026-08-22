@@ -562,8 +562,12 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).not.toContain("data-ai-visual-control");
   });
 
-  it("uses semantic line icons and a restrained depth frame instead of browser emoji cues", () => {
+  it("uses cohesive custom SVG concept glyphs and a restrained depth frame instead of browser emoji cues", () => {
     expect(homeSource).toContain("<SceneKindIcon kind={preset.kind}");
+    expect(homeSource).toContain('data-story-glyph": kind');
+    expect(homeSource).toContain("function StageRoleGlyph");
+    expect(homeSource).toContain('data-stage-role-glyph="action"');
+    expect(homeSource).toContain('data-stage-role-glyph="result"');
     expect(homeSource).not.toContain("<ThemeKindIcon theme={theme.id}");
     expect(homeSource).not.toContain("{preset.icon}");
     expect(homeSource).not.toContain("{theme.icon}");
@@ -664,9 +668,15 @@ describe("state-first Code Studio workspace contract", () => {
     expect(styleSource).toContain(".lab-shell > :not(.living-svg-background)");
   });
 
-  it("makes the primary execution visual colourful and interactive while anchoring shortcut help to its trigger", () => {
-    expect(homeSource).toContain('data-react-svg-stage data-selected-stage-node={selectedStageNode}');
+  it("makes the primary execution visual colourful, dimensional, and interactive while anchoring shortcut help to its trigger", () => {
+    expect(homeSource).toContain('data-react-svg-stage data-dimensional-svg-stage="isometric"');
+    expect(homeSource).toContain('data-svg-icon-system="story-glyphs"');
     expect(homeSource).toContain('className="simple-2d-stage-svg"');
+    expect(homeSource).toContain('className="simple-2d-stage-prisms"');
+    expect(homeSource).toContain('className="simple-2d-stage-floor-grid"');
+    expect(homeSource).toContain('data-stage-node="object"');
+    expect(homeSource).toContain('data-stage-node="action"');
+    expect(homeSource).toContain('data-stage-node="result"');
     expect(homeSource).toContain('className="simple-2d-stage-flow-trail"');
     expect(homeSource).toContain('onClick={() => setSelectedStageNode("object")}');
     expect(homeSource).toContain('onClick={() => setSelectedStageNode("action")}');
@@ -675,6 +685,9 @@ describe("state-first Code Studio workspace contract", () => {
     expect(homeSource).toContain('className="shortcut-help-popover absolute right-0 top-[calc(100%+0.75rem)]');
     expect(styleSource).toContain(".simple-2d-visual-stage");
     expect(styleSource).toContain("@keyframes story-stage-flow");
+    expect(styleSource).toContain(".simple-2d-stage-prism");
+    expect(styleSource).toContain("@keyframes story-stage-prism-bob");
+    expect(styleSource).toContain(".story-glyph");
     expect(styleSource).toContain(".simple-2d-visual-stage .simple-2d-node.is-selected");
     expect(styleSource).toContain(".shortcut-help-popover { position: fixed");
   });

@@ -343,20 +343,6 @@ const sceneStyles: Record<RealWorldStory["kind"], { accent: string; wash: string
   "delivery-desk": { accent: "#eab308", wash: "rgba(234,179,8,0.16)", label: "delivery desk" },
 };
 
-const sceneIcons = {
-  "workbench": Hammer,
-  "storage-shelf": Archive,
-  "sorting-tray": ArrowDownUp,
-  "linked-chain": Link2,
-  "family-tree": TreePine,
-  "conveyor-loop": Repeat2,
-  "recursion-stairs": Footprints,
-  "city-map": MapPinned,
-  "decision-gate": GitBranch,
-  workshop: Wrench,
-  "delivery-desk": PackageCheck,
-} satisfies Record<RealWorldStory["kind"], typeof Box>;
-
 const cityStopIcons = [Coffee, Library, TreePine, Landmark, Utensils, MapPinned, House, Palette, Network, CircleDot] as const;
 
 const themeIcons = {
@@ -368,8 +354,29 @@ const themeIcons = {
 } satisfies Record<VisualTheme, typeof Box>;
 
 function SceneKindIcon({ kind, className = "" }: { kind: RealWorldStory["kind"]; className?: string }) {
-  const Icon = sceneIcons[kind];
-  return <Icon className={className} aria-hidden="true" />;
+  const shared = { className: `story-glyph ${className}`, viewBox: "0 0 32 32", fill: "none", stroke: "currentColor", strokeWidth: 2.35, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true, focusable: false, "data-story-glyph": kind };
+  switch (kind) {
+    case "storage-shelf": return <svg {...shared}><path d="M7 5.5h18v21H7z" /><path d="M7 12.5h18M7 19.5h18" /><path d="M12 9h.01M20 16h.01M14.5 23h.01" /><path d="M10 5.5v21M22 5.5v21" /></svg>;
+    case "sorting-tray": return <svg {...shared}><path d="M6 8.5h20l-2.2 15H8.2z" /><path d="M10 8.5l2.2-3h7.6l2.2 3" /><path d="M11 14h10M13 18h6" /><circle cx="11" cy="23" r="1.2" fill="currentColor" stroke="none" /><circle cx="21" cy="23" r="1.2" fill="currentColor" stroke="none" /></svg>;
+    case "linked-chain": return <svg {...shared}><path d="M12.3 19.7 9.7 22.3a4.2 4.2 0 0 1-6-6l4-4a4.2 4.2 0 0 1 6 0" /><path d="m19.7 12.3 2.6-2.6a4.2 4.2 0 1 1 6 6l-4 4a4.2 4.2 0 0 1-6 0" /><path d="m11 21 10-10" /></svg>;
+    case "family-tree": return <svg {...shared}><circle cx="16" cy="7" r="3" /><circle cx="8" cy="24" r="3" /><circle cx="24" cy="24" r="3" /><path d="M16 10v5M8 18v-3h16v3M8 15v3M24 15v3" /></svg>;
+    case "conveyor-loop": return <svg {...shared}><path d="M7 11h16l3 5-3 5H7l-3-5z" /><path d="M10 11v10M16 11v10M22 11v10" /><path d="m21 6 3 3-3 3M11 26l-3-3 3-3" /></svg>;
+    case "recursion-stairs": return <svg {...shared}><path d="M5 25h6v-5h5v-5h5v-5h6" /><path d="m22 6 5 4-5 4" /><path d="M27 10h-8" /><path d="m10 26-4-4 4-4" /></svg>;
+    case "city-map": return <svg {...shared}><path d="m5 7 8-3 6 3 8-3v21l-8 3-6-3-8 3z" /><path d="M13 4v21M19 7v21" /><circle cx="11" cy="12" r="1.5" fill="currentColor" stroke="none" /><circle cx="21" cy="20" r="1.5" fill="currentColor" stroke="none" /></svg>;
+    case "decision-gate": return <svg {...shared}><path d="M16 5v7M16 20v7M16 12l-8 5M16 12l8 5" /><circle cx="16" cy="12" r="3.5" /><circle cx="8" cy="18" r="2.2" /><circle cx="24" cy="18" r="2.2" /></svg>;
+    case "workshop": return <svg {...shared}><path d="M8 27V14l4-8 4 8v13M4 27h24M16 19h9v8" /><path d="M19 15h3M11 18h2" /><path d="m22 9 4 4" /></svg>;
+    case "delivery-desk": return <svg {...shared}><path d="M5 11h22v16H5z" /><path d="M5 16h22M11 11V7h10v4" /><path d="M16 19v5M13.5 21.5h5" /></svg>;
+    case "workbench":
+    default: return <svg {...shared}><path d="M5 12h22v5H5zM8 17v10M24 17v10M12 8l3-3 5 5-3 3z" /><path d="m17.5 7.5 5 5M7 27h18" /></svg>;
+  }
+}
+
+function StageRoleGlyph({ role, kind, className = "" }: { role: "object" | "action" | "result"; kind: RealWorldStory["kind"]; className?: string }) {
+  if (role === "object") return <SceneKindIcon kind={kind} className={`stage-role-glyph ${className}`} />;
+  if (role === "action") {
+    return <svg className={`stage-role-glyph ${className}`} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" data-stage-role-glyph="action"><path d="M6 16h16" /><path d="m17 9 7 7-7 7" /><path d="M7 9h5M7 23h5" /><circle cx="7" cy="16" r="2.5" fill="currentColor" stroke="none" /></svg>;
+  }
+  return <svg className={`stage-role-glyph ${className}`} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" data-stage-role-glyph="result"><path d="m8 16 5 5 11-12" /><path d="M16 4v4M5.5 8.5l3 3M26.5 8.5l-3 3" /><circle cx="16" cy="16" r="12" opacity=".38" /></svg>;
 }
 
 function ThemeKindIcon({ theme, className = "" }: { theme: VisualTheme; className?: string }) {
@@ -774,14 +781,24 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
   return (
     <section className="simple-2d-diagram" data-primary-2d-scene data-state-view={showBefore ? "before" : "after"} aria-label={`2D visual for line ${shownStep.line}`}>
       <div className="simple-2d-context"><span>{showBefore ? "Before" : "After"} · Line {shownStep.line}</span><code>{shownStep.code.trim() || "Current source line"}</code></div>
-      <div className="simple-2d-visual-stage" data-react-svg-stage data-selected-stage-node={selectedStageNode}>
+      <div className="simple-2d-visual-stage" data-react-svg-stage data-dimensional-svg-stage="isometric" data-svg-icon-system="story-glyphs" data-selected-stage-node={selectedStageNode}>
         <svg className="simple-2d-stage-svg" viewBox="0 0 960 248" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="story-stage-flow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#38bdf8" /><stop offset="50%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#fbbf24" /></linearGradient>
             <radialGradient id="story-stage-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#67e8f9" stopOpacity="0.34" /><stop offset="100%" stopColor="#0f172a" stopOpacity="0" /></radialGradient>
+            <linearGradient id="story-stage-floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" /><stop offset="100%" stopColor="#dbeafe" stopOpacity="0.16" /></linearGradient>
+            <linearGradient id="story-stage-prism" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" /><stop offset="100%" stopColor="#c4b5fd" stopOpacity="0.05" /></linearGradient>
+            <filter id="story-stage-shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="10" stdDeviation="8" floodColor="#312e81" floodOpacity="0.22" /></filter>
             <filter id="story-stage-blur"><feGaussianBlur stdDeviation="10" /></filter>
           </defs>
           <rect width="960" height="248" rx="28" fill="url(#story-stage-glow)" />
+          <path className="simple-2d-stage-floor" d="M66 184 480 75 894 184 480 239Z" fill="url(#story-stage-floor)" />
+          <path className="simple-2d-stage-floor-grid" d="M134 184 480 91 826 184M207 203 480 129 753 203M480 76v160M322 117v101M638 117v101" />
+          <g className="simple-2d-stage-prisms" filter="url(#story-stage-shadow)">
+            <g className="simple-2d-stage-prism simple-2d-stage-prism-object"><path d="M117 158 146 139 175 158 146 177Z" /><path d="M117 158v20l29 19v-20ZM175 158v20l-29 19v-20Z" /></g>
+            <g className="simple-2d-stage-prism simple-2d-stage-prism-action"><path d="M451 139 480 120 509 139 480 158Z" /><path d="M451 139v20l29 19v-20ZM509 139v20l-29 19v-20Z" /></g>
+            <g className="simple-2d-stage-prism simple-2d-stage-prism-result"><path d="M785 158 814 139 843 158 814 177Z" /><path d="M785 158v20l29 19v-20ZM843 158v20l-29 19v-20Z" /></g>
+          </g>
           <g className="simple-2d-stage-orbits"><ellipse cx="480" cy="124" rx="402" ry="86" /><ellipse cx="480" cy="124" rx="290" ry="52" /></g>
           <path className="simple-2d-stage-flow-path" d="M 146 124 C 270 36, 376 36, 480 124 S 690 212, 814 124" />
           <path className="simple-2d-stage-flow-trail" d="M 146 124 C 270 36, 376 36, 480 124 S 690 212, 814 124" />
@@ -789,21 +806,21 @@ function Simple2DVisualPanel({ step, previousStep, sourceLines, showBefore }: { 
           <g className="simple-2d-stage-particles"><circle cx="224" cy="66" r="4" /><circle cx="336" cy="190" r="3" /><circle cx="615" cy="56" r="4" /><circle cx="720" cy="188" r="3" /></g>
         </svg>
         <div className="simple-2d-flow">
-        <button type="button" onClick={() => setSelectedStageNode("object")} className={`simple-2d-node simple-2d-subject ${selectedStageNode === "object" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "object"}>
+        <button type="button" onClick={() => setSelectedStageNode("object")} className={`simple-2d-node simple-2d-subject ${selectedStageNode === "object" ? "is-selected" : ""}`} data-stage-node="object" aria-pressed={selectedStageNode === "object"}>
           <span className="simple-2d-node-label">Object</span>
-          <div><SceneKindIcon kind={shownStep.story.kind} className="h-5 w-5" /><strong>{state.subject}</strong></div>
+          <div><StageRoleGlyph role="object" kind={shownStep.story.kind} /><strong>{state.subject}</strong></div>
           <span className="simple-2d-node-hint">Click to focus</span>
         </button>
-        <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
-        <button type="button" onClick={() => setSelectedStageNode("action")} className={`simple-2d-node simple-2d-action ${selectedStageNode === "action" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "action"}>
+        <span className="simple-2d-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16h20" /><path d="m17 8 8 8-8 8" /></svg></span>
+        <button type="button" onClick={() => setSelectedStageNode("action")} className={`simple-2d-node simple-2d-action ${selectedStageNode === "action" ? "is-selected" : ""}`} data-stage-node="action" aria-pressed={selectedStageNode === "action"}>
           <span className="simple-2d-node-label">Action</span>
-          <strong>{state.action}</strong>
+          <div><StageRoleGlyph role="action" kind={shownStep.story.kind} /><strong>{state.action}</strong></div>
           <span className="simple-2d-node-hint">Click to focus</span>
         </button>
-        <ArrowRight className="simple-2d-arrow" aria-hidden="true" />
-        <button type="button" onClick={() => setSelectedStageNode("result")} className={`simple-2d-node simple-2d-result ${selectedStageNode === "result" ? "is-selected" : ""}`} aria-pressed={selectedStageNode === "result"}>
+        <span className="simple-2d-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16h20" /><path d="m17 8 8 8-8 8" /></svg></span>
+        <button type="button" onClick={() => setSelectedStageNode("result")} className={`simple-2d-node simple-2d-result ${selectedStageNode === "result" ? "is-selected" : ""}`} data-stage-node="result" aria-pressed={selectedStageNode === "result"}>
           <span className="simple-2d-node-label">Result</span>
-          <strong>{state.change}</strong>
+          <div><StageRoleGlyph role="result" kind={shownStep.story.kind} /><strong>{state.change}</strong></div>
           <span className="simple-2d-node-hint">Click to focus</span>
         </button>
         </div>

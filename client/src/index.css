@@ -1653,14 +1653,109 @@ html.dark .visual-theme-mandala:not(.visual-theme-high-contrast) .code-path-card
 @keyframes story-stage-flow { to { stroke-dashoffset: -68; } }
 @keyframes story-stage-particles { from { transform: translateY(0); opacity: .34; } to { transform: translateY(-14px); opacity: .95; } }
 
+/* SVG glyphs and dimensional stage: the art is decorative; the accessible
+   buttons above it remain the source-grounded learning interaction. */
+.story-glyph,
+.stage-role-glyph {
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.simple-2d-visual-stage[data-dimensional-svg-stage="isometric"] {
+  border-color: color-mix(in srgb, #7c3aed 42%, var(--simple-line, #c4b5fd));
+  background:
+    linear-gradient(118deg, rgba(255,255,255,.9), rgba(239,246,255,.82) 46%, rgba(250,245,255,.9)),
+    radial-gradient(circle at 50% 0%, rgba(167,139,250,.16), transparent 52%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.76), inset 0 -18px 26px rgba(79,70,229,.055), 0 20px 42px rgba(67,56,202,.16);
+}
+.simple-2d-stage-floor { opacity: .88; }
+.simple-2d-stage-floor-grid {
+  fill: none;
+  stroke: rgba(99,102,241,.18);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+.simple-2d-stage-prism {
+  opacity: .52;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: story-stage-prism-bob 4.8s cubic-bezier(.45,0,.55,1) infinite alternate;
+}
+.simple-2d-stage-prism:nth-child(2) { animation-delay: -.8s; }
+.simple-2d-stage-prism:nth-child(3) { animation-delay: -1.65s; }
+.simple-2d-stage-prism path:first-child { fill: url(#story-stage-prism); stroke-width: 1.4; }
+.simple-2d-stage-prism path:last-child { fill: rgba(15,23,42,.16); stroke-width: 1.1; }
+.simple-2d-stage-prism-object { color: #0284c7; }
+.simple-2d-stage-prism-action { color: #7c3aed; }
+.simple-2d-stage-prism-result { color: #d97706; }
+.simple-2d-stage-prism-object path:first-child { fill: #7dd3fc; stroke: #0284c7; }
+.simple-2d-stage-prism-action path:first-child { fill: #c4b5fd; stroke: #7c3aed; }
+.simple-2d-stage-prism-result path:first-child { fill: #fcd34d; stroke: #d97706; }
+.simple-2d-stage-prism-object path:last-child { fill: #0e7490; stroke: #075985; }
+.simple-2d-stage-prism-action path:last-child { fill: #5b21b6; stroke: #4c1d95; }
+.simple-2d-stage-prism-result path:last-child { fill: #b45309; stroke: #92400e; }
+.simple-2d-visual-stage[data-selected-stage-node="object"] .simple-2d-stage-prism-object,
+.simple-2d-visual-stage[data-selected-stage-node="action"] .simple-2d-stage-prism-action,
+.simple-2d-visual-stage[data-selected-stage-node="result"] .simple-2d-stage-prism-result { opacity: 1; filter: drop-shadow(0 0 10px currentColor); }
+.simple-2d-visual-stage[data-selected-stage-node="object"] .simple-2d-stage-prism:not(.simple-2d-stage-prism-object),
+.simple-2d-visual-stage[data-selected-stage-node="action"] .simple-2d-stage-prism:not(.simple-2d-stage-prism-action),
+.simple-2d-visual-stage[data-selected-stage-node="result"] .simple-2d-stage-prism:not(.simple-2d-stage-prism-result) { opacity: .25; }
+.simple-2d-visual-stage .simple-2d-node {
+  position: relative;
+  overflow: hidden;
+  border-width: 1.5px;
+  border-color: rgba(148,163,184,.55);
+  background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(248,250,252,.82));
+  box-shadow: 0 5px 0 rgba(15,23,42,.12), 0 14px 20px rgba(30,41,59,.12);
+}
+.simple-2d-visual-stage .simple-2d-node::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  opacity: .72;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(255,255,255,.86), transparent 38%);
+}
+.simple-2d-visual-stage .simple-2d-node > * { position: relative; z-index: 1; }
+.simple-2d-visual-stage .simple-2d-node:active { transform: translateY(2px) scale(.99); box-shadow: 0 2px 0 rgba(15,23,42,.14), 0 7px 12px rgba(30,41,59,.12); }
+.simple-2d-visual-stage .simple-2d-subject { border-color: #0284c7; background: linear-gradient(145deg, #effcff, #dff5ff); color: #0c4a6e; }
+.simple-2d-visual-stage .simple-2d-action { border-color: #7c3aed; background: linear-gradient(145deg, #faf5ff, #ede9fe); color: #4c1d95; }
+.simple-2d-visual-stage .simple-2d-result { border-color: #d97706; background: linear-gradient(145deg, #fffbeb, #fef3c7); color: #78350f; }
+.simple-2d-visual-stage .simple-2d-node.is-selected {
+  box-shadow: 0 7px 0 rgba(15,23,42,.14), 0 18px 30px rgba(67,56,202,.24), 0 0 0 3px rgba(255,255,255,.82);
+}
+.simple-2d-visual-stage .stage-role-glyph { width: 1.45rem; height: 1.45rem; }
+.simple-2d-visual-stage .simple-2d-arrow { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 999px; color: #7c3aed; background: rgba(255,255,255,.72); box-shadow: 0 4px 12px rgba(67,56,202,.14); }
+.simple-2d-visual-stage .simple-2d-arrow svg { width: 1.15rem; height: 1.15rem; }
+.simple-2d-visual-stage .simple-2d-stage-status { padding: .25rem .55rem; border: 1px solid rgba(99,102,241,.16); border-radius: 999px; background: rgba(255,255,255,.72); backdrop-filter: blur(8px); }
+@keyframes story-stage-prism-bob { from { transform: translateY(1px); } to { transform: translateY(-8px); } }
+
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage[data-dimensional-svg-stage="isometric"] {
+  border-color: rgba(167,139,250,.56) !important;
+  background: linear-gradient(135deg, rgba(30,41,59,.96), rgba(49,46,129,.34) 56%, rgba(8,47,73,.58)) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 20px 42px rgba(0,0,0,.32) !important;
+}
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-subject { border-color: #38bdf8 !important; background: linear-gradient(145deg, rgba(14,116,144,.54), rgba(12,74,110,.72)) !important; color: #e0f2fe !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-action { border-color: #c4b5fd !important; background: linear-gradient(145deg, rgba(109,40,217,.54), rgba(76,29,149,.70)) !important; color: #f3e8ff !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-result { border-color: #fbbf24 !important; background: linear-gradient(145deg, rgba(180,83,9,.52), rgba(120,53,15,.70)) !important; color: #fffbeb !important; }
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-arrow,
+html.dark .lab-shell:not(.visual-theme-high-contrast) .simple-2d-visual-stage .simple-2d-stage-status { color: #e0e7ff; background: rgba(15,23,42,.68); border-color: rgba(196,181,253,.30); }
+
+.visual-theme-high-contrast .simple-2d-visual-stage[data-dimensional-svg-stage="isometric"] { border: 2px solid #fff !important; background: #000 !important; box-shadow: none !important; }
+.visual-theme-high-contrast .simple-2d-visual-stage :is(.simple-2d-stage-floor, .simple-2d-stage-floor-grid, .simple-2d-stage-prisms, .simple-2d-stage-orbits, .simple-2d-stage-flow-path, .simple-2d-stage-flow-trail, .simple-2d-stage-sparks, .simple-2d-stage-particles) { opacity: 0 !important; animation: none !important; }
+.visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-node { color: #fff !important; }
+.visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-arrow,
+.visual-theme-high-contrast .simple-2d-visual-stage .simple-2d-stage-status { color: #ffe600 !important; background: #000 !important; border-color: #fff !important; }
+
 @media (max-width: 640px) {
   .shortcut-help-popover { position: fixed; right: 1rem; left: 1rem; top: 4.75rem; width: auto; max-height: calc(100dvh - 6rem); overflow: auto; }
   .simple-2d-visual-stage .simple-2d-flow { min-height: 18rem; padding: 1.2rem .8rem 2.3rem; }
   .simple-2d-stage-status { left: 1rem; right: 1rem; }
+  .simple-2d-visual-stage .simple-2d-arrow { transform: rotate(90deg); justify-self: center; }
+  .simple-2d-stage-floor-grid { opacity: .45; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .simple-2d-stage-orbits, .simple-2d-stage-flow-trail, .simple-2d-stage-particles { animation: none; }
+  .simple-2d-stage-orbits, .simple-2d-stage-flow-trail, .simple-2d-stage-particles, .simple-2d-stage-prism { animation: none; }
   .simple-2d-visual-stage .simple-2d-node, .simple-2d-visual-stage .simple-2d-node:hover, .simple-2d-visual-stage .simple-2d-node.is-selected { transform: none; transition: none; }
 }
 
