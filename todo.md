@@ -331,3 +331,10 @@
 - [x] Remove only confirmed-unused repository items and simplify maintenance surfaces without changing learner functionality.
 - [x] Validate the streamlined repository with regression, type, build, workflow, and integrity checks.
 - [x] Save a checkpoint for the verified repository cleanup.
+- [x] Audit current scripts, active UI surfaces, and Git repository status before CI and commit work.
+- [x] Design a focused GitHub Actions workflow and prioritize evidence-based UI optimization opportunities.
+- [x] Add CI for tests, TypeScript checks, and production builds on pushes and pull requests.
+- [x] Document practical optimization recommendations for the remaining active Code Story Studio interface.
+- [x] Validate CI commands and repository integrity locally.
+- [ ] Create a verified Yuvraj-authored GitHub commit for the cleanup and CI update.
+- [ ] Save a checkpoint for the verified CI and GitHub update.
